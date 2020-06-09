@@ -1,0 +1,7 @@
+# Ignore everything by default
+*
+# Except MATLAB files and scripts
+!*.m
+!preprocess
+!.gitignore
+!README.md

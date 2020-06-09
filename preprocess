@@ -1,0 +1,22 @@
+#!/bin/bash
+set -e -u -o pipefail
+
+usage() {
+    cat <<eof
+usage: $0 <subject number>
+
+    description
+eof
+    exit 1
+}
+
+if [[ $# -ne 1 ]]; then
+    usage
+fi
+
+subject_number="$1"
+
+mkdir "$subject_number" || true
+
+echo "preprocessing eeg for $subject_number"
+matlab -nodisplay -r "preprocess_eeg(\"$subject_number\")"
