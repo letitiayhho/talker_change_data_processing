@@ -3,14 +3,14 @@ set -e -u -o pipefail
 
 usage() {
     cat <<eof
-usage: $0 <subject number>
+usage: $0 <subject number> <eeg data file name> <channel location file name>
 
     description
 eof
     exit 1
 }
 
-if [[ $# -ne 1 ]]; then
+if [[ $# -ne 3 ]]; then
     usage
 fi
 
@@ -19,4 +19,5 @@ subject_number="$1"
 mkdir "$subject_number" || true
 
 echo "preprocessing eeg for $subject_number"
-matlab -nodisplay -r "preprocess_eeg(\"$subject_number\")"
+matlab -nodisplay -r "preprocess_eeg_data('$subject_number','${subject_number}_eeg_data.raw','${subject_number}_channel_locations.sfp')"
+
