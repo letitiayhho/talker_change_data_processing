@@ -2,7 +2,7 @@
 set -e -u -o pipefail
 
 usage() {
-    cat <<eof
+    cat <<eof >&2
 usage: $0 <subject number> <eeg data file name> <channel location file name>
 
     description
@@ -10,7 +10,7 @@ eof
     exit 1
 }
 
-if [[ $# -ne 3 ]]; then
+if [[ $# -ne 1 ]]; then
     usage
 fi
 
@@ -18,6 +18,13 @@ subject_number="$1"
 
 mkdir "$subject_number" || true
 
-echo "preprocessing eeg for $subject_number"
-matlab -nodisplay -r "preprocess_eeg_data('$subject_number','${subject_number}_eeg_data.raw','${subject_number}_channel_locations.sfp')"
+log_file="$subject_number/$(date +%s).log"
 
+echo "preprocessing eeg data for $subject_number, writing to log file $log_file" >&2
+matlab \
+    -nodisplay \
+    -r \
+    "preprocess_eeg_data('$subject_number','${subject_number}_eeg_data.raw','${subject_number}_channel_locations.sfp')" \
+    &> "$log_file" &
+
+disown
