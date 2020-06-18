@@ -87,6 +87,8 @@ function [] = preprocess_eeg_data(subject_number, eeg_data_file_name, channel_lo
         EEG.setname = set_name;
         
         % Reject bad trials (do not remove components, rank will decrease)
+        pop_eegplot( EEG, 1, 1, 1);
+        
         
         % Re-run ICA
     

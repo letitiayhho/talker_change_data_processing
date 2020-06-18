@@ -1,0 +1,27 @@
+#!/bin/bash
+
+set -euo pipefail
+
+usage() {
+    cat <<eof >&2
+usage: $0 <downsample frequency> <high-pass frequency> <low-pass frequency>
+
+    downsample and filter all .wav files in this folder
+eof
+    exit 1
+}
+
+if [[ $# -ne 3 ]]; then
+    usage
+fi
+
+downsample="$1"
+high_pass="$2"
+low_pass="$3"
+
+for f in ./*.wav; do
+    preprocessed_f="$(echo "$f" | sed -E 's/^(.*)\.wav$/\1_preprocessed.wav/')"
+    sox "$f" -r "$downsample" "$preprocessed_f" highpass "$high_pass" lowpass "$low_pass"
+done
+
+echo "done :^)"
