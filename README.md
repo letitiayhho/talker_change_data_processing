@@ -2,7 +2,7 @@
 
 #### Run preprocessing
 
-To run the preprocessing script with the wrapper bash script use `./preprocess <subject_number>`. To see the MATLAB outputs run `tail -f <name of log file.log>` the log file name should come up after you run the preprocess script. Kill the process to stop viewing the output, type in the same `tail` command to see it again.
+To run the preprocessing script with the wrapper bash script use `./preprocess <subject_number>`. The script will run the process in the background so that it continues even if the Terminal window exits. To see the MATLAB outputs run `tail -f <name of log file.log>` the log file name should come up after you run the bash script. Kill the process to stop viewing the output, type in the same `tail` command to see it again. To kill the process, use the `kill <pid>` that the bash script also gives you when you first run it.
 
 To run the preprocessing manually with the matlab script from command line with `preprocess_eeg_data.m` run `matlab -nodisplay -r "preprocess_eeg_data('<subject number>','<eeg data file name.raw>','<channel location file name.sfp')"`. e.g. `matlab -nodisplay -r "preprocess_eeg_data('302','302_eeg_data.raw','302_channel_locations.sfp')"`
 

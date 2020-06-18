@@ -17,11 +17,9 @@ function [] = preprocess_eeg_data(subject_number, eeg_data_file_name, channel_lo
     %% 2. Import data
     fprintf(1, '\n\n2. Importing eeg data\n\n\n')
     EEG = pop_fileio(fullfile('/Applications/eeglab2019/uddin_preprocessing/raw_data', eeg_data_file_name), 'dataformat','auto'); % read data
+    EEG = eeg_checkset( EEG ); % check the consistency of the fields of an EEG dataset
     set_name = subject_number % name dataset
-    EEG.setname = set_name;
-    EEG = eeg_checkset(EEG);
-    [ALLEEG EEG CURRENTSET] = eeg_store(ALLEEG, EEG); % copy it to ALLEEG
-    EEG = pop_saveset( EEG, 'filename', set_name);
+    EEG = name_and_save(EEG, set_name);
         
         % 2.1 Save original epoch order
         epoch_order_original = EEG.event;
@@ -35,14 +33,11 @@ function [] = preprocess_eeg_data(subject_number, eeg_data_file_name, channel_lo
     EEG = pop_eegfiltnew(EEG, 'locutoff',179,'hicutoff',181,'revfilt',1);
     EEG = pop_eegfiltnew(EEG, 'locutoff',239,'hicutoff',241,'revfilt',1);
     set_name = strcat(set_name, '_fil')
-    EEG.setname = set_name;
-    [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET, 'setname', set_name); % copy changes to ALLEEG
-    EEG = pop_saveset( EEG, 'filename', set_name);
+    EEG = name_and_save(EEG, set_name);
     
     % 4. Set channel locations
     fprintf(1, '\n\n4. Setting channel locations\n\n\n')
     EEG=pop_chanedit(EEG, 'lookup', fullfile('/Applications/eeglab2019/uddin_preprocessing/raw_data', channel_location_file_name),'setref',{'128' ''});
-    EEG = eeg_checkset( EEG );
     
         % 4.1 Re-reference to Cz
         fprintf(1, '\n\n4.1. Re-referencing data to Cz\n\n\n')
@@ -67,25 +62,19 @@ function [] = preprocess_eeg_data(subject_number, eeg_data_file_name, channel_lo
         fprintf(1, '\n\n4.4. Re-referencing data to average\n\n\n')
         EEG = pop_reref( EEG, []);
         set_name = strcat(set_name, 'rav')
-        EEG.setname = set_name;
-        [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET, 'setname', set_name);
-        EEG = pop_saveset( EEG, 'filename', set_name);
+        EEG = name_and_save(EEG, set_name);
    
     % 5. Clean continuous data
     fprintf(1, '\n\n5. Cleaning continuous data\n\n\n')
     EEG = clean_artifacts(EEG, 'FlatlineCriterion','off','ChannelCriterion','off','LineNoiseCriterion','off','Highpass','off','BurstCriterion',20,'WindowCriterion',0.25,'BurstRejection','on','Distance','Euclidian','WindowCriterionTolerances',[-Inf 7] );
     set_name = strcat(set_name, '_cln')
-    EEG.setname = set_name;
-    [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET, 'setname', set_name);
-    EEG = pop_saveset( EEG, 'filename', set_name);
+    EEG = name_and_save(EEG, set_name);
     
     %% 6. Extract epochs
     fprintf(1, '\n\n6. Extracting epochs\n\n\n')
     EEG = pop_epoch( EEG, {  'GMSE'  'GMTE'  'GNSE'  'GNTE'  'SMSE'  'SMTE'  'SNSE'  'SNTE'  }, [0  1.5], 'epochinfo', 'yes');
     set_name = strcat(set_name, '_epo')
-    EEG.setname = set_name;
-    [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET, 'setname', set_name);
-    EEG = pop_saveset( EEG, 'filename', set_name);
+    EEG = name_and_save(EEG, set_name);
     
     %% 7. Decompose data by ICA
     
@@ -93,15 +82,11 @@ function [] = preprocess_eeg_data(subject_number, eeg_data_file_name, channel_lo
         fprintf(1, '\n\n7.1 Running ICA ')
         data_rank = rank(double(EEG.data(:,:)'));
         fprintf(1, strcat('with rank:', data_rank, '\n\n\n'))
-        % EEG = pop_runica(EEG, 'icatype', 'runica',
-        % 'extended',1,'interrupt','on'); % Original ICA call
         EEG = pop_runica(EEG,'extended',1,'interupt','on','pca', data_rank);
         set_name = strcat(set_name, '_ica')
         EEG.setname = set_name;
-        [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET, 'setname', set_name);
         
-        % Reject bad trials (do not remove components or else rank will
-        % decrease)
+        % Reject bad trials (do not remove components, rank will decrease)
         
         % Re-run ICA
     
@@ -110,9 +95,7 @@ function [] = preprocess_eeg_data(subject_number, eeg_data_file_name, channel_lo
         EEG = pop_icflag(EEG, [NaN NaN;0.5 1;0.5 1;0.5 1;0.5 1;0.5 1;0.5 1]);
         EEG = pop_iclabel(EEG, 'default');
         set_name = strcat(set_name, '_pru')
-        EEG.setname = set_name;
-        [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET, 'setname', set_name);
-        EEG = pop_saveset( EEG, 'filename', set_name);
+        EEG = name_and_save(EEG, set_name);
 
         % 7.3 Save pruned epoch order
         epoch_order_pruned = EEG.event;
@@ -122,4 +105,13 @@ function [] = preprocess_eeg_data(subject_number, eeg_data_file_name, channel_lo
     fprintf(1, '\n\n8. Exporting preprocessed eeg data\n\n\n')
     preprocessed_eeg_data = EEG.data;
     save('preprocessed_eeg_data');
+    
+    return
+    
+    %% Helper functions
+    function [ EEG ] = name_and_save(EEG, set_name)
+        EEG.setname = set_name;
+        [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET, 'setname', set_name);
+        EEG = pop_saveset( EEG, 'filename', set_name);
+    end
 end

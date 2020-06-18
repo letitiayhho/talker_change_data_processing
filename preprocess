@@ -27,4 +27,9 @@ matlab \
     "preprocess_eeg_data('$subject_number','${subject_number}_eeg_data.raw','${subject_number}_channel_locations.sfp')" \
     &> "$log_file" &
 
+# bash wizardry
+matlab_pid="$!"
+echo "to kill it, run $ kill $matlab_pid" >&2
+
+# don't kill the process if this terminal exits
 disown
