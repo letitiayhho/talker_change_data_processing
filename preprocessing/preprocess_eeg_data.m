@@ -16,7 +16,7 @@ function [] = preprocess_eeg_data(subject_number, eeg_data_file_name, channel_lo
     
     %% 2. Import data
     fprintf(1, '\n\n2. Importing eeg data\n\n\n')
-    EEG = pop_fileio(fullfile('/Applications/eeglab2019/uddin_preprocessing/raw_data', eeg_data_file_name), 'dataformat','auto'); % read data
+    EEG = pop_fileio(fullfile('/Applications/eeglab2019/uddin_preprocessing/raw_eeg_data', eeg_data_file_name), 'dataformat','auto'); % read data
     EEG = eeg_checkset( EEG ); % check the consistency of the fields of an EEG dataset
     set_name = subject_number % name dataset
     EEG = name_and_save(EEG, set_name);

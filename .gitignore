@@ -1,8 +1,13 @@
-# Ignore everything by default
-*
-# Except MATLAB files and scripts
-!*.m
-!preprocess
-!.gitignore
-!README.md
-!preprocess_audio
+*.wav
+*.mat
+*.txt
+*.raw
+*.sfp
+*.set
+*.fdt
+*.log
+.DS_Store
+tmp
+originals
+conditions
+*_preprocessed

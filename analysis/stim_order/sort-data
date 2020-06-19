@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# loop over all .txt files and sort rows by condition, rows must maintain previous order
+
+set -euo pipefail
+
+for f in ./stim_order*.txt; do
+    rm "$f.sort"
+    while read condition; do
+        cat "$f" \
+            | grep "^$condition" >> "$f.sort"
+    done < ./conditions
+done
+
+echo "done >:("

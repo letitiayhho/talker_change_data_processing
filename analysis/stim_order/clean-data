@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -euo pipefail
+set -x
+for f in ./talkerchng_subj*.txt; do
+    cleaned_f="$(echo "$f" | sed -E 's/^[^0-9]*([0-9]*).txt$/stim_order_\1.txt/')"
+    echo $f $cleaned_f
+    head -1 "$f" \
+        | cut -f3,6 \
+        | column -t \
+        | tee "$cleaned_f"
+    cat "$f" \
+        | sed '1d' \
+        | cut -f3,6 \
+        | column -t \
+        | grep -v ^single \
+        | grep -v ^what \
+        | grep -v ^..W \
+        | sort -k1.1,1.3 -s \
+        | tee -a "$cleaned_f"
+done
+
+echo "done :^)"
