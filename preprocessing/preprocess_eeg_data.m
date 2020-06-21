@@ -61,7 +61,7 @@ function [] = preprocess_eeg_data(subject_number, eeg_data_file_name, channel_lo
         % 4.4 Re-reference to average
         fprintf(1, '\n\n4.4. Re-referencing data to average\n\n\n')
         EEG = pop_reref( EEG, []);
-        set_name = strcat(set_name, 'rav')
+        set_name = strcat(set_name, '_rav')
         EEG = name_and_save(EEG, set_name);
    
     % 5. Clean continuous data
