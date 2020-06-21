@@ -16,7 +16,8 @@ fi
 
 subject_number="$1"
 
-mkdir "$subject_number" || true
+# make the directory and don't fail if it already exists
+mkdir -p "../$subject_number"
 
 log_file="$subject_number/$(date +%s).log"
 
