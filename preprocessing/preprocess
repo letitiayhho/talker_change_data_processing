@@ -32,5 +32,8 @@ matlab \
 matlab_pid="$!"
 echo "to kill it, run $ kill $matlab_pid" >&2
 
+# print what matlab is doing from log file
+tail -f $log_file
+
 # don't kill the process if this terminal exits
 disown
