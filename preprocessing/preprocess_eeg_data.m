@@ -12,18 +12,18 @@ function [] = preprocess_eeg_data(subject_number, eeg_data_file_name, channel_lo
     cd('/Applications/eeglab2019')
     [ALLEEG EEG CURRENTSET ALLCOM] = eeglab;
     EEG.etc.eeglabvers = '2019.1'; % this tracks which version of EEGLAB is being used, you may ignore it
-    cd(fullfile('/Applications/eeglab2019/uddin_preprocessing', subject_number))
+    cd(fullfile('/Applications/eeglab2019/uddin_preprocessing/preprocessing', subject_number))
     
     %% 2. Import data
     fprintf(1, '\n\n2. Importing eeg data\n\n\n')
-    EEG = pop_fileio(fullfile('/Applications/eeglab2019/uddin_preprocessing/raw_eeg_data', eeg_data_file_name), 'dataformat','auto'); % read data
+    EEG = pop_fileio(fullfile('/Applications/eeglab2019/uddin_preprocessing/preprocessing/raw_eeg_data', eeg_data_file_name), 'dataformat','auto'); % read data
     EEG = eeg_checkset( EEG ); % check the consistency of the fields of an EEG dataset
     set_name = subject_number % name dataset
     EEG = name_and_save(EEG, set_name);
         
         % 2.1 Save original epoch order
         epoch_order_original = EEG.event;
-        save('epoch_order_original');
+        save('epoch_order_original', 'epoch_order_original');
         
     % 3. Filter
     fprintf(1, '\n\n3. Filtering data from 0.3-400 Hz, notch filtering at 60 Hz\n\n\n')
@@ -37,7 +37,7 @@ function [] = preprocess_eeg_data(subject_number, eeg_data_file_name, channel_lo
     
     % 4. Set channel locations
     fprintf(1, '\n\n4. Setting channel locations\n\n\n')
-    EEG=pop_chanedit(EEG, 'lookup', fullfile('/Applications/eeglab2019/uddin_preprocessing/raw_data', channel_location_file_name),'setref',{'128' ''});
+    EEG=pop_chanedit(EEG, 'lookup', fullfile('/Applications/eeglab2019/uddin_preprocessing/preprocessing/raw_eeg_data', channel_location_file_name),'setref',{'128' ''});
     
         % 4.1 Re-reference to Cz
         fprintf(1, '\n\n4.1. Re-referencing data to Cz\n\n\n')
@@ -101,12 +101,12 @@ function [] = preprocess_eeg_data(subject_number, eeg_data_file_name, channel_lo
 
         % 7.3 Save pruned epoch order
         epoch_order_pruned = EEG.event;
-        save('epoch_order_pruned');
+        save('epoch_order_pruned', 'epoch_order_pruned');
         
     %% 8. Export
     fprintf(1, '\n\n8. Exporting preprocessed eeg data\n\n\n')
     preprocessed_eeg_data = EEG.data;
-    save('preprocessed_eeg_data');
+    save('preprocessed_eeg_data', 'preprocessed_eeg_data');
     
     return
     

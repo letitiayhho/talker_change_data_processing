@@ -69,9 +69,9 @@ if 1
              word = char(epoch_order_pruned.word(j));
              auditory_stimuli = audioread(fullfile('stim', word));
 
-            % Compute convolution and cross correlation
-            convolution(j, i) = mean(conv(epoch, auditory_stimuli));
-            cross_correlation(j, i) = mean(xcorr(epoch, auditory_stimuli));
+             % Compute convolution and cross correlation
+             convolution(j, i) = mean(conv(epoch, auditory_stimuli));
+             cross_correlation(j, i) = mean(xcorr(epoch, auditory_stimuli)); % should be #stim x #channels
          end
     end
     
@@ -92,6 +92,6 @@ if 1
         'VariableNames', {'condition', 'epoch', 'word', 'convolution'});
 
     % Write data
-    save('convolution_data_table')
-    save('cross_correlation_data_table')
+    save('convolution_data_table', 'convolution_data_table')
+    save('cross_correlation_data_table', 'cross_correlation_data_table')
 end
