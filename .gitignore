@@ -1,5 +1,13 @@
 # vim: syntax=conf
+
 # swap files
 *~
+
 # MacOS files
 .DS_Store
+
+# environment secrets
+.env
+
+# machine-specific installation files
+installer_input.txt

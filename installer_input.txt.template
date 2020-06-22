@@ -42,7 +42,7 @@ destinationFolder=/usr/local/matlab
 ## Set the desired value for fileInstallationKey and 
 ## uncomment the line.
 ##
-fileInstallationKey=58846-26905-64130-31138-25088-31083-28864-61429-59127-63235-04957-61501-03170-61160-43584-27854-10290-35687-49413-14797-61894-04142-21195
+fileInstallationKey=FILE_INSTALLATION_KEY
 
 ##
 ## ACCEPT LICENSE AGREEMENT  
