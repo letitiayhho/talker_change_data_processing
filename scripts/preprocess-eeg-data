@@ -3,7 +3,7 @@ set -e -u -o pipefail
 
 usage() {
     cat <<eof >&2
-usage: $0 <subject number> <eeg data file name> <channel location file name>
+usage: $0 <subject number>
 
     description
 eof
@@ -14,19 +14,14 @@ if [[ $# -ne 1 ]]; then
     usage
 fi
 
+cd "$(git rev-parse --show-toplevel)"
+
 subject_number="$1"
 
-# make the directory and don't fail if it already exists
-mkdir -p "../$subject_number"
-
-log_file="$subject_number/$(date +%s).log"
+log_file="data/$subject_number/$(date +%s).log"
 
 echo "preprocessing eeg data for $subject_number, writing to log file $log_file" >&2
-matlab \
-    -nodisplay \
-    -r \
-    "preprocess_eeg_data('$subject_number','${subject_number}_eeg_data.raw','${subject_number}_channel_locations.sfp')" \
-    &> "$log_file" &
+matlab -nodisplay -r "preprocess_eeg_data('$subject_number')" &> "$log_file" &
 
 # bash wizardry
 matlab_pid="$!"

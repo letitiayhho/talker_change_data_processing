@@ -1,14 +1,5 @@
+# vim: syntax=conf
+# swap files
 *~
-*.wav
-*.mat
-*.txt
-*.raw
-*.sfp
-*.set
-*.fdt
-*.log
+# MacOS files
 .DS_Store
-tmp
-originals
-conditions
-*_preprocessed

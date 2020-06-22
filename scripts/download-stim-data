@@ -1,0 +1,38 @@
+#!/bin/bash
+
+set -euo pipefail
+
+REMOTE_STIM_DATA_PATH="/mnt/compellent/labs/hcnlab/Soph/Talker Change followup/talkerchange/real subject data/"
+LOCAL_STIM_DATA_PATH="/tmp/stim-data"
+
+# Run this from the root of the repository
+cd "$(git rev-parse --show-toplevel)"
+
+# Copy the text files directly from the cronusx server to a temp directory.
+#
+# NOTE: We need to "'double quote'" because it has spaces in the filename.
+# NOTE: This requires having a block in "~/.ssh/config" that looks like this:
+#
+#   Host uchicago
+#       HostName cronusx.uchicago.edu
+#       User <your username>
+#
+scp -r uchicago:"'$REMOTE_STIM_DATA_PATH'" "$LOCAL_STIM_DATA_PATH"
+
+# Copy the *.txt file for each subject into the correct data folder
+for downloaded_file in "$LOCAL_STIM_DATA_PATH"/talkerchng_subj*.txt; do
+
+    # Extract subject number from filename
+    SUBJECT_NUMBER="$(echo "$downloaded_file" | sed -E 's/^.*subj(...)\.txt$/\1/')"
+
+    # Create a dir for each subject if it doesn't exist
+    SUBJECT_DIR="./data/$SUBJECT_NUMBER"
+    mkdir -p "$SUBJECT_DIR"
+
+    # Move the file we just downloaded to the expected location
+    mv "$downloaded_file" "$SUBJECT_DIR/stim_order.txt"
+
+done
+
+# Clean up the temporary dir
+rm -rf "$LOCAL_STIM_DATA_PATH"
