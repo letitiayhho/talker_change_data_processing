@@ -1,6 +1,5 @@
 function [] = convolve_and_cross_correlate(subject_number)
-
-    fprintf(1, strcat('Analyzing data from subject #', subject_number))
+    fprintf(1, strcat('Analyzing data from subject #', subject_number, '\n'))
 
     %% 1. Import data
     % Working from /Applications/eeglab2019/talker-change-data-processing
@@ -19,7 +18,7 @@ function [] = convolve_and_cross_correlate(subject_number)
     epoch_order_pruned = load('epoch_order_pruned');
     epoch_order_pruned = epoch_order_pruned.('epoch_order_pruned');
 
-    % Import stimuli order 
+    % Import stimuli order
     stim_order = readtable('stim_order.txt');
 
     %% 2. Match EEG epochs with words
@@ -32,11 +31,20 @@ function [] = convolve_and_cross_correlate(subject_number)
     epoch_order_pruned = struct2table(epoch_order_pruned);
     epoch_order_pruned = sortrows(epoch_order_pruned, 'type');
 
-    % Match words with remaining epochs
+    % Match pruned epochs with corresponding epochs
     j = 1;
     for i = 1:height(epoch_order_original)
+        % Match original epochs with corresponding stim 
+        epoch_order_original.word(i) = stim_order.ending(i);
+        
+        % Break at the end of pruned epochs to avoid exceeding array length
+        if j > height(epoch_order_pruned)
+            break
+        end
+        
+        % Match pruned epochs with corresponding stim
         if epoch_order_original.urevent(i) == epoch_order_pruned.urevent(j)
-            epoch_order_pruned.word(j) = stim_order.ending(j);
+            epoch_order_pruned.word(j) = stim_order.ending(i);
             j = j+1;
         end
     end
