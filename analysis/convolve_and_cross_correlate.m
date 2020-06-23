@@ -1,34 +1,26 @@
 % function [] = convolve_and_cross_correlate(subject_number)
 subject_number = '302';
-if 1
-% 1. Import data: EEG data and stimuli order files
-% 2. Match EEG epochs with words
-% 3. Convolve the .wav files with the epochs files
-% 4. Write data
 
+if 1
     %% 1. Import data
-    cd('~/Documents/Work/Research/s_uddin/analysis');
+    addpath('./analysis')
+    addpath(fullfile('./preprocessing', subject_number))
+    addpath('./preprocessing/stim')
 
     % Import EEG data
-    eeg_dir = 'eeg_data';
-    eeg_filename = strcat('preprocessed_', subject_number);
-    eeg_data = load(fullfile(eeg_dir, eeg_filename), eeg_filename);
-    eeg_data = eeg_data.(eeg_filename);
+    eeg_data = load('preprocessed_eeg_data');
+    eeg_data = eeg_data.('preprocessed_eeg_data');
 
     % Import original epoch order
-    eeg_epochs_original_filename = strcat('epoch_order_original_', subject_number);
-    epoch_order_original = load(fullfile(eeg_dir, eeg_epochs_original_filename), eeg_epochs_original_filename);
-    epoch_order_original = epoch_order_original.(eeg_epochs_original_filename);
+    epoch_order_original = load('epoch_order_original');
+    epoch_order_original = epoch_order_original.('epoch_order_original');
 
     % Import pruned epoch order
-    eeg_epochs_pruned_filename = strcat('epoch_order_pruned_', subject_number);
-    epoch_order_pruned = load(fullfile(eeg_dir, eeg_epochs_pruned_filename), eeg_epochs_pruned_filename);
-    epoch_order_pruned = epoch_order_pruned.(eeg_epochs_pruned_filename);
+    epoch_order_pruned = load('epoch_order_pruned');
+    epoch_order_pruned = epoch_order_pruned.('epoch_order_pruned');
 
     % Import stimuli order 
-    stim_order_dir = 'stim_order';
-    stim_order_filename = strcat('stim_order_', subject_number, '.txt');
-    stim_order = readtable(fullfile(stim_order_dir, stim_order_filename));
+    stim_order = readtable('stim_order.txt');
 
     %% 2. Match EEG epochs with words
     % Sort original epoch order by condition
@@ -54,8 +46,8 @@ if 1
 
     %% 3. Convolve
     % Initialize data tables
-    convolution = zeros(size(eeg_data, 1), size(eeg_data, 3));
-    cross_correlation = zeros(size(eeg_data, 1), size(eeg_data, 3));
+    convolution = zeros(size(eeg_data, 3), size(eeg_data, 1));
+    cross_correlation = zeros(size(eeg_data, 3), size(eeg_data, 1));
     
     % Loop over channels
     for i = 1:size(eeg_data, 1)
@@ -67,7 +59,7 @@ if 1
              
              % Load stimuli .wav file for epoch
              word = char(epoch_order_pruned.word(j));
-             auditory_stimuli = audioread(fullfile('stim', word));
+             auditory_stimuli = audioread(word);
 
              % Compute convolution and cross correlation
              convolution(j, i) = mean(conv(epoch, auditory_stimuli));
