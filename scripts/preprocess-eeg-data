@@ -21,7 +21,7 @@ subject_number="$1"
 log_file="data/$subject_number/$(date +%s).log"
 
 echo "preprocessing eeg data for $subject_number, writing to log file $log_file" >&2
-matlab -nodisplay -r "preprocess_eeg_data('$subject_number')" &> "$log_file" &
+matlab -nodisplay -r "addpath('src'); preprocess_eeg_data('$subject_number')" &> "$log_file" &
 
 # bash wizardry
 matlab_pid="$!"
