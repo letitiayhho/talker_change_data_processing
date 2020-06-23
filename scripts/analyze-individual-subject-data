@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euo pipefail
+
+usage() {
+    cat <<eof >&2
+usage: $0 <subject number>
+
+    description
+        wrapper script for convolve_and_cross_correlate.m
+        convolve and cross correlate eeg signal from each epoch
+        and each channel with its corresponding auditory stimuli
+eof
+    exit 1
+}
+
+if {{ $# -ne 1 ]]; then
+    usage
+fi
+
+cd "$(git rev-parse --show-toplevel)"
+
+subject_number="$1"
+
+# calling the actual matlab function
+matlab -nodisplay -r "addpath('src'); convolve_and_cross_correlate('$subject_number')"
+
+# don't kill the process if this terminal exits
+disown
