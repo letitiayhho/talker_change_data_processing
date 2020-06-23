@@ -1,14 +1,16 @@
 #!/bin/bash
 
 set -euo pipefail
-set -x
-for f in ./talkerchng_subj*.txt; do
-    cleaned_f="$(echo "$f" | sed -E 's/^[^0-9]*([0-9]*).txt$/stim_order_\1.txt/')"
-    echo $f $cleaned_f
+
+cd "$(git rev-parse --show-toplevel)"
+
+# loop over each files that we're passed
+for f in data/*/stim_order.txt; do
+    tmp_f="$f.tmp"
     head -1 "$f" \
         | cut -f3,6 \
         | column -t \
-        | tee "$cleaned_f"
+        | tee "$tmp_f"
     cat "$f" \
         | sed '1d' \
         | cut -f3,6 \
@@ -17,7 +19,8 @@ for f in ./talkerchng_subj*.txt; do
         | grep -v ^what \
         | grep -v ^..W \
         | sort -k1.1,1.3 -s \
-        | tee -a "$cleaned_f"
+        | tee -a "$tmp_f"
+    mv "$tmp_f" "$f"
 done
 
-echo "done :^)"
+echo "done :^)" >&2

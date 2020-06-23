@@ -1,13 +1,13 @@
-*.wav
-*.mat
-*.txt
-*.raw
-*.sfp
-*.set
-*.fdt
-*.log
+# vim: syntax=conf
+
+# swap files
+*~
+
+# MacOS files
 .DS_Store
-tmp
-originals
-conditions
-*_preprocessed
+
+# environment secrets
+.env
+
+# machine-specific installation files
+installer_input.txt

@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -euo pipefail
+
+REMOTE_SFP_DATA_PATH="/mnt/compellent/labs/hcnlab/Soph/Talker Change followup/Talker Change EEG/sfp files"
+REMOTE_EEG_DATA_PATH="/mnt/compellent/labs/hcnlab/Soph/Talker Change followup/Talker Change EEG/unprocessed raw export for further analysis in BESA 10-2017"
+
+# Run this from the root of the repository
+cd "$(git rev-parse --show-toplevel)"
+
+# Copy the *.sfp and *.raw files for all subjects that we have a "stim_order.txt" file for
+for subject_dir in data/*; do
+
+    if [ ! -d "$subject_dir" ] ; then
+        continue
+    fi
+
+    # Extract subject number from filename
+    subject_number="$(echo "$subject_dir" | sed -E 's,data/(...),\1,')"
+
+    if ! scp uchicago:"'$REMOTE_SFP_DATA_PATH/${subject_number}_${subject_number}_${subject_number}.sfp'" "$subject_dir/channel_locations.sfp"; then
+        echo "Couldn't find channel_locations.sfp for subject $subject_number, skipping ..." >&2
+        continue  # no point in downloading the *.raw file if we don't have the *.sfp one
+    fi
+
+    if ! scp uchicago:"'$REMOTE_EEG_DATA_PATH/${subject_number}_*.raw'" "$subject_dir/eeg_data.raw"; then
+        echo "Couldn't find eeg_data.raw for subject $subject_number, skipping ..." >&2
+    fi
+
+done
