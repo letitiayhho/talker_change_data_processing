@@ -1,4 +1,6 @@
-# talker_change_data_
+# talker_change_data_processing
+
+Running convolutions and cross correlations between the EEG data and audio signal of ending words of six types of sentence stems- high vs lowmeaning constraint, congruent vs incongruent, same vs different talker.
 
 ##### File management
 
