@@ -2,7 +2,7 @@
 
 Running convolutions and cross correlations between the EEG data and audio signal of ending words of six types of sentence stems- high vs lowmeaning constraint, congruent vs incongruent, same vs different talker.
 
-##### File management
+#### File management
 
 Make a directory for each subject named `<subject_number>` under `data/`. Place all raw, preprocessed and analyzed data into their corresponding subject folder. Name all raw eeg data files `eeg_data.raw`, name all channel location files `channel_locations.sfp`.
 
