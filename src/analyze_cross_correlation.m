@@ -1,5 +1,6 @@
-% function [] = analyze_cross_correlation()
-%     fprintf(1, 'Computes average cross-correlation between eeg signal and audio stimuli across all subjects, channels and trials for each condition')
+function [] = analyze_cross_correlation()
+% Computes average cross-correlation between eeg signal and audio 
+% stimuli across all subjects, channels and trials for each condition
 
     %% Main
     % Get global variables
@@ -9,13 +10,13 @@
     [split_conditions] = get_split_conditions();
 
     % Get subject means
-    [subject_means, subject_means_wide] = get_subject_means(split_conditions, number_of_conditions, number_of_subjects);
+    [subject_means] = get_subject_means(split_conditions, number_of_conditions, number_of_subjects);
 
     % Get summary statistics
-    [condition_means, condition_means_wide] = get_summary_statistics(subject_means_wide, subject_means, split_conditions)
+    [condition_means] = get_summary_statistics(subject_means);
 
     % Run a Three-Way ANOVA
-%     [t] = get_three_way_anova(subject_means)
+    [t] = get_three_way_anova(subject_means)
 
     %% Helper functions
         %% Load data of a single subject
@@ -35,9 +36,9 @@
 
         %% Split four-letter condition code up into individual arrays for each IV
         function [split_conditions] = get_split_conditions()
-            % G/S: general (i.e. low) vs specific (i.e. high) constraint sentence stems
-            % M/N: meaningful vs nonsense ending word in the context of the rest of the sentence
-            % S/T: same vs different talker in the ending word
+                % G/S: general (i.e. low) vs specific (i.e. high) constraint sentence stems
+                % M/N: meaningful vs nonsense ending word in the context of the rest of the sentence
+                % S/T: same vs different talker in the ending word
 
             % Conditions
             cross_correlations = load_single_subject_data(1);
@@ -60,7 +61,7 @@
         end
 
         %% Get subject means
-        function [subject_means, subject_means_wide] = get_subject_means(split_conditions, number_of_conditions, number_of_subjects)
+        function [subject_means] = get_subject_means(split_conditions, number_of_conditions, number_of_subjects)
             
             % Preallocate memory
             length = number_of_conditions * number_of_subjects;
@@ -94,9 +95,6 @@
                         'trial_means');
                     group_means.Properties.VariableNames{3} = 'group_means';
 
-                    % Create wide data table for summary statistics
-                    subject_means_wide(:, i) = group_means.group_means;
-
                     % Write values to iv arrays
                     constraint((j-1)*11+i) = split_conditions.constraint(j);
                     meaning((j-1)*11+i) = split_conditions.meaning(j);
@@ -110,25 +108,7 @@
         end
 
         %% Get summary statistics
-        function [condition_means, condition_means_wide] = get_summary_statistics(subject_means_wide, subject_means, split_conditions)
-                
-            % Version 1- verified correct
-            
-            % Normalize
-%             subject_means_wide = normalize(subject_means_wide)
-            
-            % Calculate means and sds
-            means = mean(subject_means_wide, 2);
-            sds = std(subject_means_wide, [], 2);
-
-            % Combine into a data table
-            condition_means_wide = [split_conditions, array2table(means), array2table(sds)];
-            
-            % Version 2
-
-            % Normalize
-%             subject_means.means = normalize(subject_means.means)
-            
+        function [condition_means] = get_summary_statistics(subject_means)
             % Compute average for each condition
             condition_means = grpstats(subject_means,...
                 {'constraint', 'meaning', 'talker'},...
@@ -149,6 +129,6 @@
                 'model',...
                 'interaction',...
                 'varnames',...
-                {'constraint','meaning','talker'})
+                {'constraint','meaning','talker'});
         end
-% end
+end
