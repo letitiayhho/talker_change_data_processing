@@ -1,5 +1,5 @@
-function [] = analyze_cross_correlation()
-    fprintf(1, 'Computes average cross-correlation between eeg signal and audio stimuli across all subjects, channels and trials for each condition')
+% function [] = analyze_cross_correlation()
+%     fprintf(1, 'Computes average cross-correlation between eeg signal and audio stimuli across all subjects, channels and trials for each condition')
 
     %% Main
     % Get global variables
@@ -9,13 +9,13 @@ function [] = analyze_cross_correlation()
     [split_conditions] = get_split_conditions();
 
     % Get subject means
-    [subject_means] = get_subject_means(number_of_conditions, number_of_subjects);
+    [subject_means, subject_means_wide] = get_subject_means(split_conditions, number_of_conditions, number_of_subjects);
 
     % Get summary statistics
-    [condition_means] = get_summary_statistics(subject_means, split_conditions);
+    [condition_means, condition_means_wide] = get_summary_statistics(subject_means_wide, subject_means, split_conditions)
 
     % Run a Three-Way ANOVA
-    [t] = get_three_way_anova(subject_means, split_conditions);
+%     [t] = get_three_way_anova(subject_means)
 
     %% Helper functions
         %% Load data of a single subject
@@ -30,7 +30,7 @@ function [] = analyze_cross_correlation()
         function [number_of_conditions, number_of_subjects] = get_global_vars()
             number_of_subjects = size(dir('data/**/cross_correlation_data_table.mat'), 1);
             cross_correlations = load_single_subject_data(1);
-            number_of_conditions = length(unique(cross_correlations.condition));
+            number_of_conditions = size(unique(cross_correlations.condition), 1);
         end
 
         %% Split four-letter condition code up into individual arrays for each IV
@@ -60,84 +60,95 @@ function [] = analyze_cross_correlation()
         end
 
         %% Get subject means
-        function [subject_means] = get_subject_means(number_of_conditions, number_of_subjects)
-
-            % Initialize subject means data table
-            subject_means = zeros(number_of_conditions, number_of_subjects); 
-
-            % Interate across subjects
-            for i = 1:number_of_subjects
-
-                % Load each file and turn into table for easy manipulation
-                cross_correlations = load_single_subject_data(i);
-                cross_correlations_expanded = table2array(cross_correlations.convolution);
-
-                % Get channel means within each subject
-                trials = size(cross_correlations, 1);
-                trial_means = zeros(trials, 1);
-                for k = 1:size(cross_correlations, 1)
-                    trial_means(k) = mean(cross_correlations_expanded(k, :));
-                end
-
-                % Get condition means within each subject
-                cross_correlations.trial_means = trial_means;
-                group_means = groupsummary(cross_correlations,...
-                    'condition',...
-                    'mean',...
-                    'trial_means');
-                group_means.Properties.VariableNames{3} = 'group_means';
-
-                % Write to subject means data table
-                subject_means(:, i) = group_means.group_means;
-                % maybe something like subject_means((i-1)*11+j) nah
-            end
-        end
-
-        %% Run a Three-Way ANOVA
-        function [t] = get_three_way_anova(subject_means, split_conditions)
-
+        function [subject_means, subject_means_wide] = get_subject_means(split_conditions, number_of_conditions, number_of_subjects)
+            
             % Preallocate memory
-            length = size(subject_means, 1) * size(subject_means, 2);
+            length = number_of_conditions * number_of_subjects;
             constraint = char(zeros(length, 1));
             meaning = char(zeros(length, 1));
             talker = char(zeros(length, 1));
             means = zeros(length, 1);
 
-            % Dumb patch to get data into desired format, interate over conditions
-            for i = 1:size(subject_means, 1)
+            % Interate across subjects
+            for i = 1:number_of_subjects
+                
+                % Iterate across conditions
+                for j = 1:number_of_conditions
 
-                % Iterate over subjects
-                for j = 1:size(subject_means, 2)
-                    constraint((i-1)*11+j) = split_conditions.constraint(i);
-                    meaning((i-1)*11+j) = split_conditions.meaning(i);
-                    talker((i-1)*11+j) = split_conditions.talker(i);
-                    means((i-1)*11+j) = subject_means(i, j);
+                    % Load each subject's data and turn into table for easy manipulation
+                    cross_correlations = load_single_subject_data(i);
+                    cross_correlations_expanded = table2array(cross_correlations.convolution);
+
+                    % Get channel means within each subject
+                    trials = size(cross_correlations, 1);
+                    trial_means = zeros(trials, 1);
+                    for k = 1:size(cross_correlations, 1)
+                        trial_means(k) = mean(cross_correlations_expanded(k, :));
+                    end
+
+                    % Get condition means within each subject
+                    cross_correlations.trial_means = trial_means;
+                    group_means = groupsummary(cross_correlations,...
+                        'condition',...
+                        'mean',...
+                        'trial_means');
+                    group_means.Properties.VariableNames{3} = 'group_means';
+
+                    % Create wide data table for summary statistics
+                    subject_means_wide(:, i) = group_means.group_means;
+
+                    % Write values to iv arrays
+                    constraint((j-1)*11+i) = split_conditions.constraint(j);
+                    meaning((j-1)*11+i) = split_conditions.meaning(j);
+                    talker((j-1)*11+i) = split_conditions.talker(j);
+                    means((j-1)*11+i) = group_means.group_means(j);
                 end
             end
+            
+            % Create data table
+            subject_means = table(constraint, meaning, talker, means);
+        end
 
-            % Write into table
-            % means_wider = table(constraint_wider, meaning_wider, talker_wider, means);
+        %% Get summary statistics
+        function [condition_means, condition_means_wide] = get_summary_statistics(subject_means_wide, subject_means, split_conditions)
+                
+            % Version 1- verified correct
+            
+            % Normalize
+%             subject_means_wide = normalize(subject_means_wide)
+            
+            % Calculate means and sds
+            means = mean(subject_means_wide, 2);
+            sds = std(subject_means_wide, [], 2);
+
+            % Combine into a data table
+            condition_means_wide = [split_conditions, array2table(means), array2table(sds)];
+            
+            % Version 2
+
+            % Normalize
+%             subject_means.means = normalize(subject_means.means)
+            
+            % Compute average for each condition
+            condition_means = grpstats(subject_means,...
+                {'constraint', 'meaning', 'talker'},...
+                {'mean', 'std'},...
+                'DataVars', 'means');
+        end
+        
+        %% Run a Three-Way ANOVA
+        function [t] = get_three_way_anova(subject_means)  
+            means = subject_means.means;
+            constraint = subject_means.constraint;
+            meaning = subject_means.meaning;
+            talker = subject_means.talker;
 
             % Compute Three-Way ANOVA
             t = anovan(means,...
-                {constraint, meaning, talker},...
+                {constraint meaning talker},...
                 'model',...
                 'interaction',...
                 'varnames',...
                 {'constraint','meaning','talker'})
         end
-
-        %% Get summary statistics
-        function [condition_means] = get_summary_statistics(subject_means, split_conditions)
-
-            % Normalize
-            normalized_subject_means = normalize(subject_means);
-
-            % Calculate means and sds
-            means = mean(normalized_subject_means, 2);
-            sds = std(normalized_subject_means, [], 2);
-
-            % Combine into a data table
-            condition_means = [split_conditions, array2table(means), array2table(sds)];
-        end
-end
+% end
