@@ -1,4 +1,4 @@
-function [] = analyze_cross_correlation(channels)
+function [] = analyze(method, channels)
 % Computes average cross-correlation between eeg signal and audio 
 % stimuli across all subjects, channels and trials for each condition
 
@@ -24,19 +24,26 @@ function [] = analyze_cross_correlation(channels)
 
     %% Helper functions
         %% Load data of a single subject
-        function [cross_correlations] = load_single_subject_data(i)
-            correlation_data_files = dir('data/**/cross_correlation_data_table.mat');
-            cross_correlation_data_table_full_path = fullfile(correlation_data_files(i).folder, 'cross_correlation_data_table.mat');
-            cross_correlations = load(cross_correlation_data_table_full_path);
-            cross_correlations = cross_correlations.('cross_correlation_data_table');
+        function [data] = load_single_subject_data(method, i)
+            if method == 'cross_correlation'
+                data_files = dir('data/**/cross_correlation_data_table.mat');
+                data_table_full_path = fullfile(data_files(i).folder, 'cross_correlation_data_table.mat');
+                data = load(data_table_full_path);
+                data = data.('cross_correlation_data_table');
+            elseif method == 'convolution'
+                data_files = dir('data/**/convolution_data_table.mat');
+                data_table_full_path = fullfile(data_files(i).folder, 'convolution_data_table.mat');
+                data = load(data_table_full_path);
+                data = data.('convolution_data_table');
+            end
         end
 
-        %% Get global variables
-        function [number_of_conditions, number_of_subjects] = get_global_vars()
-            number_of_subjects = size(dir('data/**/cross_correlation_data_table.mat'), 1);
-            cross_correlations = load_single_subject_data(1);
-            number_of_conditions = size(unique(cross_correlations.condition), 1);
-        end
+%         %% Get global variables
+%         function [number_of_conditions, number_of_subjects] = get_global_vars(method)
+%             number_of_subjects = size(dir('data/**/cross_correlation_data_table.mat'), 1);
+%             cross_correlations = load_single_subject_data(1);
+%             number_of_conditions = size(unique(cross_correlations.condition), 1);
+%         end
 
         %% Split four-letter condition code up into individual arrays for each IV
         function [split_conditions] = get_split_conditions()
@@ -45,8 +52,8 @@ function [] = analyze_cross_correlation(channels)
                 % S/T: same vs different talker in the ending word
 
             % Conditions
-            cross_correlations = load_single_subject_data(1);
-            conditions = unique(cross_correlations.condition);
+            data = load_single_subject_data(1);
+            conditions = unique(data.condition);
 
             % Preallocate memory for iv arrays
             constraint = char(zeros(8, 1));
@@ -65,7 +72,15 @@ function [] = analyze_cross_correlation(channels)
         end
 
         %% Get subject means
-        function [subject_means] = get_subject_means(channels, split_conditions, number_of_conditions, number_of_subjects)
+        function [subject_means] = get_subject_means(method, channels, split_conditions)
+            if method == 'cross_correlation'
+                number_of_subjects = size(dir('data/**/cross_correlation_data_table.mat'));
+                data = load_single_subject_data(1);
+                number_of_conditions = size(unique(data.condition), 1);
+            elseif method == 'convolution'
+                number_of_subjects = size(dir('data/**/convolution.mat'));
+                data = load_single_subject_data(1);
+                number_of_conditions = size(unique(data.condition), 1);
             
             % Preallocate memory
             length = number_of_conditions * number_of_subjects;
@@ -81,21 +96,21 @@ function [] = analyze_cross_correlation(channels)
                 for j = 1:number_of_conditions
 
                     % Load each subject's data and turn into table for easy manipulation
-                    cross_correlations = load_single_subject_data(i);
-                    cross_correlations_expanded = table2array(cross_correlations.convolution);
+                    data = load_single_subject_data(i);
+                    data_expanded = table2array(data.convolution);
 
-                    % Get means for specified channels
-                    trials = size(cross_correlations, 1);
+                    % Get means for each channel
+                    trials = size(data, 1);
                     trial_means = zeros(trials, 1);
-                    cross_correlations_of_specified_channels = cross_correlations_expanded(:, channels);
+                    data_of_one_channel = data_expanded(:, channels);
                     
                     for trial = 1:trials
-                        trial_means(trial) = mean(cross_correlations_of_specified_channels(trial, :));
+                        trial_means(trial) = mean(data_of_one_channel(trial, :));
                     end
 
                     % Get condition means within each subject
-                    cross_correlations.trial_means = trial_means;
-                    group_means = groupsummary(cross_correlations,...
+                    data.trial_means = trial_means;
+                    group_means = groupsummary(data,...
                         'condition',...
                         'mean',...
                         'trial_means');
