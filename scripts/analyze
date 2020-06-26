@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -euo pipefail
+
+usage() {
+    cat <<eof >&2
+usage: $0 <channel number> ...
+
+    description
+        this script enables running the analysis file from
+        the root directory in the repo, also simplifies the
+        function call
+eof
+    exit 1
+}
+
+if [[ $# == 0 ]]; then
+    usage
+fi
+
+cd "$(git rev-parse --show-toplevel)"
+
+if [[ $1 == 'anterior frontal' ]]; then
+    matlab -r "addpath('src'); analyze_cross_correlation([34; 38])"
+elif [[ $1 == 'central frontal' ]]; then
+    matlab -r "addpath('src'); analyze_cross_correlation([[40; 44; 45; 46])"
+elif [[ $1 == 'all' ]]; then
+    matlab -r "addpath('src'); analyze_cross_correlation([[40; 44; 45; 46])"
+
