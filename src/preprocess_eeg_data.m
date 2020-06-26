@@ -96,6 +96,7 @@ function [] = preprocess_eeg_data(subject_number)
         EEG = pop_iclabel(EEG, 'default');
         set_name = strcat(set_name, '_pru')
         EEG = name_and_save(EEG, set_name);
+        EEG = pop_saveset( EEG, 'filename', set_name);
 
         % 7.3 Save pruned epoch order
         epoch_order_pruned = EEG.event;

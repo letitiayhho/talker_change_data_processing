@@ -1,6 +1,10 @@
-function [] = analyze_cross_correlation()
+function [] = analyze_cross_correlation(channels)
 % Computes average cross-correlation between eeg signal and audio 
 % stimuli across all subjects, channels and trials for each condition
+
+% Passing channels into the function e.g. [34; 38] for anterior temporal 
+% channels, [40; 44; 45; 46] for central temporal channels. [:] for all
+% channels.
 
     %% Main
     % Get global variables
@@ -10,7 +14,7 @@ function [] = analyze_cross_correlation()
     [split_conditions] = get_split_conditions();
 
     % Get subject means
-    [subject_means] = get_subject_means(split_conditions, number_of_conditions, number_of_subjects);
+    [subject_means] = get_subject_means(channels, split_conditions, number_of_conditions, number_of_subjects);
 
     % Get summary statistics
     [condition_means] = get_summary_statistics(subject_means);
@@ -61,7 +65,7 @@ function [] = analyze_cross_correlation()
         end
 
         %% Get subject means
-        function [subject_means] = get_subject_means(split_conditions, number_of_conditions, number_of_subjects)
+        function [subject_means] = get_subject_means(channels, split_conditions, number_of_conditions, number_of_subjects)
             
             % Preallocate memory
             length = number_of_conditions * number_of_subjects;
@@ -80,11 +84,13 @@ function [] = analyze_cross_correlation()
                     cross_correlations = load_single_subject_data(i);
                     cross_correlations_expanded = table2array(cross_correlations.convolution);
 
-                    % Get channel means within each subject
+                    % Get means for specified channels
                     trials = size(cross_correlations, 1);
                     trial_means = zeros(trials, 1);
-                    for k = 1:size(cross_correlations, 1)
-                        trial_means(k) = mean(cross_correlations_expanded(k, :));
+                    cross_correlations_of_specified_channels = cross_correlations_expanded(:, channels);
+                    
+                    for trial = 1:trials
+                        trial_means(trial) = mean(cross_correlations_of_specified_channels(trial, :));
                     end
 
                     % Get condition means within each subject
