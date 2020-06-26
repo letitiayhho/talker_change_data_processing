@@ -7,14 +7,11 @@ function [] = analyze(method, channels)
 % channels.
 
     %% Main
-    % Get global variables
-    [number_of_conditions, number_of_subjects] = get_global_vars();
-
     % Split four-letter condition code up into individual arrays for each IV
     [split_conditions] = get_split_conditions();
 
     % Get subject means
-    [subject_means] = get_subject_means(channels, split_conditions, number_of_conditions, number_of_subjects);
+    [subject_means] = get_subject_means(method, channels, split_conditions);
 
     % Get summary statistics
     [condition_means] = get_summary_statistics(subject_means);
@@ -37,13 +34,6 @@ function [] = analyze(method, channels)
                 data = data.('convolution_data_table');
             end
         end
-
-%         %% Get global variables
-%         function [number_of_conditions, number_of_subjects] = get_global_vars(method)
-%             number_of_subjects = size(dir('data/**/cross_correlation_data_table.mat'), 1);
-%             cross_correlations = load_single_subject_data(1);
-%             number_of_conditions = size(unique(cross_correlations.condition), 1);
-%         end
 
         %% Split four-letter condition code up into individual arrays for each IV
         function [split_conditions] = get_split_conditions()
@@ -81,6 +71,7 @@ function [] = analyze(method, channels)
                 number_of_subjects = size(dir('data/**/convolution.mat'));
                 data = load_single_subject_data(1);
                 number_of_conditions = size(unique(data.condition), 1);
+            end
             
             % Preallocate memory
             length = number_of_conditions * number_of_subjects;
