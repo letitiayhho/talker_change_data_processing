@@ -3,32 +3,28 @@ set -e -u -o pipefail
 
 usage() {
     cat <<eof >&2
-usage: $0 <subject number>
+usage: $0 <subject number> ...
 
     description
 eof
     exit 1
 }
 
-if [[ $# -ne 1 ]]; then
+if [[ $# -eq 0 ]]; then
     usage
 fi
 
 cd "$(git rev-parse --show-toplevel)"
 
-subject_number="$1"
+#subject_number="$1"
 
-log_file="data/$subject_number/$(date +%s).log"
+for subject_number in "$@"; do
+    # create a log file
+    log_file="data/$subject_number/$(date +%s).log"
 
-echo "preprocessing eeg data for $subject_number, writing to log file $log_file" >&2
-matlab -nodisplay -r "addpath('src'); preprocess_eeg_data('$subject_number')" &> "$log_file" &
-
-# bash wizardry
-matlab_pid="$!"
-echo "to kill it, run $ kill $matlab_pid" >&2
-
-# print what matlab is doing from log file
-tail -f $log_file
-
-# don't kill the process if this terminal exits
-disown
+    # preprocess the data
+    echo "preprocessing eeg data for $subject_number, writing to log file $log_file" >&2
+    matlab -nodisplay -r "addpath('src'); preprocess_eeg_data('$subject_number')" 2>&1 \
+        | tee "$log_file"
+    echo "done >:)"
+done
