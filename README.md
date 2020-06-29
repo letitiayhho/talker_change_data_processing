@@ -16,7 +16,7 @@ As seen in this repo, everything in your working directory should be divided int
 
 All scripts should be run from the root directory of this repo, i.e. if you git cloned it then you should run everything from `talker-change-data-processing/`.
 
-**Download raw data from lab server**
+*Download raw data from lab server*
 
 For this you will need a CNET log in with access to the server. Check the APEX lab wiki to see how to get access approval. 
 
@@ -35,8 +35,13 @@ To run the preprocessing script with the wrapper bash script use `./scripts/prep
 ./scripts/preprocess-eeg-data <subject number> 
 ```
 
-To run the preprocessing manually with the matlab script from command line with `preprocess_eeg_data.m` run `matlab -nodisplay -r "preprocess_eeg_data('<subject number>','<eeg data file name.raw>','<channel location file name.sfp')"`. e.g. `matlab -nodisplay -r "preprocess_eeg_data('302','302_eeg_data.raw','302_channel_locations.sfp')"`.
+To run the preprocessing manually with the MATLAB script from command line use. The MATLAB script being used is `preprocess_eeg_data.m.
 
+```
+matlab -nodisplay -r "preprocess_eeg_data('<subject number>','<eeg data file name.raw>','<channel location file name.sfp')"
+# EXAMPLE
+#  matlab -nodisplay -r "preprocess_eeg_data('302','302_eeg_data.raw','302_channel_locations.sfp')"
+```
 
 #### Run analysis of individual subject data
 
