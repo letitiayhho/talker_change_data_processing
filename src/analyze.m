@@ -131,6 +131,11 @@ function [condition_means] = analyze(method, channels)
             
             % Combine iv arrays into data table for ANOVA
             subject_means = table(constraint, meaning, talker, means);
+            
+%             % Name groups in two-way table
+%             conditions = unique(data.condition);
+%             two_way_subject_means = array2table(two_way_subject_means);
+%             two_way_subject_means.Properties.VariableNames = conditions;
         end
 
         %% Get summary statistics
@@ -160,6 +165,11 @@ function [condition_means] = analyze(method, channels)
         %% Run Friedman's non-parametric test
         function [p] = get_friedmans(two_way_subject_means)
             number_of_subjects = size(two_way_subject_means, 1);
-            p = friedman(two_way_subject_means, number_of_subjects);
+            p = friedman(two_way_subject_means, 1);
         end
+    
+%         %% Permutation test
+%         function [p] = get_permutation_test(subject_means)
+%             subject_means
+%         end
 end

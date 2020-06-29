@@ -5,7 +5,7 @@ function [] = convolve_and_cross_correlate(subject_number)
     % Working from /Applications/eeglab2019/talker-change-data-processing
     addpath(fullfile('data', subject_number)) % add subject data to path
     addpath(fullfile('data/stim')) % add audio stimuli directory to path
-
+    
     % Import EEG data
     eeg_data = load('eeg_data');
     eeg_data = eeg_data.('eeg_data');
@@ -94,6 +94,18 @@ function [] = convolve_and_cross_correlate(subject_number)
     % Write data
     save(fullfile('data', subject_number, 'convolution_data_table'), 'convolution_data_table')
     save(fullfile('data', subject_number, 'cross_correlation_data_table'), 'cross_correlation_data_table')
+    
+    % Save convolution data as json
+%     convolution_json = jsonencode(convolution_data_table);
+%     fp = fopen(fullfile('data', subject_number, 'convolution.json'), 'w');
+%     fprintf(fp, convolution_json);
+%     fclose(fp);
+    
+    % Save cross cross_correlation data as json
+%     cross_correlation_json = jsonencode(cross_correlation_data_table);
+%     fp = fopen(fullfile('data', subject_number, 'cross_correlation.json'), 'w');
+%     fprintf(fp, cross_correlation_json);
+%     fclose(fp);
 
     %% Quit
     quit
