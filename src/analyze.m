@@ -10,9 +10,6 @@ function [condition_means] = analyze(method, channels)
 %           [40; 44; 45; 46] for central temporal channels
 %           [:] for all channels
 
-%     method = 'cross_correlation';
-%     channels = [34; 38];
-
     %% Main
     % Split four-letter condition code up into individual arrays for each IV
     [split_conditions] = get_split_conditions(method);
@@ -24,10 +21,10 @@ function [condition_means] = analyze(method, channels)
     [condition_means] = get_summary_statistics(subject_means)
 
     % Run a Three-Way ANOVA
-%     [t] = get_three_way_anova(subject_means)
+    [t] = get_three_way_anova(subject_means)
     
     % Run Friedman's non-parametric test
-%     [p] = get_friedmans(two_way_subject_means)
+    [p] = get_friedmans(two_way_subject_means)
 
     % Run a permutation test
 %     [p] = get_permutation_test(subject_means)
