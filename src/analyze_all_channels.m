@@ -7,7 +7,7 @@
 %   area - (char) 'anterior temporal', 'central temporal', 'premotor' or
 %   'all'
 
-method = 'convolution';
+method = 'cross_correlation';
 area = 'central temporal';
 
 %% Main
@@ -28,8 +28,15 @@ area = 'central temporal';
 [meaning_clusters] = get_clusters(pairwise_h, 'meaning');
 [talker_clusters] = get_clusters(pairwise_h, 'talker');
 
+% Get cluster-level statistics
+[constraint_cluster_stats, constraint_cluster_max] = get_cluster_stats(pairwise_t, constraint_clusters, 'constraint');
+[meaning_cluster_stats, meaning_cluster_max] = get_cluster_stats(pairwise_t, meaning_clusters, 'meaning');
+[talker_cluster_stats, talker_cluster_max] = get_cluster_stats(pairwise_t, talker_clusters, 'talker');
+
+% Conduct permutation test
+
 % Three-Way ANOVA, mostly compare with check previous script
-% [t] = get_three_way_anova(data, channels) 
+[t] = get_three_way_anova(data, channels) 
 
 %% Get channels
 function [channels] = get_channels(area)
@@ -58,7 +65,7 @@ function [data] = shape_data(method)
 
     % Iterate over subjects
     for i = 1:number_of_subjects
-        subject_data = load_single_subject_data(method, i);
+        [subject_data, subject_number] = load_single_subject_data(method, i);
 
         % Normalize data
 %         normalized_subject_data = table2array(removevars(subject_data, {'condition'}));
@@ -80,6 +87,10 @@ function [data] = shape_data(method)
         
         % Add condition codes to data table
         subject_means = [split_conditions, subject_means];
+        
+        % Add subject number to data table
+        subject_means.subject_number(:) = subject_number;
+        subject_means = movevars(subject_means, 'subject_number', 'Before', 'constraint');
 
         % Combine all subjects into one table
         data = [data; subject_means];
@@ -89,6 +100,7 @@ end
 %% Summary statistics
 function [summary_statistics] = get_summary_statistics(data, channels)
     % Get means for all channels
+    data = removevars(data, {'subject_number'});
     channel_means = grpstats(data, {'constraint', 'meaning', 'talker'});
     
     % Extract means for specified channels
@@ -166,7 +178,7 @@ function [clusters] = get_clusters(pairwise_h, condition);
             state = 'B';
             if length(cluster) > 1
                 cluster = {cluster};
-                clusters = [clusters, cluster]
+                clusters = [clusters, cluster];
                 cluster = [];
             else
                 cluster = [];
@@ -175,65 +187,29 @@ function [clusters] = get_clusters(pairwise_h, condition);
             state = 'B';
         end
     end
+end
 
-%         % Read current state
-%         current_value = pairwise_t(i)
-%         if current_value == 1
-%             state = 'A'
-%             % write
-%         elseif current_value == 0
-%             if strcmp(state, 'A')
-%                 state = 'C'
-%             if strcmp(state, 'C')
-%                 state = 'B'
-%                 % reset, commit if cluster >1
-%             elseif strcmp(state, 'B')
-%                 continue
-%             end
-%         end
-                
-%         % Output
-%         if strcmp(state, 'A')
-%             % write
-%         elseif strcmp(state, 'B')
-%             % reset/commit if cluster >1
-%         elseif strcmp(state, 'C')
-%             continue
-%         end
-%         % Read current state
-%         current_value = pairwise_t(i)
-%         if current_value == 1
-%             state = 'A'
-%         elseif current_value == 0
-%             if strcmp(state, 'C')
-%                 state = 'B'
-%             elseif strcmp(state, 'B')
-%                 continue
-%             end
-%         end
-%                 
-%         % Output
-%         if strcmp(state, 'A')
-%             % write
-%         elseif strcmp(state, 'B')
-%             % reset/commit if cluster >1
-%         elseif strcmp(state, 'C')
-%             continue
-%         end
-            
-%             cluster = [cluster, i];
-%         else
-%             if strcmp(state, 'C')
-%                 continue
-%             elseif strcmp(state, 'B')
-%                 clusters = [clusters, cluster]; % if longer than 1
-%                 cluster = [];
+%% Get cluster stats
+function [cluster_stats, cluster_max] = get_cluster_stats(pairwise_t, clusters, condition)
+    % Get t-values
+    t_values = table2array(pairwise_t(condition, :));
+    
+    % Get sum of the t-values within every cluster
+    cluster_stats = [];
+    for i = 1:size(clusters, 2)
+        cluster = cell2mat(clusters(1, i));
+        cluster_stat = mean(t_values(:, cluster));
+        cluster_stats = [cluster_stats, cluster_stat];
+    end
+    
+    % Get maximum value
+    cluster_max = max(cluster_stats);
 end
 
 %% Other helper functions
 
     %% Load data of a single subject
-    function [subject_data] = load_single_subject_data(method, i)
+    function [subject_data, subject_number] = load_single_subject_data(method, i)
         if ~strcmp(method, 'cross_correlation') && ~strcmp(method, 'convolution')
             % Throw an error if incorrect method is specified
             error('Invalid method, valid methods are ''convolution'' and ''cross_correlation''')
@@ -243,8 +219,11 @@ end
         file_names = strcat(method, '_data_table.mat');
         data_files = dir(fullfile('data/**/', file_names));
         data_table_full_path = fullfile(data_files(i).folder, file_names);
+        
+        % Get subject number
+        subject_number = string(extractAfter(data_files(i).folder, 'data/'));
 
-        % load data
+        % Load data
         subject_data = load(data_table_full_path);
         subject_data = subject_data.(strcat(method, '_data_table'));
 
