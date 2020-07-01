@@ -2,22 +2,22 @@ method = 'convolution';
 area = 'anterior temporal';
 
 [channels] = get_channels(area);
-[split_conditions] = get_split_conditions(method);
-[data] = shape_data(method, split_conditions);
-% [summary_statistics] = get_summary_statistics(data, channels)
+[data] = shape_data(method);
+% subject_means_2 = check_data(data, channels)
+[summary_statistics] = get_summary_statistics(data, channels)
 % [pairwise_h, pairwise_p, pairwise_t] = all_pairwise_t_tests(data);
-[t] = get_three_way_anova(data, channels) 
+% [t] = get_three_way_anova(data, channels) 
 
 %% Get channels
 function [channels] = get_channels(area)
     if strcmp(area, 'anterior temporal')
-        channels = [34, 38]
+        channels = [34, 38];
     elseif strcmp(area, 'central temporal')
-        channels = [40, 44, 45, 46]
+        channels = [40, 44, 45, 46];
     elseif strcmp(area, 'premotor')
-        channels = [29]
+        channels = [29];
     elseif strcmp(area, 'all')
-        channels = [1:128]
+        channels = [1:128];
         
     % Throw an error if the chosen area is not an ROI
     else
@@ -26,7 +26,7 @@ function [channels] = get_channels(area)
 end
 
 %% Shape data
-function [data] = shape_data(method, split_conditions)
+function [data] = shape_data(method)
     % Set general stats
     number_of_subjects = 11;
 
@@ -44,9 +44,13 @@ function [data] = shape_data(method, split_conditions)
         % Calculate means for each channel for each condition
         subject_means = grpstats(subject_data, 'condition');
 
-        % Clean the data table
-        subject_means = removevars(subject_means, {'condition', 'GroupCount'});
-        subject_means.Properties.VariableNames = string(1:128); 
+        % Split conditions up
+        conditions = subject_means.condition;
+        split_conditions = get_split_conditions(conditions);
+
+        % Clean up the data table, add labels
+        subject_means = removevars(subject_means, {'condition', 'GroupCount'}); 
+        subject_means.Properties.VariableNames = string(1:128);
         subject_means.Properties.RowNames = {};
         
         % Add condition codes to data table
@@ -55,6 +59,24 @@ function [data] = shape_data(method, split_conditions)
         % Combine all subjects into one table
         data = [data; subject_means];
     end
+end
+
+%% Check data (REMOVE LATER)
+function [subject_means_2] = check_data(data, channels)
+    % Get conditions
+    constraint = data.constraint;
+    meaning = data.meaning;
+    talker = data.talker;
+    
+    % CHECK
+    subject_means_2 = [];
+    for i = 1:length(channels)
+        subject_means_2 = [subject_means_2, data.(string(channels(i)))];
+    end
+    subject_means_2 = mean(subject_means_2, 2);
+    subject_means_2 = table(constraint, meaning, talker, subject_means_2);
+    subject_means_2 = sortrows(subject_means_2, {'constraint', 'meaning', 'talker'});
+    
 end
 
 %% Summary statistics
@@ -77,7 +99,7 @@ function [t] = get_three_way_anova(data, channels)
     for i = 1:length(channels)
         channel_data(:, i) = data.(string(channels(i)));
     end
-    means = mean(channel_data, 2)
+    means = mean(channel_data, 2);
     
     % Extract columns from data table into separate arrays for ANOVA
     constraint = data.constraint;
@@ -145,20 +167,11 @@ end
     end
 
     %% Split four-letter condition code up into individual arrays for each IV
-    function [split_conditions] = get_split_conditions(method)
+    function [split_conditions] = get_split_conditions(conditions)
             % G/S: general (i.e. low) vs specific (i.e. high) constraint sentence stems
             % M/N: meaningful vs nonsense ending word in the context of the rest of the sentence
             % S/T: same vs different talker in the ending word
-
-        % Conditions
-        data = load_single_subject_data(method, 1);
-        conditions = unique(data.condition);
-
-        % Preallocate memory for iv arrays
-        constraint = char(zeros(8, 1));
-        meaning = char(zeros(8, 1));
-        talker = char(zeros(8, 1));
-
+        
         for i = 1:size(conditions, 1)
             condition = char(conditions(i, :));
             constraint(i, :) = condition(1);
