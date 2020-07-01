@@ -6,7 +6,7 @@ area = 'anterior temporal';
 % subject_means_2 = check_data(data, channels)
 [summary_statistics] = get_summary_statistics(data, channels)
 % [pairwise_h, pairwise_p, pairwise_t] = all_pairwise_t_tests(data);
-% [t] = get_three_way_anova(data, channels) 
+[t] = get_three_way_anova(data, channels) 
 
 %% Get channels
 function [channels] = get_channels(area)
@@ -185,21 +185,21 @@ end
 
     %% Load data of a single subject
     function [subject_data] = load_single_subject_data(method, i)
-        if strcmp(method, 'cross_correlation') || strcmp(method, 'convolution')
-            % Get name of the data files and their directory
-            file_names = strcat(method, '_data_table.mat');
-            data_files = dir(fullfile('data/**/', file_names));
-            data_table_full_path = fullfile(data_files(i).folder, file_names);
-
-            % load data
-            subject_data = load(data_table_full_path);
-            subject_data = subject_data.(strcat(method, '_data_table'));
-
-            % Convert into easily accessible form
-            subject_data = [subject_data.condition, subject_data.convolution];
-            subject_data.Properties.VariableNames = ['condition', string(1:128)];
-        else
+        if ~strcmp(method, 'cross_correlation') && ~strcmp(method, 'convolution')
             % Throw an error if incorrect method is specified
             error('Invalid method, valid methods are ''convolution'' and ''cross_correlation''')
         end
+        
+        % Get name of the data files and their directory
+        file_names = strcat(method, '_data_table.mat');
+        data_files = dir(fullfile('data/**/', file_names));
+        data_table_full_path = fullfile(data_files(i).folder, file_names);
+
+        % load data
+        subject_data = load(data_table_full_path);
+        subject_data = subject_data.(strcat(method, '_data_table'));
+
+        % Convert into easily accessible form
+        subject_data = [subject_data.condition, subject_data.convolution];
+        subject_data.Properties.VariableNames = ['condition', string(1:128)];
     end

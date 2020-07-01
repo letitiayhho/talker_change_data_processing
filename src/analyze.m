@@ -12,19 +12,19 @@ function [] = analyze(method, area)
 
     %% Main
     % Get channels
-    [channels] = get_channels(area);
+    [channels] = get_channels(area)
     
     % Split four-letter condition code up into individual arrays for each IV
     [split_conditions] = get_split_conditions(method);
 
     % Get subject means
-    [subject_means, two_way_subject_means] = get_subject_means(method, split_conditions);
+    [subject_means, two_way_subject_means] = get_subject_means(method, split_conditions, channels);
 
     % Get summary statistics
-    [condition_means] = get_summary_statistics(subject_means)
+    [condition_means] = get_summary_statistics(subject_means);
 
     % Run a Three-Way ANOVA
-    [t] = get_three_way_anova(subject_means)
+%     [t] = get_three_way_anova(subject_means)
     
     % Run Friedman's non-parametric test
 %     [p] = get_friedmans(two_way_subject_means)
@@ -36,13 +36,13 @@ function [] = analyze(method, area)
     %% Get channels
     function [channels] = get_channels(area)
         if strcmp(area, 'anterior temporal')
-            channels = [34, 38]
+            channels = [34, 38];
         elseif strcmp(area, 'central temporal')
-            channels = [40, 44, 45, 46]
+            channels = [40, 44, 45, 46];
         elseif strcmp(area, 'premotor')
-            channels = [29]
+            channels = [29];
         elseif strcmp(area, 'all')
-            channels = [1:128]
+            channels = [1:128];
 
         % Throw an error if the chosen area is not an ROI
         else
@@ -90,7 +90,7 @@ function [] = analyze(method, area)
     end
 
     %% Get subject means
-    function [subject_means, two_way_subject_means] = get_subject_means(method, split_conditions)
+    function [subject_means, two_way_subject_means] = get_subject_means(method, split_conditions, channels)
         number_of_subjects = 11;
         number_of_conditions = 8;
 
