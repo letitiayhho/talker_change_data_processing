@@ -1,12 +1,35 @@
-method = 'convolution';
-area = 'anterior temporal';
+% DESCRIPTION:
+%   Computes average cross-correlation between eeg signal and audio 
+%   stimuli across all subjects, channels and trials for each condition
+%
+% INPUT:
+%   method - (char) 'cross_correlation' or 'convolution'
+%   area - (char) 'anterior temporal', 'central temporal', 'premotor' or
+%   'all'
 
+method = 'convolution';
+area = 'central temporal';
+
+%% Main
+% Get the channels corresponding to the specified cortical area
 [channels] = get_channels(area);
+
+% Shape data for further analysis
 [data] = shape_data(method);
-% subject_means_2 = check_data(data, channels)
-[summary_statistics] = get_summary_statistics(data, channels)
-% [pairwise_h, pairwise_p, pairwise_t] = all_pairwise_t_tests(data);
-[t] = get_three_way_anova(data, channels) 
+
+% Get means for specified channels
+[summary_statistics] = get_summary_statistics(data, channels);
+
+% Pairwise t-test between the levels of each condition 
+[pairwise_h, pairwise_p, pairwise_t] = all_pairwise_t_tests(data);
+
+% Get clusters based on pairwise t-test results
+[constraint_clusters] = get_clusters(pairwise_h, 'constraint');
+[meaning_clusters] = get_clusters(pairwise_h, 'meaning');
+[talker_clusters] = get_clusters(pairwise_h, 'talker');
+
+% Three-Way ANOVA, mostly compare with check previous script
+% [t] = get_three_way_anova(data, channels) 
 
 %% Get channels
 function [channels] = get_channels(area)
@@ -37,10 +60,12 @@ function [data] = shape_data(method)
     for i = 1:number_of_subjects
         subject_data = load_single_subject_data(method, i);
 
-        % Normalize
-%         normalized_values = atanh(table2array(removevars(subject_data, {'condition'})));
-%         subject_data = [subject_data.condition, array2table(normalized_values)];
-        
+        % Normalize data
+%         normalized_subject_data = table2array(removevars(subject_data, {'condition'}));
+%         normalized_subject_data = normalize(normalized_subject_data);
+%         subject_data = [subject_data.condition, array2table(normalized_subject_data)];
+%         subject_data.Properties.VariableNames = ['condition', string(1:128)];
+
         % Calculate means for each channel for each condition
         subject_means = grpstats(subject_data, 'condition');
 
@@ -59,24 +84,6 @@ function [data] = shape_data(method)
         % Combine all subjects into one table
         data = [data; subject_means];
     end
-end
-
-%% Check data (REMOVE LATER)
-function [subject_means_2] = check_data(data, channels)
-    % Get conditions
-    constraint = data.constraint;
-    meaning = data.meaning;
-    talker = data.talker;
-    
-    % CHECK
-    subject_means_2 = [];
-    for i = 1:length(channels)
-        subject_means_2 = [subject_means_2, data.(string(channels(i)))];
-    end
-    subject_means_2 = mean(subject_means_2, 2);
-    subject_means_2 = table(constraint, meaning, talker, subject_means_2);
-    subject_means_2 = sortrows(subject_means_2, {'constraint', 'meaning', 'talker'});
-    
 end
 
 %% Summary statistics
@@ -141,7 +148,128 @@ function [pairwise_h, pairwise_p, pairwise_t] = all_pairwise_t_tests(data)
     pairwise_t = array2table(pairwise_t, 'RowNames', conditions, 'VariableNames', string(1:128));
 end
 
+%% Get clusters
+function [clusters] = get_clusters(pairwise_h, condition);
+    % Get values and initialize state machine
+    values = table2array(pairwise_h(condition, :));
+    clusters = [];
+    cluster = [];
+    state = 'B';
+    
+    % Baby state machine
+    for i = 1:size(values, 2)
+        current_value = values(i);
+        if current_value == 1
+            state = 'A';
+            cluster = [cluster, i];
+        elseif current_value == 0 && strcmp(state, 'B')
+            state = 'B';
+            if length(cluster) > 1
+                cluster = {cluster};
+                clusters = [clusters, cluster]
+                cluster = [];
+            else
+                cluster = [];
+            end
+        elseif current_value == 0 && strcmp(state, 'A')
+            state = 'B';
+        end
+    end
+
+%         % Read current state
+%         current_value = pairwise_t(i)
+%         if current_value == 1
+%             state = 'A'
+%             % write
+%         elseif current_value == 0
+%             if strcmp(state, 'A')
+%                 state = 'C'
+%             if strcmp(state, 'C')
+%                 state = 'B'
+%                 % reset, commit if cluster >1
+%             elseif strcmp(state, 'B')
+%                 continue
+%             end
+%         end
+                
+%         % Output
+%         if strcmp(state, 'A')
+%             % write
+%         elseif strcmp(state, 'B')
+%             % reset/commit if cluster >1
+%         elseif strcmp(state, 'C')
+%             continue
+%         end
+%         % Read current state
+%         current_value = pairwise_t(i)
+%         if current_value == 1
+%             state = 'A'
+%         elseif current_value == 0
+%             if strcmp(state, 'C')
+%                 state = 'B'
+%             elseif strcmp(state, 'B')
+%                 continue
+%             end
+%         end
+%                 
+%         % Output
+%         if strcmp(state, 'A')
+%             % write
+%         elseif strcmp(state, 'B')
+%             % reset/commit if cluster >1
+%         elseif strcmp(state, 'C')
+%             continue
+%         end
+            
+%             cluster = [cluster, i];
+%         else
+%             if strcmp(state, 'C')
+%                 continue
+%             elseif strcmp(state, 'B')
+%                 clusters = [clusters, cluster]; % if longer than 1
+%                 cluster = [];
+end
+
 %% Other helper functions
+
+    %% Load data of a single subject
+    function [subject_data] = load_single_subject_data(method, i)
+        if ~strcmp(method, 'cross_correlation') && ~strcmp(method, 'convolution')
+            % Throw an error if incorrect method is specified
+            error('Invalid method, valid methods are ''convolution'' and ''cross_correlation''')
+        end
+        
+        % Get name of the data files and their directory
+        file_names = strcat(method, '_data_table.mat');
+        data_files = dir(fullfile('data/**/', file_names));
+        data_table_full_path = fullfile(data_files(i).folder, file_names);
+
+        % load data
+        subject_data = load(data_table_full_path);
+        subject_data = subject_data.(strcat(method, '_data_table'));
+
+        % Convert into easily accessible form
+        subject_data = [subject_data.condition, subject_data.convolution];
+        subject_data.Properties.VariableNames = ['condition', string(1:128)];
+    end
+
+    %% Split four-letter condition code up into individual arrays for each IV
+    function [split_conditions] = get_split_conditions(conditions)
+            % G/S: general (i.e. low) vs specific (i.e. high) constraint sentence stems
+            % M/N: meaningful vs nonsense ending word in the context of the rest of the sentence
+            % S/T: same vs different talker in the ending word
+        
+        for i = 1:size(conditions, 1)
+            condition = char(conditions(i, :));
+            constraint(i, :) = condition(1);
+            meaning(i, :) = condition(2);
+            talker(i, :) = condition(3);
+        end
+
+        % Create table of separated IVs
+        split_conditions = table(constraint, meaning, talker);
+    end
+    
     %% Function for conducting an individual t-test
     function [h, p, ci, stats] = one_t_test(data, channel, condition)
         % Get values into right class to be used as indexes
@@ -165,41 +293,21 @@ end
         % Conduct t-test
         [h, p, ci, stats] = ttest(x, y);
     end
+    
+    %% Check data
+    function [subject_means_2] = check_data(data, channels)
+        % Get conditions
+        constraint = data.constraint;
+        meaning = data.meaning;
+        talker = data.talker;
 
-    %% Split four-letter condition code up into individual arrays for each IV
-    function [split_conditions] = get_split_conditions(conditions)
-            % G/S: general (i.e. low) vs specific (i.e. high) constraint sentence stems
-            % M/N: meaningful vs nonsense ending word in the context of the rest of the sentence
-            % S/T: same vs different talker in the ending word
-        
-        for i = 1:size(conditions, 1)
-            condition = char(conditions(i, :));
-            constraint(i, :) = condition(1);
-            meaning(i, :) = condition(2);
-            talker(i, :) = condition(3);
+        % CHECK
+        subject_means_2 = [];
+        for i = 1:length(channels)
+            subject_means_2 = [subject_means_2, data.(string(channels(i)))];
         end
+        subject_means_2 = mean(subject_means_2, 2);
+        subject_means_2 = table(constraint, meaning, talker, subject_means_2);
+        subject_means_2 = sortrows(subject_means_2, {'constraint', 'meaning', 'talker'});
 
-        % Create table of separated IVs
-        split_conditions = table(constraint, meaning, talker);
-    end
-
-    %% Load data of a single subject
-    function [subject_data] = load_single_subject_data(method, i)
-        if ~strcmp(method, 'cross_correlation') && ~strcmp(method, 'convolution')
-            % Throw an error if incorrect method is specified
-            error('Invalid method, valid methods are ''convolution'' and ''cross_correlation''')
-        end
-        
-        % Get name of the data files and their directory
-        file_names = strcat(method, '_data_table.mat');
-        data_files = dir(fullfile('data/**/', file_names));
-        data_table_full_path = fullfile(data_files(i).folder, file_names);
-
-        % load data
-        subject_data = load(data_table_full_path);
-        subject_data = subject_data.(strcat(method, '_data_table'));
-
-        % Convert into easily accessible form
-        subject_data = [subject_data.condition, subject_data.convolution];
-        subject_data.Properties.VariableNames = ['condition', string(1:128)];
     end
