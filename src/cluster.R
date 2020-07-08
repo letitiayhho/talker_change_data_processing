@@ -1,9 +1,8 @@
-get_clusters = function(distance = 3.5, alpha = 0.05, condition, n = 10, min_cluster_size = 2) {
-  library(dplyr)
+get_clusters = function(condition, method = "euclidean", distance = 3.5, alpha = 0.05, n = 11, min_cluster_size = 2) {
+  ## Usage
   
-  ## Setting global variables
-  t_threshold = qt(1-alpha/1, df = n-1)
-  
+  ## Main  
+
   ## Load data
   setwd("/Applications/eeglab2019/talker-change-data-processing")
   t_values_raw = read.csv("data/cluster_t_values.csv")
@@ -11,11 +10,11 @@ get_clusters = function(distance = 3.5, alpha = 0.05, condition, n = 10, min_clu
     .[startsWith(as.character(.$V1), "E"), ]
   
   ## Get t_values
-  if (condition == 'constraint'){
+  if (condition == "constraint"){
     t_values = t_values_raw[1,]
-  } else if (condition == 'meaning') {
+  } else if (condition == "meaning") {
     t_values = t_values_raw[2,]
-  } else if (condition == 'talker') {
+  } else if (condition == "talker") {
     t_values = t_values_raw[3,]
   }
   
@@ -27,9 +26,10 @@ get_clusters = function(distance = 3.5, alpha = 0.05, condition, n = 10, min_clu
   # sort_distances = as.vector(distances) %>%
   #   .[!duplicated(.)] %>%
   #   sort() %>%
-  #   hist(., breaks = 50, main = 'Histogram of pairwise distances')
+  #   hist(., breaks = 50, main = "Histogram of pairwise distances")
 
   ## Get clusters
+  t_threshold = qt(1-(alpha/2)/1, df = n-1)
   above_threshold_neighbors = vector(mode = "list", length = nrow(distances))
   for (i in 1:nrow(distances)) {
     neighboring_channels = which(distances[i, ] < distance)
@@ -82,6 +82,9 @@ get_clusters = function(distance = 3.5, alpha = 0.05, condition, n = 10, min_clu
   }
   # Remove NAs
   clusters = clusters[!is.na(clusters)]
+  
+  # Return
+  return(clusters)
 }
 
 
