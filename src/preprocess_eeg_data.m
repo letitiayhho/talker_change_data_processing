@@ -7,7 +7,7 @@ function [] = preprocess_eeg_data(subject_number)
     fprintf(1, '\n\n1. Opening EEGLAB\n\n\n')
     addpath('/Applications/eeglab2019')
     [ALLEEG EEG CURRENTSET ALLCOM] = eeglab;
-    EEG.etc.eeglabvers = '2019.1'; % this tracks which version of EEGLAB is being used, you may ignore it
+    EEG.etc.eeglabvers = '2019.1'; % tracks which version of EEGLAB is being used
 
     % Set error breakpoint
     dbstop if error
@@ -87,7 +87,6 @@ function [] = preprocess_eeg_data(subject_number)
         % Reject bad trials (do not remove components, rank will decrease)
         pop_eegplot( EEG, 1, 1, 1);
 
-
         % Re-run ICA
 
         % 7.2 Reject components with ICLabel
@@ -107,7 +106,7 @@ function [] = preprocess_eeg_data(subject_number)
     eeg_data = EEG.data;
     save('eeg_data', 'eeg_data');
 
-    return
+    quit
 
     %% Helper functions
     function [ EEG ] = name_and_save(EEG, set_name)
