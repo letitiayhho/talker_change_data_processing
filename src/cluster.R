@@ -1,5 +1,4 @@
 get_clusters <- function(condition,
-                         subject_number,
                          method = "euclidean",
                          distance = 3.5,
                          alpha = 0.05,
@@ -40,8 +39,8 @@ get_clusters <- function(condition,
   }
   
   
-  get_coordinates <- function(subject_number) {
-    coordinates_fp <- file.path("/Applications/eeglab2019/talker-change-data-processing/data", subject_number, "channel_locations.sfp")
+  get_coordinates <- function() {
+    coordinates_fp <- file.path("/Applications/eeglab2019/talker-change-data-processing/data/aggregate/average_channel_locations.sfp")
     coordinates_raw <- read.delim(coordinates_fp, header = FALSE, sep = "", dec = ".") %>%
       .[startsWith(as.character(.$V1), "E"), ]
     coordinates <- cbind(coordinates_raw$V2, coordinates_raw$V3, coordinates_raw$V4)
@@ -139,7 +138,7 @@ get_clusters <- function(condition,
   
   ## MAIN:
   t_values <- get_t_values(condition)
-  coordinates <- get_coordinates(subject_number)
+  coordinates <- get_coordinates()
   distances <- get_pairwise_distances(coordinates)
   get_histogram_of_pairwise_distances(distances)
   clusters <- actual_get_clusters(distance, alpha, n, min_cluster_size, distances, t_values)
