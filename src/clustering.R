@@ -1,17 +1,18 @@
 get_clusters <- function(condition,
-                         method = "euclidean",
+                         sliding_method = "cross_correlation",
+                         clustering_method = "euclidean",
                          distance = 3.5,
                          alpha = 0.05,
                          n = 11,
                          min_cluster_size = 2) {
   
-  
-  ## DSECRIPTION:
+  ## DESCRIPTION:
   ##  Identify clusters of spatially contiguous channels that show condition-dependent verdicality
   ## 
   ## INPUT:
   ##  condition (string) - "constraint", "meaning", or "talker"
-  ##  method (string) - "euclidean", "rank", or "density" (optional, default = "euclidean")
+  ##  sliding_method (string) - "cross_correlation", "convolution" (optional, default = "cross_correlation")
+  ##  clustering_method (string) - "euclidean", "rank", or "density" (optional, default = "euclidean")
   ##  distance (double) - distance between neighboring electrodes, see histogram function (optional, default = 3.5)
   ##  alpha (double) - significance level at which to include channels in clusters (optional, default = 0.05)
   ##  n (int) - sample size (optional, default = 11)
@@ -22,8 +23,10 @@ get_clusters <- function(condition,
   
   
   ## FUNCTIONS:
-  get_t_values <- function(condition) {
-    t_values_raw <- read.csv("/Applications/eeglab2019/talker-change-data-processing/data/cluster_t_values.csv")
+  get_t_values <- function(condition, sliding_method) {
+    t_values_fn <- paste(sliding_method, "_t_values.csv", sep = "")
+    t_values_fp <- file.path("/Applications/eeglab2019/talker-change-data-processing/data/aggregate", t_values_fn)
+    t_values_raw <- read.csv(t_values_fp)
     
     # Get t_values for specified condition
     if (condition == "constraint"){
@@ -69,7 +72,7 @@ get_clusters <- function(condition,
   actual_get_clusters <- function(distance, alpha, n, min_cluster_size, distances, t_values) {
     
     # Determine threshold for t-values based on specified alpha significance level
-    t_threshold <- qt(1-(alpha/2)/1, df = n-1)
+    t_threshold <- qt(1-(alpha/2), df = n-1)
     
     # Identify neighboring channels of each electrode with t-values above threshold
     above_threshold_neighbors <- vector(mode = "list", length = nrow(distances))
@@ -88,8 +91,8 @@ get_clusters <- function(condition,
     clusters <- vector(mode = "list")
     for (i in 1:length(above_threshold_neighbors)) {
       
-      # Continue if neighbors is empty
-      if (length(above_threshold_neighbors[[i]]) == 0) {
+      # Continue if neighbors is one channel or fewer
+      if (length(above_threshold_neighbors[[i]]) <= 1) {
         next
       }
       
@@ -99,16 +102,23 @@ get_clusters <- function(condition,
         clusters = list(c(cluster))
       }
       
+      print('<------ new neighbor ------>') # CHECK
+      
       # Loop through existing clusters to identify cluster with overlap
       for (j in 1:length(clusters)) {
         
         # Add each neighbor to each cluster and see if there are duplicates
         comparison = c(clusters[[j]], above_threshold_neighbors[[i]])
         
+        print('neighbors:')
+        print(above_threshold_neighbors[[i]]) # CHECK
+        print('current cluster:')
+        print(clusters[[j]]) # CHECK
+        
         # If there are duplicates keep the cluster merged and remove duplicates
         if (TRUE %in% duplicated(comparison)) {
           cluster = unique(comparison)
-          clusters[[j]] <- NA
+          # clusters[[j]] <- NA
           break
           
           # If there are no duplicates create a new cluster with the neighbors
@@ -116,6 +126,9 @@ get_clusters <- function(condition,
           cluster <- above_threshold_neighbors[[i]]
         }
       }
+      
+      print('adding cluster:')
+      print(cluster)
       
       # Add cluster to list of clusters
       clusters <- c(clusters, list(cluster))
@@ -129,7 +142,10 @@ get_clusters <- function(condition,
     }
     
     # Remove NAs
-    clusters <- clusters[!is.na(clusters)]
+    # clusters <- clusters[!is.na(clusters)]
+    
+    # Turn into matrix
+    clusters <- as.matrix(clusters)
     
     # Return
     return(clusters)
@@ -137,11 +153,18 @@ get_clusters <- function(condition,
   
   
   ## MAIN:
-  t_values <- get_t_values(condition)
+  t_values <- get_t_values(condition, sliding_method)
   coordinates <- get_coordinates()
   distances <- get_pairwise_distances(coordinates)
   get_histogram_of_pairwise_distances(distances)
   clusters <- actual_get_clusters(distance, alpha, n, min_cluster_size, distances, t_values)
+
+  ## SAVE:
+  file_name <- paste(sliding_method, "_", condition, "_clusters.txt", sep = "")
+  for (i in 1:length(clusters)) {
+    write(clusters[[i]], file = file_name, append = TRUE, ncolumns = 128)
+  }
+
   return(clusters)
 }
 
