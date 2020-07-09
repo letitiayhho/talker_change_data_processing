@@ -23,16 +23,10 @@ get_clusters <- function(condition,
   
   
   ## FUNCTIONS:
-  get_data <- function(condition, subject_number) {
-
-    # Load data
-    setwd("/Applications/eeglab2019/talker-change-data-processing")
-    t_values_raw <- read.csv("data/cluster_t_values.csv")
-    coordinates_fp <- file.path("data", subject_number, "channel_locations.sfp")
-    coordinates_raw <- read.delim(coordinates_fp, header = FALSE, sep = "", dec = ".") %>%
-      .[startsWith(as.character(.$V1), "E"), ]
+  get_t_values <- function(condition) {
+    t_values_raw <- read.csv("/Applications/eeglab2019/talker-change-data-processing/data/cluster_t_values.csv")
     
-    # Get t_values
+    # Get t_values for specified condition
     if (condition == "constraint"){
       t_values = t_values_raw[1,]
     } else if (condition == "meaning") {
@@ -41,16 +35,19 @@ get_clusters <- function(condition,
       t_values = t_values_raw[3,]
     }
     
-    # Get pairwise Euclidean distance
+    # Return
+    return(t_values)
+  }
+  
+  
+  get_coordinates <- function(subject_number) {
+    coordinates_fp <- file.path("/Applications/eeglab2019/talker-change-data-processing/data", subject_number, "channel_locations.sfp")
+    coordinates_raw <- read.delim(coordinates_fp, header = FALSE, sep = "", dec = ".") %>%
+      .[startsWith(as.character(.$V1), "E"), ]
     coordinates <- cbind(coordinates_raw$V2, coordinates_raw$V3, coordinates_raw$V4)
-    distances <- as.matrix(dist(coordinates))
-    
-    # Write output named list
-    data = list(t_values = t_values,
-                coordinates = coordinates)
     
     # Return
-    return(data)
+    return(coordinates)
   }
   
   
@@ -72,12 +69,17 @@ get_clusters <- function(condition,
 
   actual_get_clusters <- function(distance, alpha, n, min_cluster_size, distances, t_values) {
     
-    # Find neighboring channels that are above alpha threshold
+    # Determine threshold for t-values based on specified alpha significance level
     t_threshold <- qt(1-(alpha/2)/1, df = n-1)
-    above_threshold_neighbors <- vector(mode = "list", length = nrow(distances))
     
+    # Identify neighboring channels of each electrode with t-values above threshold
+    above_threshold_neighbors <- vector(mode = "list", length = nrow(distances))
     for (i in 1:nrow(distances)) {
+      
+      # Identify neighboring channels within the specified radius
       neighboring_channels = which(distances[i, ] < distance)
+      
+      # Subsetting the channels
       above_threshold_neighbors_indexes = which(abs(t_values[neighboring_channels]) > t_threshold)
       above_threshold_neighbors_for_each_channel = list(neighboring_channels[above_threshold_neighbors_indexes])
       above_threshold_neighbors[i] = above_threshold_neighbors_for_each_channel
@@ -134,11 +136,13 @@ get_clusters <- function(condition,
     return(clusters)
   }
   
+  
   ## MAIN:
-  data <- get_data(condition, subject_number)
-  distances <- get_pairwise_distances(data$coordinates)
+  t_values <- get_t_values(condition)
+  coordinates <- get_coordinates(subject_number)
+  distances <- get_pairwise_distances(coordinates)
   get_histogram_of_pairwise_distances(distances)
-  clusters <- actual_get_clusters(distance, alpha, n, min_cluster_size, distances, data$t_values)
+  clusters <- actual_get_clusters(distance, alpha, n, min_cluster_size, distances, t_values)
   return(clusters)
 }
 
