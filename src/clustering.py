@@ -1,5 +1,6 @@
 from heapq import heappush
 from typing import Callable, Dict, IO, List, Set, Sequence, Tuple, TypeVar
+from scipy import stats
 
 import argparse
 import numpy as np  # type: ignore
@@ -52,7 +53,7 @@ NearestNeighbors = List[Tuple[Distance, RowIndex]]
 
 
 def calc_nearest_neighbors(
-    df: np.ndarray, n_neighbors: int
+    df: np.ndarray, k_neighbors: int
 ) -> Dict[RowIndex, NearestNeighbors]:
     all_nearest_neighbors: Dict[RowIndex, NearestNeighbors] = {}
     for this_index, this_row in enumerate(df):
@@ -62,8 +63,8 @@ def calc_nearest_neighbors(
                 continue
             d = dist(this_row, neighbor_row)
             heappush(nearest_neighbors, (d, neighbor_index))
-            if len(nearest_neighbors) > n_neighbors:
-                nearest_neighbors = nearest_neighbors[:n_neighbors]
+            if len(nearest_neighbors) > k_neighbors:
+                nearest_neighbors = nearest_neighbors[:k_neighbors]
         all_nearest_neighbors[this_index] = nearest_neighbors
     return all_nearest_neighbors
 
@@ -72,15 +73,17 @@ def calc_significant_neighbors(
     df: np.ndarray,
     nearest_neighbors: Dict[RowIndex, NearestNeighbors],
     col: int,
-    min_significance: float,
+    alpha: float,
+    n: int
 ) -> Dict[RowIndex, Sequence[RowIndex]]:
     all_significant_neighbors: Dict[RowIndex, Sequence[RowIndex]] = {}
+    t_threshold = stats.t.ppf(1-(alpha/2), n-1)
     for i, row in enumerate(df):
-        is_significant = row[col] >= min_significance
+        is_significant = row[col] >= t_threshold
         if not is_significant:
             continue
         significant_neighbors = [
-            j for _, j in nearest_neighbors[i] if df[j][col] >= min_significance
+            j for _, j in nearest_neighbors[i] if df[j][col] >= t_threshold
         ]
         if not significant_neighbors:
             continue
@@ -103,15 +106,15 @@ def calc_clusters(
 
 
 def main(
-    t_values_fp: IO[str], coords_fp: IO[str], n_neighbors: int, min_significance: float
+    t_values_fp: IO[str], coords_fp: IO[str], k_neighbors: int, alpha: float, n_subjects: int
 ) -> None:
     df = load_data(t_values_fp, coords_fp)
-    nearest_neighbors = calc_nearest_neighbors(df, n_neighbors)
+    nearest_neighbors = calc_nearest_neighbors(df, k_neighbors)
 
     t_value_columns = (1, 2, 3)
     for col in t_value_columns:
         all_significant_neighbors = calc_significant_neighbors(
-            df, nearest_neighbors, col, min_significance
+            df, nearest_neighbors, col, alpha, n_subjects
         )
         print(calc_clusters(all_significant_neighbors))
 
@@ -120,8 +123,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("t_values_fp", type=argparse.FileType("r"))
     parser.add_argument("coords_fp", type=argparse.FileType("r"))
-    parser.add_argument("--n-neighbors", type=int, required=True)
-    parser.add_argument("--min-significance", type=float, required=True)
+    parser.add_argument("--k-neighbors", type=int, default=8)
+    parser.add_argument("--alpha", type=float, default=0.05)
+    parser.add_argument("--n-subjects", type=int, default=11)
     args = parser.parse_args()
 
-    main(args.t_values_fp, args.coords_fp, args.n_neighbors, args.min_significance)
+    main(args.t_values_fp, args.coords_fp, args.k_neighbors, args.alpha, args.n_subjects)
