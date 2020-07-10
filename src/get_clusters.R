@@ -1,4 +1,5 @@
-get_clusters <- function(condition,
+get_clusters <- function(t_values,
+                         condition,
                          sliding_method = "cross_correlation",
                          clustering_method = "euclidean",
                          max_distance = 3.5,
@@ -20,37 +21,9 @@ get_clusters <- function(condition,
   ##
   ## OUTPUT:
   ##  (list) - list of lists containing the numbers of channels in each cluster
-  
-
-  # ## PARAMETERS (TEMP):
-  # condition = "talker"
-  # sliding_method = "cross_correlation"
-  # clustering_method = "euclidean"
-  # max_distance = 3.5
-  # alpha = 0.05
-  # n = 11
-  # min_cluster_size = 2
 
   
   ## FUNCTIONS:
-  get_t_values <- function(condition, sliding_method) {
-    t_values_fn <- paste(sliding_method, "_t_values.csv", sep = "")
-    t_values_fp <- file.path("/Applications/eeglab2019/talker-change-data-processing/data/aggregate", t_values_fn)
-    t_values_raw <- read.csv(t_values_fp)
-    
-    # Get t_values for specified condition
-    if (condition == "constraint"){
-      t_values = t_values_raw[1,]
-    } else if (condition == "meaning") {
-      t_values = t_values_raw[2,]
-    } else if (condition == "talker") {
-      t_values = t_values_raw[3,]
-    }
-    
-    # Return
-    return(t_values)
-  }
-  
   
   get_coordinates <- function() {
     coordinates_fp <- file.path("/Applications/eeglab2019/talker-change-data-processing/data/aggregate/average_channel_locations.sfp")
@@ -79,7 +52,7 @@ get_clusters <- function(condition,
   }
   
   
-  get_neighboring_clusters <- function(max_distance, alpha, n, distances) {
+  get_neighboring_clusters <- function(t_values, max_distance, alpha, n, distances) {
     # Determine threshold for t-values based on specified alpha level
     t_threshold <- qt(1-(alpha/2), df = n-1)
     
@@ -153,20 +126,22 @@ get_clusters <- function(condition,
 
   
     ## MAIN:
-    t_values <- get_t_values(condition, sliding_method)
     coordinates <- get_coordinates()
     distances <- get_pairwise_distances(coordinates)
-    # get_histogram_of_pairwise_distances(distances)
-    neighboring_clusters <- get_neighboring_clusters(max_distance, alpha, n, distances)
+    neighboring_clusters <- get_neighboring_clusters(t_values, max_distance, alpha, n, distances)
     clusters <- get_actual_clusters(neighboring_clusters)
     
     
-    # SAVE:
+    ## SAVE:
     file_name <- paste(sliding_method, "_", condition, "_clusters.txt", sep = "")
-    file.remove(file_name)
+    if (file.exists(file_name)) {file.remove(file_name)}
     for (i in 1:length(clusters)) {
       write(clusters[[i]], file = file_name, append = TRUE, ncolumns = 128)
     }
+    
+    
+    ## RETURN:
+    return(clusters)
   }
 
 
