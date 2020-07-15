@@ -1,4 +1,4 @@
-permutation_test_on_clusters <- function(condition, sliding_method = "cross_correlation") {
+get_permutation_test_on_clusters <- function(condition, sliding_method = "cross_correlation") {
   
   ## DESCRIPTION:
   ##  Conduct a permutation test on the clusters
