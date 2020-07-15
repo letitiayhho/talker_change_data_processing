@@ -106,16 +106,13 @@ get_mni_coordinates <- function(coordinates_file_name = "average_channel_locatio
   
   ## SAVE:
   if (save_output == TRUE) {
-    ## SAVE to read into eeglab, x-coordinates flipped:
-    save_file_fp <- file.path("/Applications/eeglab2019/talker-change-data-processing/data/aggregate", "eeglab_mni_coordinates.txt")
+    ## SAVE to read into eeglab, x-coordinates flipped
+    save_file_fp <- file.path("/Applications/eeglab2019/talker-change-data-processing/data/aggregate", save_file)
     write.table(coordinates, file = save_file_fp, append = FALSE, sep = "\t", col.names = FALSE, quote = FALSE)
-    
-    ## SAVE actual mni coordinates, x-coordinates not flipped:
-    coordinates_formatted <- coordinates[c("channels", "x", "y", "z")]
-    coordinates_formatted$x <- coordinates_formatted$x * -1
-    write.table(format(coordinates_formatted, digits = 2), file = "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/actual_mni_coordinates.txt", append = FALSE, sep = "\t", col.names = TRUE, quote = FALSE)
   }
-  
-  # Return
+
+  # RETURN:
+  coordinates$x <- coordinates$x * -1 # flip x-coordinates back
   return(coordinates)
+
 }
