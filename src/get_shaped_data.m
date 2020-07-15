@@ -1,6 +1,6 @@
-function [] = analyze(method, area)
+function [] = get_shaped_data(method)
     % DESCRIPTION:
-    %   Computes average cross-correlation between eeg signal and audio 
+    %   Computes cross-correlations or convolutions between eeg signal and audio 
     %   stimuli across all subjects, channels and trials for each condition
     %
     % INPUT:
@@ -10,51 +10,11 @@ function [] = analyze(method, area)
 
 
     %% Main
-    % Get the channels corresponding to the specified cortical area
-    [channels] = get_channels(area);
-
-    % Shape data for further analysis
     [data] = shape_data(method);
-
-    % Get means for specified channels
-    [summary_statistics] = get_summary_statistics(data, channels);
-
-    % Pairwise t-test between the levels of each condition 
-    [pairwise_h, pairwise_p, pairwise_t] = all_pairwise_t_tests(data);
-
-    % % Get clusters based on pairwise t-test results
-    % [constraint_clusters] = get_clusters(pairwise_h, 'constraint');
-    % [meaning_clusters] = get_clusters(pairwise_h, 'meaning');
-    % [talker_clusters] = get_clusters(pairwise_h, 'talker');
-    % 
-    % % Get cluster-level statistics
-    % [constraint_cluster_stats, constraint_cluster_max] = get_cluster_stats(pairwise_t, constraint_clusters, 'constraint');
-    % [meaning_cluster_stats, meaning_cluster_max] = get_cluster_stats(pairwise_t, meaning_clusters, 'meaning');
-    % [talker_cluster_stats, talker_cluster_max] = get_cluster_stats(pairwise_t, talker_clusters, 'talker');
 
     % Export data
     writetable(data, strcat('data/aggregate/', method, '_data.csv'));
     writetable(pairwise_t, strcat('data/aggregate/', method, '_t_values.csv'));
-
-    % % Three-Way ANOVA, mostly compare with check previous script
-    % [t] = get_three_way_anova(data, channels) 
-
-    %% Get channels
-    function [channels] = get_channels(area)
-        if strcmp(area, 'anterior temporal')
-            channels = [34, 38];
-        elseif strcmp(area, 'central temporal')
-            channels = [40, 44, 45, 46];
-        elseif strcmp(area, 'premotor')
-            channels = [29];
-        elseif strcmp(area, 'all')
-            channels = [1:128];
-
-        % Throw an error if the chosen area is not an ROI
-        else
-            error('Invalid cortical area, valid options are ''anterior temporal'', ''central temporal'', ''premotor'', and ''all''')
-        end
-    end
 
     %% Shape data
     function [data] = shape_data(method)
@@ -98,43 +58,6 @@ function [] = analyze(method, area)
         end
     end
 
-    %% Summary statistics
-    function [summary_statistics] = get_summary_statistics(data, channels)
-        % Get means for all channels
-        data = removevars(data, {'subject_number'});
-        channel_means = grpstats(data, {'constraint', 'meaning', 'talker'});
-
-        % Extract means for specified channels
-        summary_statistics = table();
-        for i = 1:length(channels)
-            channel = strcat('mean_', string(channels(i)));
-            summary_statistics = [summary_statistics, channel_means(:, channel)];
-        end
-    end
-
-    %% Run a Three-Way ANOVA
-    function [t] = get_three_way_anova(data, channels) 
-        % Average over channels in the specified area 
-        channel_data = zeros(88, length(channels));
-        for i = 1:length(channels)
-            channel_data(:, i) = data.(string(channels(i)));
-        end
-        means = mean(channel_data, 2);
-
-        % Extract columns from data table into separate arrays for ANOVA
-        constraint = data.constraint;
-        meaning = data.meaning;
-        talker = data.talker;
-
-        % Compute Three-Way ANOVA
-        t = anovan(means,...
-            {constraint meaning talker},...
-            'model',...
-            'interaction',...
-            'varnames',...
-            {'constraint','meaning','talker'});
-    end
-
     %% Conduct all pairwise t-tests
     function [pairwise_h, pairwise_p, pairwise_t] = all_pairwise_t_tests(data)
 
@@ -159,52 +82,6 @@ function [] = analyze(method, area)
         pairwise_h = array2table(pairwise_h, 'RowNames', conditions, 'VariableNames', string(1:128));
         pairwise_p = array2table(pairwise_p, 'RowNames', conditions, 'VariableNames', string(1:128));
         pairwise_t = array2table(pairwise_t, 'RowNames', conditions, 'VariableNames', string(1:128));
-    end
-
-    %% Get clusters
-    function [clusters] = get_clusters(pairwise_h, condition);
-        % Get values and initialize state machine
-        values = table2array(pairwise_h(condition, :));
-        clusters = [];
-        cluster = [];
-        state = 'B';
-
-        % Baby state machine
-        for i = 1:size(values, 2)
-            current_value = values(i);
-            if current_value == 1
-                state = 'A';
-                cluster = [cluster, i];
-            elseif current_value == 0 && strcmp(state, 'B')
-                state = 'B';
-                if length(cluster) > 1
-                    cluster = {cluster};
-                    clusters = [clusters, cluster];
-                    cluster = [];
-                else
-                    cluster = [];
-                end
-            elseif current_value == 0 && strcmp(state, 'A')
-                state = 'B';
-            end
-        end
-    end
-
-    %% Get cluster stats
-    function [cluster_stats, cluster_max] = get_cluster_stats(pairwise_t, clusters, condition)
-        % Get t-values
-        t_values = table2array(pairwise_t(condition, :));
-
-        % Get sum of the t-values within every cluster
-        cluster_stats = [];
-        for i = 1:size(clusters, 2)
-            cluster = cell2mat(clusters(1, i));
-            cluster_stat = mean(t_values(:, cluster));
-            cluster_stats = [cluster_stats, cluster_stat];
-        end
-
-        % Get maximum value
-        cluster_max = max(cluster_stats);
     end
 
     %% Other helper functions
@@ -272,23 +149,5 @@ function [] = analyze(method, area)
 
             % Conduct t-test
             [h, p, ci, stats] = ttest(x, y);
-        end
-
-        %% Check data
-        function [subject_means_2] = check_data(data, channels)
-            % Get conditions
-            constraint = data.constraint;
-            meaning = data.meaning;
-            talker = data.talker;
-
-            % CHECK
-            subject_means_2 = [];
-            for i = 1:length(channels)
-                subject_means_2 = [subject_means_2, data.(string(channels(i)))];
-            end
-            subject_means_2 = mean(subject_means_2, 2);
-            subject_means_2 = table(constraint, meaning, talker, subject_means_2);
-            subject_means_2 = sortrows(subject_means_2, {'constraint', 'meaning', 'talker'});
-
         end
 end
