@@ -24,12 +24,14 @@ get_clusters <- function(t_values,
 
   
   ## FUNCTIONS:
+  library(dplyr) 
   
   get_coordinates <- function() {
     coordinates_fp <- file.path("/Applications/eeglab2019/talker-change-data-processing/data/aggregate/average_channel_locations.sfp")
-    coordinates_raw <- read.delim(coordinates_fp, header = FALSE, sep = "", dec = ".") %>%
-      .[startsWith(as.character(.$V1), "E"), ]
-    coordinates <- cbind(coordinates_raw$V2, coordinates_raw$V3, coordinates_raw$V4)
+    coordinates <- read.delim(coordinates_fp, header = FALSE, sep = "", dec = ".") %>%
+      .[startsWith(as.character(.$V1), "E"), ] %>%
+      .[c("V2", "V3", "V4")]
+    names(coordinates) <- c("x", "y", "z")
     
     # Return
     return(coordinates)
