@@ -40,7 +40,7 @@ get_mni_coordinates <- function(coordinates_file_name = "average_channel_locatio
     return(coordinates)
   }
   
-  transform_coordinates <- function(coordinates, transforms) {
+  transform_coordinates <- function(coordinates, transforms, coordinates_file_name) {
     
     # Shift
     shift <- function(coordinates, t) {
@@ -79,10 +79,17 @@ get_mni_coordinates <- function(coordinates_file_name = "average_channel_locatio
       }
      
     # Scale
-    scale <- function(coordinates, t) {
-      coordinates$x <- coordinates$x * -t$scalex
-      coordinates$y <- coordinates$y * -t$scaley
-      coordinates$z <- coordinates$z * t$scalez
+    scale <- function(coordinates, t, coordinates_file_name) {
+      # Format data frame depending on file type
+      if (file_ext(coordinates_file_name) == "txt") {
+        coordinates$x <- coordinates$x * -t$scalex
+        coordinates$y <- coordinates$y * t$scaley # if file extension is .txt, don't flip y-coordinates
+        coordinates$z <- coordinates$z * t$scalez
+      } else if (file_ext(coordinates_file_name) == "sfp") {
+        coordinates$x <- coordinates$x * -t$scalex
+        coordinates$y <- coordinates$y * -t$scaley 
+        coordinates$z <- coordinates$z * t$scalez
+        }
       
       # Return
       return(coordinates)
@@ -94,14 +101,14 @@ get_mni_coordinates <- function(coordinates_file_name = "average_channel_locatio
     
     # Transform
     coordinates <- rotate(coordinates, t)
-    coordinates <- scale(coordinates, t)
+    coordinates <- scale(coordinates, t, coordinates_file_name)
     coordinates <- shift(coordinates, t)
   }
   
   
   ## MAIN:
   coordinates <- get_coordinates(coordinates_file_name)
-  coordinates <- transform_coordinates(coordinates, transforms)
+  coordinates <- transform_coordinates(coordinates, transforms, coordinates_file_name)
   
   
   ## SAVE:
