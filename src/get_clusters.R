@@ -13,21 +13,36 @@
   condition = "talker"
   level = "S"
   threshold = 0.20
-  hemisphere = "all"
+  hemisphere = "right
+  "
   
   
   ## FUNCTIONS:
   library(dplyr) 
   
   
-  get_coordinates <- function() {
+  get_coordinates <- function(hemisphere) {
+    nodes_fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates_areas.txt"
+    nodes <- read.delim(nodes_fp, header = TRUE) %>%
+      rename(id = channels)
+    nodes$id <- substr(nodes$id, 2, 5)
+    nodes <- nodes[-c(1:3, 132), ]
+    
+    # Filter out nodes from other hemisphere if specified
+    if (hemisphere == "left") {
+      nodes <- filter(nodes, x < 0)
+    } else if (hemisphere == "right") {
+      nodes <- filter(nodes, x > 0)
+    } else if (hemisphere == "none") {
+      next }
+    
     # Load and clean up data
-    coordinates_fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates.txt"
-    coordinates <- read.delim(coordinates_fp, header = FALSE, sep = "", dec = ".") %>%
-      .[startsWith(as.character(.$V2), "E"), ] %>%
-      select(V3, V4, V5)
-    colnames(coordinates) <- c("y", "x", "z")
-    rownames(coordinates) <- 1:128
+    # coordinates_fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates.txt"
+    # coordinates <- read.delim(coordinates_fp, header = FALSE, sep = "", dec = ".") %>%
+    #   .[startsWith(as.character(.$V2), "E"), ] %>%
+    #   select(V3, V4, V5)
+    # colnames(coordinates) <- c("y", "x", "z")
+    # rownames(coordinates) <- NULL
     
     # coordinates_fp <- file.path("/Applications/eeglab2019/talker-change-data-processing/data/aggregate/average_channel_locations.sfp")
     # coordinates <- read.delim(coordinates_fp, header = FALSE, sep = "", dec = ".") %>%
@@ -104,7 +119,10 @@
   
   get_nodes <- function(hemisphere) {
     nodes_fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates_areas.txt"
-    nodes <- read.delim(nodes_fp, header = TRUE) 
+    nodes <- read.delim(nodes_fp, header = TRUE) %>%
+      rename(id = channels)
+    nodes$id <- substr(nodes$id, 2, 5)
+    nodes <- nodes[-c(1:3, 132), ]
     
     # Filter out nodes from other hemisphere if specified
     if (hemisphere == "left") {
@@ -115,11 +133,7 @@
       next }
     
     # Clean up
-    # nodes <- select(nodes, channels, aal.label, ba.label) %>%
-    #   rename(id = channels)
-    # nodes$id <- substr(nodes$id, 2, 5)
-    nodes <- nodes[-c(1:3, 132), ]
-    
+    nodes <- select(nodes, channels, aal.label, ba.label)
     
     return(nodes)
   }
@@ -164,7 +178,7 @@
     
     ## PLOT:
     drops <- get_drops(hemisphere, coordinates)
-    links <- get_links(edge_weights, drops)
+    # links <- get_links(edge_weights, drops)
     nodes <- get_nodes(hemisphere)
     layout <- get_layout(hemisphere)
     # net <- graph_from_data_frame(d = links, vertices = nodes, directed = F) %>%
