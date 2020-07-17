@@ -13,76 +13,63 @@
   condition = "talker"
   level = "S"
   threshold = 0.20
-  hemisphere = "right
-  "
+  hemisphere = "left"
   
   
   ## FUNCTIONS:
   library(dplyr) 
   
   
-  get_coordinates <- function(hemisphere) {
-    nodes_fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates_areas.txt"
-    nodes <- read.delim(nodes_fp, header = TRUE) %>%
+  get_channels <- function(hemisphere) {
+    channels_fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates_areas.txt"
+    channels <- read.delim(channels_fp, header = TRUE) %>%
       rename(id = channels)
-    nodes$id <- substr(nodes$id, 2, 5)
-    nodes <- nodes[-c(1:3, 132), ]
+    channels$id <- substr(channels$id, 2, 5)
+    channels <- channels[-c(1:3, 132), ]
     
     # Filter out nodes from other hemisphere if specified
     if (hemisphere == "left") {
-      nodes <- filter(nodes, x < 0)
+      channels <- filter(channels, x < 0)
     } else if (hemisphere == "right") {
-      nodes <- filter(nodes, x > 0)
+      channels <- filter(channels, x > 0)
     } else if (hemisphere == "none") {
       next }
+    rownames(channels) <- NULL
     
-    # Load and clean up data
-    # coordinates_fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates.txt"
-    # coordinates <- read.delim(coordinates_fp, header = FALSE, sep = "", dec = ".") %>%
-    #   .[startsWith(as.character(.$V2), "E"), ] %>%
-    #   select(V3, V4, V5)
-    # colnames(coordinates) <- c("y", "x", "z")
-    # rownames(coordinates) <- NULL
-    
-    # coordinates_fp <- file.path("/Applications/eeglab2019/talker-change-data-processing/data/aggregate/average_channel_locations.sfp")
-    # coordinates <- read.delim(coordinates_fp, header = FALSE, sep = "", dec = ".") %>%
-    #   .[startsWith(as.character(.$V1), "E"), ] %>%
-    #   .[c("V2", "V3", "V4")]
-    # colnames(coordinates) <- c("x", "y", "z")
-    # rownames(coordinates) <- 1:128
-    # 
-    return(coordinates) }
+    return(channels) }
   
   
-  get_distance_scores <- function(coordinates) {
+  get_distance_scores <- function(channels) {
+    coordinates <- select(channels, x, y, z)
     distances <- as.matrix(dist(coordinates)) # calculate pairwise distances
     distance_scores <- 1/distances # apply inverse
     distance_scores[distance_scores == Inf] <- 0
     distance_scores <- normalize(distance_scores)
-    rownames(distance_scores) <- 1:128
-    colnames(distance_scores) <- 1:128
+    # rownames(distance_scores) <- 1:nrow(channels)
+    # colnames(distance_scores) <- 1:nrow(channels)
 
     return(distance_scores) }
   
   normalize <- function(x) {return(x / (max(x) - min(x)))}
   
-  get_correlations <- function(condition, level) {
+  get_correlations <- function(condition, level, drops) {
     # Load data, average over subjects and tidy up
     correlations_fp <- paste("data/aggregate/", method, "_data.csv", sep = "")
     correlations <- read.csv(correlations_fp) %>%
       aggregate(., by = list(.[[condition]]), FUN = "mean")
     rownames(correlations) <- correlations$Group.1
-    correlations <- subset(correlations, rownames(correlations) %in% c("S"), select = -c(Group.1, subject_number, constraint, meaning, talker))
+    correlations <- subset(correlations, rownames(correlations) %in% c("S"), select = -c(Group.1, subject_number, constraint, meaning, talker)) %>%
+      subset(select = -c(drops))
       
     return(correlations) }
   
   
-  get_similarity_scores <- function(condition, level) {
-    correlations <- get_correlations(condition, level)
+  get_similarity_scores <- function(condition, level, drops) {
+    correlations <- get_correlations(condition, level, drops)
     similarity_scores <- sapply(correlations, function(x) {sapply(correlations, function(y) {x^3+y^3})}) %>%
       normalize()
-    rownames(similarity_scores) <- 1:128
-    colnames(similarity_scores) <- 1:128
+    rownames(similarity_scores) <- NULL
+    colnames(similarity_scores) <- NULL
     
     return(similarity_scores) }
   
@@ -108,38 +95,29 @@
     return(links)
   }
   
-  get_drops <- function(hemisphere, coordinates) {
+  get_drops <- function(hemisphere) {
+    channels_fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates_areas.txt"
+    channels <- read.delim(channels_fp, header = TRUE) %>%
+      rename(id = channels)
+    channels$id <- substr(channels$id, 2, 5)
+    channels <- channels[-c(1:3, 132), ]
+    
     if (hemisphere == "left") {
-      drops <- which(coordinates$x > 0)
+      drops <- which(channels$x > 0)
     } else if (hemisphere == "right") {
-      drops <- which(coordinates$x < 0)
+      drops <- which(channels$x < 0)
     } else if (hemisphere == "none") {
       drops <- 0 }
   }
   
-  get_nodes <- function(hemisphere) {
-    nodes_fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates_areas.txt"
-    nodes <- read.delim(nodes_fp, header = TRUE) %>%
-      rename(id = channels)
-    nodes$id <- substr(nodes$id, 2, 5)
-    nodes <- nodes[-c(1:3, 132), ]
-    
-    # Filter out nodes from other hemisphere if specified
-    if (hemisphere == "left") {
-      nodes <- filter(nodes, x < 0)
-    } else if (hemisphere == "right") {
-      nodes <- filter(nodes, x > 0)
-    } else if (hemisphere == "none") {
-      next }
-    
-    # Clean up
-    nodes <- select(nodes, channels, aal.label, ba.label)
-    
-    return(nodes)
-  }
+  # get_nodes <- function(hemisphere, channels) {
+  #   nodes <- select(channels, channels, aal.label, ba.label)
+  #   
+  #   return(nodes)
+  # }
   
   get_layout <- function(hemisphere) { # INTEGRATE DROPS
-    layout <- get_coordinates()
+    layout <- get_channels()
     if (hemisphere == "left") {
       layout <- filter(layout, x < 0) %>% select(x, z)
     } else if (hemisphere == "right") {
@@ -150,7 +128,7 @@
       # layout$Y <- layout$Y/layout$Z
       # layout <- as.matrix(layout) }
 
-    # layout <- get_coordinates() %>%
+    # layout <- get_channels() %>%
       # filter(x < 0) %>% # FILTER RIGHT HEMISPHERE
       # select(x, z)
     # z <- abs(layout$X)^1.5 + abs(layout$Y)^1.5
@@ -170,17 +148,17 @@
   
   
     ## MAIN:
-    coordinates <- get_coordinates()
-    distance_scores <- get_distance_scores(coordinates)
-    similarity_scores <- get_similarity_scores(condition, level)
+    channels <- get_channels(hemisphere)
+    drops <- get_drops(hemisphere)
+    distance_scores <- get_distance_scores(channels)
+    similarity_scores <- get_similarity_scores(condition, level, drops)
     edge_weights <- get_edge_weights(distance_scores, similarity_scores, threshold)
 
     
     ## PLOT:
-    drops <- get_drops(hemisphere, coordinates)
     # links <- get_links(edge_weights, drops)
-    nodes <- get_nodes(hemisphere)
-    layout <- get_layout(hemisphere)
+    # nodes <- channels
+    # layout <- get_layout(hemisphere)
     # net <- graph_from_data_frame(d = links, vertices = nodes, directed = F) %>%
       # simplify(., remove.multiple = F, remove.loops = T)
     # plot(net, edge.arrow.size=.4, layout = layout, edge.width = links$weight/2, vertex.label.family = "Helvetica")
