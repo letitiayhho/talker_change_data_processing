@@ -12,71 +12,59 @@
   method = "cross_correlation"
   condition = "talker"
   level = "S"
-  threshold = 0.20
-  hemisphere = "left"
+  threshold = 6
+  hemisphere = "none"
   
   
   ## FUNCTIONS:
   library(dplyr) 
   
   
-  get_channels <- function(hemisphere) {
-    channels_fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates_areas.txt"
-    channels <- read.delim(channels_fp, header = TRUE) %>%
-      rename(id = channels)
-    channels$id <- substr(channels$id, 2, 5)
-    channels <- channels[-c(1:3, 132), ]
+  get_coordinates <- function() {
+    # Load and clean up data
+    coordinates_fp <- file.path("/Applications/eeglab2019/talker-change-data-processing/data/aggregate/average_channel_locations.sfp")
+    coordinates <- read.delim(coordinates_fp, header = FALSE, sep = "", dec = ".") %>%
+      .[startsWith(as.character(.$V1), "E"), ] %>%
+      .[c("V2", "V3", "V4")]
+    colnames(coordinates) <- c("X", "Y", "Z")
+    rownames(coordinates) <- NULL
     
-    # Filter out nodes from other hemisphere if specified
-    if (hemisphere == "left") {
-      channels <- filter(channels, x < 0)
-    } else if (hemisphere == "right") {
-      channels <- filter(channels, x > 0)
-    } else if (hemisphere == "none") {
-      next }
-    rownames(channels) <- NULL
-    
-    return(channels) }
+    return(coordinates) }
   
   
-  get_distance_scores <- function(channels) {
-    coordinates <- select(channels, x, y, z)
+  get_distance_scores <- function(coordinates) {
     distances <- as.matrix(dist(coordinates)) # calculate pairwise distances
-    distance_scores <- 1/distances # apply inverse
-    distance_scores[distance_scores == Inf] <- 0
-    distance_scores <- normalize(distance_scores)
-    # rownames(distance_scores) <- 1:nrow(channels)
-    # colnames(distance_scores) <- 1:nrow(channels)
+    distance_scores <- 1/distances %>% # apply inverse
+      normalize() # normalize?
+    rownames(distance_scores) <- 1:128
+    colnames(distance_scores) <- 1:128
 
     return(distance_scores) }
   
-  normalize <- function(x) {return(x / (max(x) - min(x)))}
+  normalize <- function(x) {return((x - min(x)) / (max(x) - min(x)))}
   
-  get_correlations <- function(condition, level, drops) {
+  get_correlations <- function(condition, level) {
     # Load data, average over subjects and tidy up
     correlations_fp <- paste("data/aggregate/", method, "_data.csv", sep = "")
     correlations <- read.csv(correlations_fp) %>%
       aggregate(., by = list(.[[condition]]), FUN = "mean")
     rownames(correlations) <- correlations$Group.1
-    correlations <- subset(correlations, rownames(correlations) %in% c("S"), select = -c(Group.1, subject_number, constraint, meaning, talker)) %>%
-      subset(select = -c(drops))
+    correlations <- subset(correlations, rownames(correlations) %in% c("S"), select = -c(Group.1, subject_number, constraint, meaning, talker))
       
     return(correlations) }
   
   
-  get_similarity_scores <- function(condition, level, drops) {
-    correlations <- get_correlations(condition, level, drops)
-    similarity_scores <- sapply(correlations, function(x) {sapply(correlations, function(y) {x^3+y^3})}) %>%
-      normalize()
-    rownames(similarity_scores) <- NULL
-    colnames(similarity_scores) <- NULL
+  get_similarity_scores <- function(condition, level) {
+    correlations <- get_correlations(condition, level)
+    similarity_scores <- sapply(correlations, function(x) {sapply(correlations, function(y) {x^3+y^3})})
     
     return(similarity_scores) }
   
   
   get_edge_weights <- function(distance_scores, similarity_scores, threshold) {
     edge_weights <- distance_scores * similarity_scores
-    edge_weights <- normalize(edge_weights)
+    edge_weights <- edge_weights*1e+05 # (scale?)
+    edge_weights[edge_weights == -Inf | edge_weights == Inf] <- 0
     # edge_weights[,25] <- 0
     # edge_weights[25,] <- 0
     
@@ -86,55 +74,44 @@
     links <- data.frame("from" = integer(), "to" = integer(), "weight" = double())
     for (i in 1:nrow(edge_weights)) {
       for (j in 1:nrow(edge_weights)) {
-        if (i <= j) { next }
-        else if (i %in% drops | j %in% drops) { next }
-        else if (abs(edge_weights[i, j]) > threshold) {
+        if (i <= j) { next
+        } else if (i %in% drops | j %in% drops) {next 
+        } else if (abs(edge_weights[i, j]) > threshold) {
           links[nrow(links)+1,] <- c(i, j, edge_weights[i, j]) }
       }
     }
     return(links)
   }
   
-  get_drops <- function(hemisphere) {
-    channels_fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates_areas.txt"
-    channels <- read.delim(channels_fp, header = TRUE) %>%
+  get_nodes <- function() {
+    nodes_fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates_areas.txt"
+    nodes <- read.delim(nodes_fp, header = TRUE) %>%
+      filter(x < 0) %>% # FILTER RIGHT HEMISPHERE
+      select(channels, aal.label, ba.label) %>%
       rename(id = channels)
-    channels$id <- substr(channels$id, 2, 5)
-    channels <- channels[-c(1:3, 132), ]
-    
-    if (hemisphere == "left") {
-      drops <- which(channels$x > 0)
-    } else if (hemisphere == "right") {
-      drops <- which(channels$x < 0)
-    } else if (hemisphere == "none") {
-      drops <- 0 }
+    nodes$id <- substr(nodes$id, 2, 5)
+    nodes <- nodes[-c(1:3, 132), ]
+    return(nodes)
   }
   
-  # get_nodes <- function(hemisphere, channels) {
-  #   nodes <- select(channels, channels, aal.label, ba.label)
-  #   
-  #   return(nodes)
-  # }
-  
-  get_layout <- function(hemisphere) { # INTEGRATE DROPS
-    layout <- get_channels()
+  get_drops <- function(hemisphere, coordinates) {
     if (hemisphere == "left") {
-      layout <- filter(layout, x < 0) %>% select(x, z)
+      drops <- which(coordinates$X > 0)
     } else if (hemisphere == "right") {
-      layout <- filter(layout, x > 0) %>% select(x, z)
-    } else if (hemisphere == "all") {}
-      # z <- abs(layout$X)^1.5 + abs(layout$Y)^1.5
-      # layout$X <- layout$X/layout$Z
-      # layout$Y <- layout$Y/layout$Z
-      # layout <- as.matrix(layout) }
-
-    # layout <- get_channels() %>%
-      # filter(x < 0) %>% # FILTER RIGHT HEMISPHERE
-      # select(x, z)
+      drops <- which(coordinates$X < 0)
+    } else if (hemisphere == "none") {
+      drops <- 0
+    }
+  }
+  
+  get_layout <- function(drops) { # INTEGRATE DROPS
+    layout <- get_coordinates() %>%
+      filter(X < 0) %>% # FILTER RIGHT HEMISPHERE
+      select(X, Z)
     # z <- abs(layout$X)^1.5 + abs(layout$Y)^1.5
     # layout$X <- layout$X/layout$Z
     # layout$Y <- layout$Y/layout$Z
-    # layout <- as.matrix(layout)
+    layout <- as.matrix(layout)
     
     return(layout)
   }
@@ -148,24 +125,20 @@
   
   
     ## MAIN:
-    channels <- get_channels(hemisphere)
-    drops <- get_drops(hemisphere)
-    distance_scores <- get_distance_scores(channels)
-    similarity_scores <- get_similarity_scores(condition, level, drops)
+    coordinates <- get_coordinates()
+    drops <- get_drops(hemisphere, coordinates)
+    distance_scores <- get_distance_scores(coordinates)
+    similarity_scores <- get_similarity_scores(condition, level)
     edge_weights <- get_edge_weights(distance_scores, similarity_scores, threshold)
 
     
     ## PLOT:
-    # links <- get_links(edge_weights, drops)
-    # nodes <- channels
-    # layout <- get_layout(hemisphere)
-    # net <- graph_from_data_frame(d = links, vertices = nodes, directed = F) %>%
-      # simplify(., remove.multiple = F, remove.loops = T)
-    # plot(net, edge.arrow.size=.4, layout = layout, edge.width = links$weight/2, vertex.label.family = "Helvetica")
-    
-    
-    
-    
+    links <- get_links(edge_weights, drops)
+    nodes <- get_nodes()
+    layout <- get_layout()
+    net <- graph_from_data_frame(d = links, vertices = nodes, directed = F) %>%
+      simplify(., remove.multiple = F, remove.loops = T)
+    plot(net, edge.arrow.size=.4, layout = layout, edge.width = links$weight/2, vertex.label.family = "Helvetica")
     # E(net)$width <- E(net)$weight
     
     # net <- network(links,  vertex.attr=nodes, matrix.type="edgelist", 

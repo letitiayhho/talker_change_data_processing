@@ -82,8 +82,8 @@ get_mni_coordinates <- function(coordinates_file_name = "average_channel_locatio
     scale <- function(coordinates, t, coordinates_file_name) {
       # Format data frame depending on file type
       if (file_ext(coordinates_file_name) == "txt") {
-        coordinates$x <- coordinates$x * -t$scalex
-        coordinates$y <- coordinates$y * t$scaley # if file extension is .txt, don't flip y-coordinates
+        coordinates$x <- coordinates$x * t$scalex
+        coordinates$y <- coordinates$y * t$scaley # if file extension is .txt, don't flip the coordinates
         coordinates$z <- coordinates$z * t$scalez
       } else if (file_ext(coordinates_file_name) == "sfp") {
         coordinates$x <- coordinates$x * -t$scalex
