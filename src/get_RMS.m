@@ -1,8 +1,8 @@
-% function[] = get_RMS()
+function[] = get_RMS(subject_number)
     fprintf(1, strcat('Analyzing data from subject #', subject_number, '\n'))
 
     %% 1. Import data
-    % Working from /Applications/eeglab2019/talker-change-data-processing
+    cd('/Applications/eeglab2019/talker-change-data-processing')
     addpath(fullfile('data', subject_number)) % add subject data to path
     addpath(fullfile('data/stim')) % add audio stimuli directory to path
     
@@ -52,10 +52,9 @@
     % Sort pruned epoch order by latency
     epoch_order_pruned = sortrows(epoch_order_pruned, 'latency');
 
-    %% 3. Convolve
-    % Initialize data tables
-    convolution = zeros(size(eeg_data, 3), size(eeg_data, 1));
-    cross_correlation = zeros(size(eeg_data, 3), size(eeg_data, 1));
+    %% 3. Compute RMS
+    % Initialize data table
+    RMS = zeros(size(eeg_data, 3), size(eeg_data, 1));
 
     % Loop over channels
     for i = 1:size(eeg_data, 1)
@@ -63,50 +62,24 @@
 
         % Loop over epochs
          for j = 1:size(eeg_data, 3)
+             
+             % Compute RMS
              epoch = eeg_data(i, :, j);
-
-             % Load stimuli .wav file for epoch
-             word = char(epoch_order_pruned.word(j));
-             auditory_stimuli = audioread(word);
-
-             % Compute convolution and cross correlation
-             convolution(j, i) = mean(conv(epoch, auditory_stimuli));
-             cross_correlation(j, i) = mean(xcorr(epoch, auditory_stimuli)); % should be #stim x #channels
+             RMS(j, i) = rms(epoch);
          end
     end
 
     %% 4. Write data
-    % Add relevant info to data tables
-    convolution = array2table(convolution);
-    convolution_data_table = table([epoch_order_pruned.type],...
+    RMS = array2table(RMS);
+    RMS_data_table = table([epoch_order_pruned.type],...
         [epoch_order_pruned.epoch],...
         [epoch_order_pruned.word],...
-        [convolution],...
-        'VariableNames', {'condition', 'epoch', 'word', 'convolution'});
-
-    cross_correlation = array2table(cross_correlation);
-    cross_correlation_data_table = table([epoch_order_pruned.type],...
-        [epoch_order_pruned.epoch],...
-        [epoch_order_pruned.word],...
-        [cross_correlation],...
-        'VariableNames', {'condition', 'epoch', 'word', 'cross_correlation'});
-
+        [RMS],...
+        'VariableNames', {'condition', 'epoch', 'word', 'RMS'});
+    
     % Write data
-    save(fullfile('data', subject_number, 'convolution_data_table'), 'convolution_data_table')
-    save(fullfile('data', subject_number, 'cross_correlation_data_table'), 'cross_correlation_data_table')
+    save(fullfile('data', subject_number, 'RMS_data_table'), 'RMS_data_table')
     
-    % Save convolution data as json
-%     convolution_json = jsonencode(convolution_data_table);
-%     fp = fopen(fullfile('data', subject_number, 'convolution.json'), 'w');
-%     fprintf(fp, convolution_json);
-%     fclose(fp);
-    
-    % Save cross cross_correlation data as json
-%     cross_correlation_json = jsonencode(cross_correlation_data_table);
-%     fp = fopen(fullfile('data', subject_number, 'cross_correlation.json'), 'w');
-%     fprintf(fp, cross_correlation_json);
-%     fclose(fp);
-
     %% Quit
     quit
 end
