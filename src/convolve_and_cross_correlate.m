@@ -2,7 +2,7 @@ function [] = convolve_and_cross_correlate(subject_number)
     fprintf(1, strcat('Analyzing data from subject #', subject_number, '\n'))
 
     %% 1. Import data
-    % Working from /Applications/eeglab2019/talker-change-data-processing
+    cd('/Applications/eeglab2019/talker-change-data-processing')
     addpath(fullfile('data', subject_number)) % add subject data to path
     addpath(fullfile('data/stim')) % add audio stimuli directory to path
     
