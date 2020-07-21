@@ -8,6 +8,7 @@
 ##
 ## OUTPUT:
 
+
 ## TMP:
 method = "cross_correlation"
 condition = "talker"
@@ -18,7 +19,6 @@ hemisphere = "both"
 
 ## FUNCTIONS:
 library(dplyr) 
-
 
 get_channels <- function() {
   channels_fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates_areas.txt"
@@ -46,7 +46,7 @@ get_correlations <- function(condition, level) {
   correlations <- read.csv(correlations_fp) %>%
     aggregate(., by = list(.[[condition]]), FUN = "mean")
   rownames(correlations) <- correlations$Group.1
-  correlations <- subset(correlations, rownames(correlations) %in% c("S")) %>%
+  correlations <- subset(correlations, rownames(correlations) %in% c(level)) %>%
     select(-c(Group.1, subject_number, constraint, meaning, talker))
   colnames(correlations) <- 1:128
   
@@ -110,24 +110,6 @@ get_nodes <- function(channels, drops) {
 get_layout <- function(hemisphere, drops) { 
   coordinates <- read.delim("data/aggregate/electrode_points", header = FALSE)
   colnames(coordinates) <- c("x", "y")
-  # if (hemisphere == "both") {
-    # # Center
-    # coordinates$x <- coordinates$x - mean(channels$x)
-    # coordinates$y <- coordinates$y - mean(channels$y)
-    # # Transform coordinate locations for better plotting
-    # k <- 1+((1.2*coordinates$x)^2 + (coordinates$y)^2)
-    # coordinates$x <- coordinates$x*k
-    # coordinates$y <- coordinates$y*k
-  # } else {
-    # coordinates <- coordinates[-c(drops),]
-    
-    # coordinates <- select(channels, x, y, z) %>%
-    # slice(drops)
-    
-    # slice(coordinates, drops) 
-    # %>%
-    #   select(x, y)
-  # }
   layout <- as.matrix(coordinates) 
   
   return(layout)
@@ -195,29 +177,6 @@ plot(net,
      edge.width = links$weight*30, 
      vertex.label.family = "Helvetica"
 )
-
-
-
-# colrs <- adjustcolor( c("gray50", "tomato", "gold", "yellowgreen"), alpha=.6)
-# plot(p, colors = colrs)
-
-# ceb <- cluster_edge_betweenness(net) 
-
-# dendPlot(ceb, mode="hclust")
-
-# E(net)$width <- E(net)$weight
-
-# net <- network(links,  vertex.attr=nodes, matrix.type="edgelist", 
-# loops=F, multiple=F, ignore.eval = F)
-# render.d3movie(net, usearrows = F, displaylabels = F, bg="#111111", 
-# vertex.border="#ffffff", vertex.col =  net %v% "col")
-# vertex.cex = (net %v% "audience.size")/8, 
-# edge.lwd = (net %e% "weight")/3, edge.col = '#55555599',
-# vertex.tooltip = paste("<b>Name:</b>", (net3 %v% 'media') , "<br>",
-#                        "<b>Type:</b>", (net3 %v% 'type.label')),
-# edge.tooltip = paste("<b>Edge type:</b>", (net3 %e% 'type'), "<br>", 
-#                      "<b>Edge weight:</b>", (net3 %e% "weight" ) ),
-# launchBrowser=F)  
 # }
 
 
