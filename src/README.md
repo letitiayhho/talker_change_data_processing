@@ -14,7 +14,7 @@ Takes the preprocessed eeg data and convolves or cross-correlates the waveforms 
 
 Shapes the convolution and cross-correlation values for each subject and collects them into a data frame
 
-**get_clusters.R**
+**get_permutation_clusters.R**
 
 Identifies clusters of spatially contiguous channels that show condition-dependent verdicality
 
@@ -29,5 +29,9 @@ Get MNI coordinates of the average channel locations using the transformation ma
 **get_mni_cortical_areas.R**
 
 Apply function from yunshiuan's repo to get the nearest mni coordinates of each electrode
+
+**get_cluster_map.R**
+
+Get a pretty figure of cross-correlation or convolution values on a 2-d map of the electrodes. Node size represents cross-correlation or convolution magnitude (abs). Color represents closest cortical area. Edges are a function of the similarity of the cross-correlation/convolution between the two nodes, and their euclidean distance.
 
 

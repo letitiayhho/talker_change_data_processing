@@ -18,8 +18,6 @@ hemisphere = "both"
 
 
 ## FUNCTIONS:
-library(dplyr) 
-
 get_channels <- function() {
   channels_fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates_areas.txt"
   channels <- read.delim(channels_fp, header = TRUE) %>%
@@ -143,6 +141,7 @@ get_colors <- function(channels) {
 ## SOURCE:
 options(warn=-1)
 setwd("/Applications/eeglab2019/talker-change-data-processing")
+library('dplyr') 
 library('igraph')
 library('ndtv')
 
