@@ -8,13 +8,11 @@ function [] = get_shaped_data(method)
     %   area - (char) 'anterior temporal', 'central temporal', 'premotor' or
     %   'all'
 
-
     %% Main
     [data] = shape_data(method);
 
     % Export data
     writetable(data, strcat('data/aggregate/', method, '_data.csv'));
-    writetable(pairwise_t, strcat('data/aggregate/', method, '_t_values.csv'));
 
     %% Shape data
     function [data] = shape_data(method)
@@ -27,12 +25,6 @@ function [] = get_shaped_data(method)
         % Iterate over subjects
         for i = 1:number_of_subjects
             [subject_data, subject_number] = load_single_subject_data(method, i);
-
-            % Normalize data
-    %         normalized_subject_data = table2array(removevars(subject_data, {'condition'}));
-    %         normalized_subject_data = normalize(normalized_subject_data);
-    %         subject_data = [subject_data.condition, array2table(normalized_subject_data)];
-    %         subject_data.Properties.VariableNames = ['condition', string(1:128)];
 
             % Calculate means for each channel for each condition
             subject_means = grpstats(subject_data, 'condition');
@@ -88,9 +80,12 @@ function [] = get_shaped_data(method)
 
         %% Load data of a single subject
         function [subject_data, subject_number] = load_single_subject_data(method, i)
-            if ~strcmp(method, 'cross_correlation') && ~strcmp(method, 'convolution')
+            if ~strcmp(method, 'cross_correlation') &&...
+                ~strcmp(method, 'convolution') &&...
+                ~strcmp(method, 'RMS')
                 % Throw an error if incorrect method is specified
-                error('Invalid method, valid methods are ''convolution'' and ''cross_correlation''')
+                error('Invalid method, valid methods are ''convolution'','\...
+                    '''cross_correlation'', and ''RMS''')
             end
 
             % Get name of the data files and their directory
@@ -106,7 +101,7 @@ function [] = get_shaped_data(method)
             subject_data = subject_data.(strcat(method, '_data_table'));
 
             % Convert into easily accessible form
-            subject_data = [subject_data.condition, subject_data.convolution];
+            subject_data = [subject_data.condition, subject_data.(method)];
             subject_data.Properties.VariableNames = ['condition', string(1:128)];
         end
 
@@ -127,27 +122,4 @@ function [] = get_shaped_data(method)
             split_conditions = table(constraint, meaning, talker);
         end
 
-        %% Function for conducting an individual t-test
-        function [h, p, ci, stats] = one_t_test(data, channel, condition)
-            % Get values into right class to be used as indexes
-            channel = string(channel);
-            condition = string(condition);
-
-            % Separate groups for t-test
-            if strcmp(condition, 'constraint')
-                x = data.(channel)(data.(condition) == 'G');
-                y = data.(channel)(data.(condition) == 'S');
-            elseif strcmp(condition, 'meaning')
-                x = data.(channel)(data.(condition) == 'M');
-                y = data.(channel)(data.(condition) == 'N');
-            elseif strcmp(condition, 'talker')
-                x = data.(channel)(data.(condition) == 'S');
-                y = data.(channel)(data.(condition) == 'T');
-            else
-                error('Invalid condition, valid options are ''constraint'', ''meaning'', ''talker''')
-            end
-
-            % Conduct t-test
-            [h, p, ci, stats] = ttest(x, y);
-        end
 end
