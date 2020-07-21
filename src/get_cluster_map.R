@@ -10,6 +10,7 @@
 
 
 ## TMP:
+abs = TRUE
 method = "cross_correlation"
 condition = "talker"
 level = "S"
@@ -85,13 +86,17 @@ get_drops <- function(hemisphere) {
   return(drops)
 }
 
-get_links <- function(edge_weights, drops, threshold) {
+get_links <- function(edge_weights, drops, threshold, abs) {
   links <- data.frame("from" = integer(), "to" = integer(), "weight" = double())
   for (i in 1:nrow(edge_weights)) {
     for (j in 1:nrow(edge_weights)) {
       if (i <= j) { next }
       else if (i %in% drops | j %in% drops) { next }
-      else if (abs(edge_weights[i, j]) > threshold) {
+      else if (abs == TRUE) {
+        if (abs(edge_weights[i, j]) > threshold) {
+          links[nrow(links)+1,] <- c(i, j, edge_weights[i, j])
+        }
+      } else if (edge_weights[i, j] > threshold) {
         links[nrow(links)+1,] <- c(i, j, edge_weights[i, j])
       }
     }
@@ -113,8 +118,14 @@ get_layout <- function(hemisphere, drops) {
   return(layout)
 }
 
-get_sizes <- function(correlations) {
-  sizes <- t(abs(correlations))*900
+get_sizes <- function(correlations, abs) {
+  if (abs == TRUE) {
+    sizes <- t(abs(correlations))*900
+  } else if (abs == FALSE) {
+    sizes <- t(correlations)*900
+    sizes[sizes < 0] <- 0
+  }
+  
   return(sizes)
 }
 
@@ -156,12 +167,17 @@ edge_weights <- get_edge_weights(distance_scores, similarity_scores)
 
 ## PLOT:
 drops <- get_drops(hemisphere)
-links <- get_links(edge_weights, drops, threshold)
+links <- get_links(edge_weights, drops, threshold, abs)
 nodes <- get_nodes(channels, drops)
 layout <- get_layout()
-sizes <- get_sizes(correlations)
+sizes <- get_sizes(correlations, abs)
 colors <- get_colors(channels)
 
+# Histogram
+title <- paste("cross correlation values of electrodes in ", condition, "_", level, sep = "")
+hist(as.matrix(correlations), main = title, xlim = c(-0.1, 0.1))
+
+# Map
 net <- graph_from_data_frame(d = links, vertices = nodes, directed = F) %>%
   simplify(., remove.multiple = F, remove.loops = T)
 plot(net, 
@@ -176,6 +192,7 @@ plot(net,
      edge.width = links$weight*30, 
      vertex.label.family = "Helvetica"
 )
+
 # }
 
 
