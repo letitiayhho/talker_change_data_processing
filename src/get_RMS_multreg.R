@@ -39,29 +39,51 @@ get_RMS_multreg <- function(channels) {
     rms_54 <- rms$E54
     rms_61 <- rms$E61
     
-    # Compute mult reg for all channels
-    coeffs <- list()
-    p_values <- list()
-    adj_r_sq <- list()
+    # Create variables for storing stats
+    coeffs <- data.frame(intercept = double(),
+                         constraint = double(),
+                         meaning = double(),
+                         talker = double(),
+                         rms_53 = double(),
+                         rms_54 = double(),
+                         rms_61 = double())
+    p <- data.frame(p_intercept = double(),
+                    p_constraint = double(),
+                    p_meaning = double(),
+                    p_talker = double(),
+                    p_rms_53 = double(),
+                    p_rms_54 = double(),
+                    p_rms_61 = double())
+    adj_rsq <- matrix(0, 128)
+    f <- matrix(0, 128)
+    p_f <- matrix(0, 128)
     
+    # Compute mult reg for all channels
     for (i in 1:128) {
-      # Compute mult reg
+      # Get DV
       y <- correlations[[paste("E", i, sep = "")]]
+      
+      # Compute mult reg
       fit <- lm(y ~ constraint + meaning + talker + rms_53 + rms_54 + rms_61)
       
       # Extract statistics
-      coeffs[i] <- fit
-      p_values[i] <- list(summary(fit)$coefficients[,"Pr(>|t|)"])
-      adj_r_sq[i] <- summary(fit)$adj.r.squared
+      coeffs[i,] <- unname(fit$coefficients)
+      p[i,] <- unname(summary(fit)$coefficients[,"Pr(>|t|)"])
+      adj_rsq[i,] <- summary(fit)$adj.r.squared
+      f[i,] <- unname(glance(fit)$statistic)
+      p_f[i,] <- unname(glance(fit)$p.value)
     }
     
-    # Compile into one nested named list
-    fits <- list(coeffs = coeffs,
-                 p_values = p_values,
-                 r_sq = r_sq)
+    # Bind into one data frame
+    fits <- cbind(coeffs, p, adj_rsq, f, p_f)
     
     return(fits)
   }
+
+  
+  ## SOURCE:
+  library(broom)
+  setwd("/Applications/eeglab2019/talker-change-data-processing/")
   
   
   ## MAIN:
@@ -71,5 +93,5 @@ get_RMS_multreg <- function(channels) {
   
   
   ## SAVE:
-  save(fits, file = "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/rms_fits")
+  write.csv(fits, "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/RMS_fits.csv")
 }
