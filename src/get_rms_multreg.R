@@ -13,9 +13,9 @@ get_rms_multreg <- function(channels) {
     return(correlations) }
   
   get_rms <- function() {
-    correlations <- read.csv("data/aggregate/rms_data.csv")
-    colnames(correlations) <- c("subject_number", "constraint", "meaning", "talker", paste("E", 1:128, sep = ""))
-    return(correlations) }
+    rms <- read.csv("data/aggregate/rms_data.csv")
+    colnames(rms) <- c("subject_number", "constraint", "meaning", "talker", paste("E", 1:128, sep = ""))
+    return(rms) }
   
   get_condition_recoding <- function(correlations, condition) {
     # Recoding for one condition, constraint G/S -> 0/1, meaning M/N -> 0/1, talker S/T -> 0/1
