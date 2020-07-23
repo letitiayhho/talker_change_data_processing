@@ -1,7 +1,7 @@
-get_RMS_multreg <- function(channels) {
+get_rms_multreg <- function(channels) {
   ## DESCRIPTION:
   ##  Compute a multiple regression for each electrode against all three conditions and
-  ##  the RMS values for all three superior parietal channels (53, 54, 61)
+  ##  the rms values for all three superior parietal channels (53, 54, 61)
   ## 
   ## OUTPUT:
   
@@ -13,7 +13,7 @@ get_RMS_multreg <- function(channels) {
     return(correlations) }
   
   get_rms <- function() {
-    correlations <- read.csv("data/aggregate/RMS_data.csv")
+    correlations <- read.csv("data/aggregate/rms_data.csv")
     colnames(correlations) <- c("subject_number", "constraint", "meaning", "talker", paste("E", 1:128, sep = ""))
     return(correlations) }
   
@@ -93,5 +93,5 @@ get_RMS_multreg <- function(channels) {
   
   
   ## SAVE:
-  write.csv(fits, "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/RMS_fits.csv")
+  write.csv(fits, "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/rms_fits.csv")
 }
