@@ -1,4 +1,4 @@
-function[] = get_RMS(subject_number)
+function[] = get_rms(subject_number)
     fprintf(1, strcat('Analyzing data from subject #', subject_number, '\n'))
 
     %% 1. Import data
@@ -54,7 +54,7 @@ function[] = get_RMS(subject_number)
 
     %% 3. Compute RMS
     % Initialize data table
-    RMS = zeros(size(eeg_data, 3), size(eeg_data, 1));
+    rms = zeros(size(eeg_data, 3), size(eeg_data, 1));
 
     % Loop over channels
     for i = 1:size(eeg_data, 1)
@@ -65,20 +65,20 @@ function[] = get_RMS(subject_number)
              
              % Compute RMS
              epoch = eeg_data(i, :, j);
-             RMS(j, i) = rms(epoch);
+             rms(j, i) = rms(epoch);
          end
     end
 
     %% 4. Write data
-    RMS = array2table(RMS);
-    RMS_data_table = table([epoch_order_pruned.type],...
+    rms = array2table(rms);
+    rms_data_table = table([epoch_order_pruned.type],...
         [epoch_order_pruned.epoch],...
         [epoch_order_pruned.word],...
-        [RMS],...
-        'VariableNames', {'condition', 'epoch', 'word', 'RMS'});
+        [rms],...
+        'VariableNames', {'condition', 'epoch', 'word', 'rms'});
     
     % Write data
-    save(fullfile('data', subject_number, 'RMS_data_table'), 'RMS_data_table')
+    save(fullfile('data', subject_number, 'rms_data_table'), 'rms_data_table')
     
     %% Quit
     quit
