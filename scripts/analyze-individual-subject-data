@@ -22,5 +22,6 @@ cd "$(git rev-parse --show-toplevel)"
 for subject_number in  "$@"; do
     # calling the actual matlab function
     #matlab -nodisplay -r "addpath('src'); convolve_and_cross_correlate('$subject_number')"
-    matlab -nodisplay -r "addpath('src'); get_RMS('$subject_number')"
+    #matlab -nodisplay -r "addpath('src'); get_RMS('$subject_number')"
+    matlab -nodisplay -r "addpath('src'); convolve_and_cross_correlate_formants('$subject_number')"
 done
