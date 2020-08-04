@@ -1,4 +1,4 @@
-# get_nearest_cortical_areas <- function(radius = 5, x, y, z) {
+get_nearest_cortical_areas <- function(radius = 10) {
   #' DESCRIPTION:
   #'  Get closest cortical areas to each channel based on its MNI coordinate
   #'
@@ -85,6 +85,7 @@
             ]
         )
         label <- ifelse(length(result$label) == 0, "NULL", result$label)
+        # label <- ifelse(length(result$label) == 0 | result$distance > 30, "NULL", result$label)
         return(label)
       }
     )
@@ -109,6 +110,7 @@
   
   
   ## SOURCE:
+  setwd('/Applications/eeglab2019/talker-change-data-processing')
   source('/Users/letitiaho/src/label4MRI/R/mni_to_region_index.R')
   source('/Users/letitiaho/src/label4MRI/R/label4mri_metadata.R')
   library(dplyr)
@@ -120,7 +122,6 @@
   
   
   ## MAIN:
-  start_time <- Sys.time()
   coordinates <- get_coordinates()
   min_distance <- get_min_distance()
   sphere_coordinates <- mapply(get_sphere_coordinates,
@@ -131,27 +132,13 @@
                                z = coordinates$z,
                                SIMPLIFY = FALSE)
   labels <- label_sphere(sphere_coordinates)
-  end_time <- Sys.time()
-  end_time - start_time
-  
-  aal <- labels[["aal.label"]]
-  ba <- labels[["ba.label"]]
-  
-  save(aal, file = '/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates_areas_aal.RData')
-  save(ba, file = '/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates_areas_ba.RData')
-  
-  ## RETURN:
-  # return(sphere_coordinates)
-  
-  # result <- unlist(r_indexes, recursive = F)
-  # names(result) <- paste(
-  #   rep(template, each = 1),
-  #   rep(c("label"), length(template)),
-  #   sep = "."
-  # )
   
   
-  # result <- t(result)
-  # return(result)
-# }
+  ## SAVE:
+  aal2 <- labels[["aal.label"]]
+  ba2 <- labels[["ba.label"]]
+  save(aal2, file = 'data/aggregate/mni_coordinates_areas_aal_2.RData')
+  save(ba2, file = 'data/aggregate/mni_coordinates_areas_ba_2.RData')
+  
+}
 
