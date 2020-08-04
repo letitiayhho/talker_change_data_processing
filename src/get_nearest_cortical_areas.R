@@ -21,7 +21,7 @@
   
   get_min_distance <- function() {
     nearest_areas <- read.delim('/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates_areas.txt')
-    min_distance <- nearest_areas$aal.distance
+    min_distance <- min(nearest_areas$aal.distance)
     return(min_distance)
   }
   
@@ -41,9 +41,9 @@
     
     # Get surrounding coordinates
     sphere_coordinates <- data.frame('x' = x, 'y' = y, 'z' = z)
-    for (i in (x-radius):(x+radius)) {
-      for (j in (y-radius):(y+radius)) {
-        for (k in (z-radius):(z+radius)) {
+    for (i in seq(from = x-radius, to = x+radius, by = 2)) {
+      for (j in seq(from = y-radius, to = y+radius, by = 2)) {
+        for (k in seq(from = z-radius, to = z+radius, by = 2)) {
           new_point <- c(i, j, k)
           
           # Calculate distance to centroid
@@ -74,7 +74,7 @@
         z <- coordinate[3]
         
         # Adds index and distance to result
-        result <- mni_to_region_index(x, y, z, distance = F, .template)
+        result <- mni_to_region_index(x, y, z, distance = T, .template)
         df_region_index_name <- label4mri_metadata[[.template]]$label
         
         # Adds region label to result
@@ -93,27 +93,25 @@
   }
   
   label_sphere <- function(sphere_coordinates) {
-    labels <- list()
+    # labels <- data.frame("aal.label" = c(), "ba.label" = c())
+    aal.label <- list()
+    ba.label <- list()
     for (i in 1:length(sphere_coordinates)) {
       channel <- sphere_coordinates[[i]]
       channel_labels <- apply(channel, MARGIN = 1, FUN = label_one_point)
-      unique_channel_labels <- list(aal.label = unique(channel_labels[1,]),
-                                    ba.label = unique(channel_labels[2,]))
-      labels <- c(labels, unique_channel_labels)
+      aal.label <- c(aal.label, list(unique(channel_labels[1,])))
+      ba.label <- c(ba.label, list(unique(channel_labels[2,])))
+      
+      # unique_channel_labels <- c(list(unique(channel_labels[1,])), list(unique(channel_labels[2,])))
+      # labels <- rbind(labels, unique_channel_labels)
+
+      # unique_channel_labels <- data.frame("aal.label" = list(unique(channel_labels[1,])),
+                                    # "ba.label" = list(unique(channel_labels[2,])))
+      # labels <- rbind(labels, unique_channel_labels)
     }
-    return(labels)
+    return(labels = list(aal.label = aal.label,
+                         ba.label = ba.label))
   }
-    # labels <- apply(sphere_coordinates, MARGIN = 1,
-    #                 function(channel) {
-    #                   print("Getting labels for channel")
-    #                   channel <- round(channel)
-    #                   channel_labels <- apply(channel, MARGIN = 1, FUN = label_one_point)
-    #                   unique_channel_labels <- list(aal.label = unique(channel_labels[1,]),
-    #                                                 ba.label = unique(channel_labels[2,]))
-    #                   return(unique_channel_labels)
-    #                 }
-    # )
-    # return(labels)
   
   round <- function(x) as.integer(trunc(x+0.5)) # Avoid round to even
   
@@ -126,20 +124,24 @@
   
   
   ## TMP:
-  radius <- 20 # oh shit it has to be in mm
+  radius <- 10 # in mm
   
   
   ## MAIN:
+  start_time <- Sys.time()
   coordinates <- get_coordinates()
+  # coordinates <- data.frame("x" = 26, "y" = 0, "z" = 0)
   min_distance <- get_min_distance()
-  sphere_coordinates <- mapply(get_sphere_coordinates, 
-                               radius, 
-                               min_distance, 
-                               x = coordinates$x, 
-                               y = coordinates$y, 
-                               z = coordinates$z, 
+  sphere_coordinates <- mapply(get_sphere_coordinates,
+                               radius,
+                               min_distance,
+                               x = coordinates$x[1:2],
+                               y = coordinates$y[1:2],
+                               z = coordinates$z[1:2],
                                SIMPLIFY = FALSE)
-  labels <- label_sphere(sphere_coordinates)
+  labs <- label_sphere(sphere_coordinates)
+  end_time <- Sys.time()
+  end_time - start_time
   
   
   
