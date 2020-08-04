@@ -53,7 +53,7 @@ function [] = convolve_and_cross_correlate_formants(subject_number)
     epoch_order_pruned = sortrows(epoch_order_pruned, 'latency');
     
     %% 3. Convolve
-    formants = {'f0', 'f1', 'f2', 'f3'};
+    formants = {'f0', 'f1_f2', 'f3'};
     % Initialize data tables (epochs * channels * formants)
     cross_correlation = zeros(size(eeg_data, 3), size(eeg_data, 1), size(formants, 2));
     
@@ -75,8 +75,7 @@ function [] = convolve_and_cross_correlate_formants(subject_number)
                  auditory_stimuli = audioread(word);
 
                  % Compute convolution and cross correlation
-                 cross_correlation(k, j, i) = i+j+k;
-                 cross_correlation(k, j, i) = mean(xcorr(epoch, auditory_stimuli)); % should be #stim x #channels
+                 cross_correlation(k, j, i) = mean(xcorr(epoch, auditory_stimuli)); % should be #stim * #channels * #formants
 
              end
         end
@@ -85,15 +84,13 @@ function [] = convolve_and_cross_correlate_formants(subject_number)
     %% 4. Write data
     % Add relevant info to data tables
     f0_cross_correlation_data_table = save_corr(cross_correlation, epoch_order_pruned, 'f0', formants);
-    f1_cross_correlation_data_table = save_corr(cross_correlation, epoch_order_pruned, 'f1', formants);
-    f2_cross_correlation_data_table = save_corr(cross_correlation, epoch_order_pruned, 'f2', formants);
+    f1_f2_cross_correlation_data_table = save_corr(cross_correlation, epoch_order_pruned, 'f1_f2', formants);
     f3_cross_correlation_data_table = save_corr(cross_correlation, epoch_order_pruned, 'f3', formants);
     
     % Write data
     cross_correlation_data_table = [f0_cross_correlation_data_table;
-        f0_cross_correlation_data_table; 
-        f0_cross_correlation_data_table; 
-        f0_cross_correlation_data_table];
+        f1_f2_cross_correlation_data_table; 
+        f3_cross_correlation_data_table];
     fp = fullfile('data', subject_number, 'formants_cross_correlation_data_table');
     fprintf(1, strcat('Writing file to ', fp))
     save(fp, 'cross_correlation_data_table');
@@ -104,7 +101,7 @@ function [] = convolve_and_cross_correlate_formants(subject_number)
         cross_correlation = array2table(cross_correlation(:, :, formant_table));
         
         % Create array for formants
-        formant_array(1:length(cross_correlation)) = formant;
+        formant_array(1:size(epoch_order_pruned, 1), 1) = {formant};
         
         % Add information to data table
         cross_correlation_data_table = table(formant_array,...
