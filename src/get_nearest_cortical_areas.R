@@ -93,7 +93,6 @@
   }
   
   label_sphere <- function(sphere_coordinates) {
-    # labels <- data.frame("aal.label" = c(), "ba.label" = c())
     aal.label <- list()
     ba.label <- list()
     for (i in 1:length(sphere_coordinates)) {
@@ -101,13 +100,6 @@
       channel_labels <- apply(channel, MARGIN = 1, FUN = label_one_point)
       aal.label <- c(aal.label, list(unique(channel_labels[1,])))
       ba.label <- c(ba.label, list(unique(channel_labels[2,])))
-      
-      # unique_channel_labels <- c(list(unique(channel_labels[1,])), list(unique(channel_labels[2,])))
-      # labels <- rbind(labels, unique_channel_labels)
-
-      # unique_channel_labels <- data.frame("aal.label" = list(unique(channel_labels[1,])),
-                                    # "ba.label" = list(unique(channel_labels[2,])))
-      # labels <- rbind(labels, unique_channel_labels)
     }
     return(labels = list(aal.label = aal.label,
                          ba.label = ba.label))
@@ -130,20 +122,23 @@
   ## MAIN:
   start_time <- Sys.time()
   coordinates <- get_coordinates()
-  # coordinates <- data.frame("x" = 26, "y" = 0, "z" = 0)
   min_distance <- get_min_distance()
   sphere_coordinates <- mapply(get_sphere_coordinates,
                                radius,
                                min_distance,
-                               x = coordinates$x[1:2],
-                               y = coordinates$y[1:2],
-                               z = coordinates$z[1:2],
+                               x = coordinates$x,
+                               y = coordinates$y,
+                               z = coordinates$z,
                                SIMPLIFY = FALSE)
-  labs <- label_sphere(sphere_coordinates)
+  labels <- label_sphere(sphere_coordinates)
   end_time <- Sys.time()
   end_time - start_time
   
+  aal <- labels[["aal.label"]]
+  ba <- labels[["ba.label"]]
   
+  save(aal, file = '/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates_areas_aal.RData')
+  save(ba, file = '/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates_areas_ba.RData')
   
   ## RETURN:
   # return(sphere_coordinates)
