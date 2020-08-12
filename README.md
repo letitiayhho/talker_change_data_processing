@@ -2,7 +2,7 @@
 
 Running convolutions and cross correlations between the EEG data and audio signal of ending words of six types of sentence stems- high vs lowmeaning constraint, congruent vs incongruent, same vs different talker.
 
-### Dependencies
+## Dependencies
 
 * MATLAB R2019b or later with the dependencies for EEGLAB also listed [here](https://sccn.ucsd.edu/eeglab/ressources.php).
     * Signal processing toolbox
@@ -14,7 +14,7 @@ Running convolutions and cross correlations between the EEG data and audio signa
     * tools
     * dplyr
 
-### File management
+## File management
 
 As seen in this repo, everything in your working directory should be divided into three folders- `scripts`, `src`, and `data`. `scripts` is for wrapper bash scripts that you call to run the MATLAB files in `src`. `data` is where all the raw, preprocessed, and analyzed data end up, each subject has its own subdirectory within `data`. If you run everything using the scripts in `scripts`, you shouldn't have to directly touch anything in `src` or `data`, the bash scripts should take the correct files, apply correct MATLAB scripts to them and spit output into their correct subject folders.
 
@@ -30,7 +30,7 @@ For this you will need a CNET log in with access to the server. Check the APEX l
 ./scripts/extract-stim-order-from-text-files
 ```
 
-### Data processing
+## Data processing
 
 #### Preprocess
 
