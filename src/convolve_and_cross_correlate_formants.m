@@ -1,4 +1,14 @@
 function [] = convolve_and_cross_correlate_formants(subject_number)
+% DESCRIPTION:
+%     Takes the preprocessed eeg data and convolves or cross-correlates the 
+%     waveforms with the waveform of the auditory stimuli
+%
+% INPUT:
+%     subject_number (char) - input subject numbers as strings, e.g. '302'
+%
+% OUTPUT:
+%     Writes files named <cross_correlation/convolution>_formant_data_table.mat
+
     fprintf(1, strcat('Analyzing data from subject #', subject_number, '\n'))
 
     %% 1. Import data
@@ -52,17 +62,18 @@ function [] = convolve_and_cross_correlate_formants(subject_number)
     % Sort pruned epoch order by latency
     epoch_order_pruned = sortrows(epoch_order_pruned, 'latency');
     
-    %% 3. Convolve
+    %% 3. Compute cross correlations and convolutions for formants
     formants = {'f0', 'f1_f2', 'f3'};
+    
     % Initialize data tables (epochs * channels * formants)
     convolution = zeros(size(eeg_data, 3), size(eeg_data, 1), size(formants, 2));
     cross_correlation = zeros(size(eeg_data, 3), size(eeg_data, 1), size(formants, 2));
-    
+
     % Loop over formants
     for i = 1:length(formants)
         formant = formants(i);
         fprintf(1, ['Correlating eeg data with audio files filtered for ', char(formant), '\n'])
-    
+
         % Loop over channels
         for j = 1:size(eeg_data, 1)
             fprintf(1, ['Channel #', num2str(j), '\n'])
@@ -84,10 +95,9 @@ function [] = convolve_and_cross_correlate_formants(subject_number)
     end
 
     %% 4. Write data
-    % Write data
     cross_correlation_data_table = format_data(cross_correlation, epoch_order_pruned, formants);
-    fprintf(1, strcat('Writing file to ', fp))
     fp = fullfile('data', subject_number, 'cross_correlation_formant_data_table');
+    fprintf(1, strcat('Writing file to ', fp))
     save(fp, 'cross_correlation_data_table');
     
     convolution_data_table = format_data(convolution, epoch_order_pruned, formants);
@@ -95,7 +105,9 @@ function [] = convolve_and_cross_correlate_formants(subject_number)
     fprintf(1, strcat('Writing file to ', fp))
     save(fp, 'convolution_data_table');
     
+    % Format data into a table with columns for conditions
     function [data_table] = format_data(data, epoch_order_pruned, formants)
+        data_table = [];
         for formant = formants
             % Index into correlations of specified formant
             formant_table = find(contains(formants, formant));
