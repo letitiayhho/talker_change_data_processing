@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE, echo=FALSE}
 require("knitr")
-library('dplyr')
+library("dplyr")
 opts_knit$set(root.dir = "/Applications/eeglab2019/talker-change-data-processing/")
 ```
 
@@ -18,9 +18,12 @@ conv <- read.csv('data/aggregate/convolution_data.csv')
 # conv_formants <- read.csv('data/aggregate/convolution_formant_data.csv')
 ```
 
+
+******
+
 #### 1. Do cortical regions track temporal variation in the speech signal?
 
-```{r, message=FALSE, echo=FALSE}
+```{r, message=FALSE, include = FALSE}
 one_sample_t <- function(data) {
   channel_columns = paste("X", 1:128, sep = "")
   channels <- select(data, channel_columns)
@@ -29,65 +32,98 @@ one_sample_t <- function(data) {
   df <- apply(channels, MARGIN = 2, function(channel) {t.test(channel)$parameter})
   return(data.frame("p" = p, "t" = t, "df" = df))
 }
-```
 
-**Output 1. Channels with significant cross-correlation with stimulus waveform ($\alpha$ < 0.1)** Computed with a one-sample t-test on the cross-correlation of each stimulus waveform with each electrode EEG trace across all conditions. 
-
-```{r, message=FALSE, echo=FALSE}
+# Cross-correlation
 xcorr_tracking <- one_sample_t(xcorr)
-# List of channels with significant tracking (p < 0.1)
-xcorr_tracking[which(xcorr_tracking$p < 0.1),]
 # Number of channels with significant tracking
-nchans <- sum(xcorr_tracking$p < 0.1)
-```
+xcorr_nchans <- sum(xcorr_tracking$p < 0.1)
 
-Number of channels: `r nchans`
-
-**Output 2. Channels with significant convolution with stimulus waveform ($\alpha$ < 0.1)** One-sample t-test for the convolution of each stimulus waveform with each electrode EEG trace across all conditions.
-
-```{r, message=FALSE, echo=FALSE}
+# Convolution
 conv_tracking <- one_sample_t(conv)
-# List of channels with significant tracking (p < 0.1)
-conv_tracking[which(conv_tracking$p < 0.1),]
 # Number of channels with significant tracking
-nchans <- sum(conv_tracking$p < 0.1)
+conv_nchans <- sum(conv_tracking$p < 0.1)
 ```
 
-Number of channels: `r nchans`
+**Table 1. Number of channels significantly tracking the stimuli**
 
+| | count |
+| --- | --- |
+| cross correlation | `r xcorr_nchans` |
+| convolution | `r conv_nchans` |
+
+**Output 1. Channels with significant cross-correlation with stimulus waveform ($\alpha$ < 0.1)** Computed with a one-sample t-test for the cross-correlation of each stimulus waveform with each electrode EEG trace across all conditions.
+
+```{r}
+xcorr_tracking[which(xcorr_tracking$p < 0.1),]
+```
+
+**Output 2. Channels with significant convolution with stimulus waveform ($\alpha$ < 0.1)** Computed with a one-sample t-test for the convolution of each stimulus waveform with each electrode EEG trace across all conditions.
+
+```{r}
+conv_tracking[which(conv_tracking$p < 0.1),]
+```
+
+************
 
 #### 2. Do cortical regions track differently depending on the conditions?
 
+```{r}
+one_sample_t_sig <- function(data) {
+  channel_columns = paste("X", 1:128, sep = "")
+  channels <- select(data, channel_columns)
+  sig <- apply(channels, MARGIN = 2, function(channel) {t.test(channel)$p.value}) < 0.1
+  return(sig)
+}
+
+```
+
+
+```{r, message=FALSE, echo=FALSE}
+# Cross-correlation
+xcorr_same_talker <- one_sample_t_sig(filter(xcorr, talker == 'S'))
+xcorr_same_talker
+# xcorr_same_talker_nchans <- sum(xcorr_same_talker$p < 0.1)
+# xcorr_diff_talker <- one_sample_t(filter(xcorr, talker == 'T'))
+# xcorr_diff_talker_nchans <- sum(xcorr_diff_talker$p < 0.1)
+# xcorr_meaningful <- one_sample_t(filter(xcorr, meaning == 'M'))
+# xcorr_meaningful_nchans <- sum(xcorr_meaningful$p < 0.1)
+# xcorr_nonsense <- one_sample_t(filter(xcorr, meaning == 'N'))
+# xcorr_nonsense_nchans <- sum(xcorr_nonsense$p < 0.1)
+# xcorr_general <- one_sample_t(filter(xcorr, constraint == 'G'))
+# xcorr_general_nchans <- sum(xcorr_general$p < 0.1)
+# xcorr_specific <- one_sample_t(filter(xcorr, constraint == 'S'))
+# xcorr_specific_nchans <- sum(xcorr_specific$p < 0.1)
+# 
+# # Convolution
+# conv_same_talker <- one_sample_t(filter(conv, talker == 'S'))
+# conv_same_talker_nchans <- sum(conv_same_talker$p < 0.1)
+# conv_diff_talker <- one_sample_t(filter(conv, talker == 'T'))
+# conv_diff_talker_nchans <- sum(conv_diff_talker$p < 0.1)
+# conv_meaningful <- one_sample_t(filter(conv, meaning == 'M'))
+# conv_meaningful_nchans <- sum(conv_meaningful$p < 0.1)
+# conv_nonsense <- one_sample_t(filter(conv, meaning == 'N'))
+# conv_nonsense_nchans <- sum(conv_nonsense$p < 0.1)
+# conv_general <- one_sample_t(filter(conv, constraint == 'G'))
+# conv_general_nchans <- sum(conv_general$p < 0.1)
+# conv_specific <- one_sample_t(filter(conv, constraint == 'S'))
+# conv_specific_nchans <- sum(conv_specific$p < 0.1)
+```
+
 **Table 2. Number of channels significantly tracking the stimuli** 
-|  | same talker | different talker | meaningful | nonsense | general constraint | specific constraint |
-| --- | --- | --- | --- | --- | --- |
-| cross correlation | `r xcorr_same_talker_nchans` | `r xcorr_diff_talker_nchans` | `r xcorr_meaningful_nchans` | `r xcorr_nonsense_nchans` |  `r xcorr_general_nchans` | `r xcorr_specific_nchans` |
-| convolution | `r conv_same_talker_nchans` | `r conv_diff_talker_nchans` | `r conv_meaningful_nchans` | `r conv_nonsense_nchans` |  `r conv_general_nchans` | `r conv_specific_nchans` |
 
-**Output 3. Channels with significant cross-correlation with stimulus waveform under the same talker condition** Paired samples t-test between stimulus-electrode trace cross-correlations at the levels within each condition.
+<!-- | | same talker | different talker | meaningful | nonsense | general constraint | specific constraint | -->
+<!-- | --- | --- | --- | --- | --- | --- | --- | -->
+<!-- | cross correlation | `r xcorr_same_talker_nchans` | `r xcorr_diff_talker_nchans` | `r xcorr_meaningful_nchans` | `r xcorr_nonsense_nchans` |  `r xcorr_general_nchans` | `r xcorr_specific_nchans` | -->
+<!-- | convolution | `r conv_same_talker_nchans` | `r conv_diff_talker_nchans` | `r conv_meaningful_nchans` | `r conv_nonsense_nchans` |  `r conv_general_nchans` | `r conv_specific_nchans` | -->
 
-```{r, message=FALSE, echo=FALSE}
-xcorr_same_talker <- one_sample_t(filter(xcorr, talker == 'S'))
-# List of channels with significant tracking (p < 0.1)
-xcorr_same_talker[which(xcorr_same_talker$p < 0.1),]
-# Number of channels with significant tracking
-xcorr_same_talker_nchans <- sum(xcorr_same_talker$p < 0.1)
+**Output 3. Sample of channels with significant cross-correlation with stimulus waveform under the same-talker condition ($\alpha$ < 0.1)**
+```{r}
+# xcorr_same_talker[which(xcorr_same_talker$p < 0.1),]
 ```
 
-```{r, message=FALSE, echo=FALSE}
-xcorr_diff_talker <- one_sample_t(filter(xcorr, talker == 'T'))
-# List of channels with significant tracking (p < 0.1)
-xcorr_diff_talker[which(xcorr_diff_talker$p < 0.1),]
-# Number of channels with significant tracking
-xcorr_diff_talker_nchans <- sum(xcorr_diff_talker$p < 0.1)
-```
+**Output 4. Sample of channels with significant convolution with stimulus waveform under the same-talker condition ($\alpha$ < 0.1)**
+```{r}
+# conv_same_talker[which(conv_same_talker$p < 0.1),]
 ```
 
-
-**Convolution**
-Paired samples t-test between stimulus-electrode trace convolutions at the levels within each condition
-
-```{r, message=FALSE, echo=FALSE}
-
-```
 
