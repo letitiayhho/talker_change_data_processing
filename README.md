@@ -4,12 +4,12 @@ Running convolutions and cross correlations between the EEG data and audio signa
 
 ### Dependencies
 
-* MATLAB R2019b (or later) with the dependencies for EEGLAB also listed [here](https://sccn.ucsd.edu/eeglab/ressources.php).
+* MATLAB R2019b or later with the dependencies for EEGLAB also listed [here](https://sccn.ucsd.edu/eeglab/ressources.php).
     * Signal processing toolbox
     * Statistics toolbox
     * Optimization toolbox
     * Image processing toolbox
-* R version 3.6.1
+* R version 3.6.1 with following packages
     * R.matlab
     * tools
     * dplyr
@@ -22,7 +22,7 @@ All scripts should be run from the root directory of this repo, i.e. if you git 
 
 **Download raw data from lab server**
 
-For this you will need a CNET log in with access to the server. Check the APEX lab wiki to see how to get access approval. 
+For this you will need a CNET log in with access to the server. Check the APEX lab wiki to see how to get access approval.
 
 ```
 ./scripts/download-eeg-data
@@ -34,14 +34,14 @@ For this you will need a CNET log in with access to the server. Check the APEX l
 
 #### Preprocess
 
-To run the preprocessing script with the wrapper bash script use `./scripts/preprocess <subject_number> ...`, where the elipsses `...` denote any number of subjects. The script will run the process in the background so that it continues even if the Terminal window exits. To see the MATLAB outputs run `tail -f <name of log file.log>` the log file name should come up after you run the bash script. Kill the process to stop viewing the output, type in the same `tail` command to see it again. To kill the process, use the `kill <pid>` that the bash script also gives you when you first run it.
+To run the preprocessing script with the wrapper bash script use `./scripts/preprocess <subject_number> ...`, where the elipses `...` denote any number of subjects. The script will run the process in the background so that it continues even if the Terminal window exits. To see the MATLAB outputs run `tail -f <name of log file.log>` the log file name should come up after you run the bash script. Kill the process to stop viewing the output, type in the same `tail` command to see it again. To kill the process, use the `kill <pid>` that the bash script also gives you when you first run it.
 
 ```
 ./scripts/preprocess-audio <downsample frequency> <high-pass frequency> <low-pass frequency>
 ./scripts/preprocess-eeg-data <subject number> ...
 ```
 
-To run the preprocessing manually with the MATLAB script from command line use. The MATLAB script being used is `preprocess_eeg_data.m.
+To run the preprocessing manually with the MATLAB script from command line use the following..
 
 ```
 matlab -nodisplay -r "preprocess_eeg_data('<subject number>','<eeg data file name.raw>','<channel location file name.sfp')"
