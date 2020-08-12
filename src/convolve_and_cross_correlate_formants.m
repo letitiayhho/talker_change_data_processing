@@ -91,11 +91,11 @@ function [] = convolve_and_cross_correlate_formants(subject_number)
     cross_correlation_data_table = [f0_cross_correlation_data_table;
         f1_f2_cross_correlation_data_table; 
         f3_cross_correlation_data_table];
-    fp = fullfile('data', subject_number, 'formants_cross_correlation_data_table');
+    fp = fullfile('data', subject_number, 'formant_data_table');
     fprintf(1, strcat('Writing file to ', fp))
-    save(fp, 'cross_correlation_data_table');
+    save(fp, 'data_table');
     
-    function [cross_correlation_data_table] = save_corr(cross_correlation, epoch_order_pruned, formant, formants)
+    function [data_table] = save_corr(cross_correlation, epoch_order_pruned, formant, formants)
         % Index into correlations of specified formant
         formant_table = find(contains(formants, formant));
         cross_correlation = array2table(cross_correlation(:, :, formant_table));
@@ -104,7 +104,7 @@ function [] = convolve_and_cross_correlate_formants(subject_number)
         formant_array(1:size(epoch_order_pruned, 1), 1) = {formant};
         
         % Add information to data table
-        cross_correlation_data_table = table(formant_array,...
+        data_table = table(formant_array,...
             [epoch_order_pruned.type],...
             [epoch_order_pruned.epoch],...
             [epoch_order_pruned.word],...
