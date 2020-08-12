@@ -11,6 +11,8 @@ Running convolutions and cross correlations between the EEG data and audio signa
     * Image processing toolbox
 * R version 3.6.1
     * R.matlab
+    * tools
+    * dplyr
 
 #### File management
 
