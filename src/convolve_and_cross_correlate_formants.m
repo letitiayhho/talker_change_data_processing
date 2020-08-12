@@ -55,6 +55,7 @@ function [] = convolve_and_cross_correlate_formants(subject_number)
     %% 3. Convolve
     formants = {'f0', 'f1_f2', 'f3'};
     % Initialize data tables (epochs * channels * formants)
+    convolution = zeros(size(eeg_data, 3), size(eeg_data, 1), size(formants, 2));
     cross_correlation = zeros(size(eeg_data, 3), size(eeg_data, 1), size(formants, 2));
     
     % Loop over formants
@@ -75,6 +76,7 @@ function [] = convolve_and_cross_correlate_formants(subject_number)
                  auditory_stimuli = audioread(word);
 
                  % Compute convolution and cross correlation
+                 convolution(k, j, i) = mean(conv(epoch, auditory_stimuli));
                  cross_correlation(k, j, i) = mean(xcorr(epoch, auditory_stimuli)); % should be #stim * #channels * #formants
 
              end
@@ -82,38 +84,38 @@ function [] = convolve_and_cross_correlate_formants(subject_number)
     end
 
     %% 4. Write data
-    % Add relevant info to data tables
-    f0_cross_correlation_data_table = save_corr(cross_correlation, epoch_order_pruned, 'f0', formants);
-    f1_f2_cross_correlation_data_table = save_corr(cross_correlation, epoch_order_pruned, 'f1_f2', formants);
-    f3_cross_correlation_data_table = save_corr(cross_correlation, epoch_order_pruned, 'f3', formants);
-    
     % Write data
-    cross_correlation_data_table = [f0_cross_correlation_data_table;
-        f1_f2_cross_correlation_data_table; 
-        f3_cross_correlation_data_table];
-    fp = fullfile('data', subject_number, 'formant_data_table');
+    cross_correlation_data_table = format_data(cross_correlation, epoch_order_pruned, formants);
     fprintf(1, strcat('Writing file to ', fp))
-    save(fp, 'data_table');
+    fp = fullfile('data', subject_number, 'cross_correlation_formant_data_table');
+    save(fp, 'cross_correlation_data_table');
     
-    function [data_table] = save_corr(cross_correlation, epoch_order_pruned, formant, formants)
-        % Index into correlations of specified formant
-        formant_table = find(contains(formants, formant));
-        cross_correlation = array2table(cross_correlation(:, :, formant_table));
-        
-        % Create array for formants
-        formant_array(1:size(epoch_order_pruned, 1), 1) = {formant};
-        
-        % Add information to data table
-        data_table = table(formant_array,...
-            [epoch_order_pruned.type],...
-            [epoch_order_pruned.epoch],...
-            [epoch_order_pruned.word],...
-            [cross_correlation],...
-            'VariableNames', {'formant', 'condition', 'epoch', 'word', 'cross_correlation'});
-    end
+    convolution_data_table = format_data(convolution, epoch_order_pruned, formants);
+    fp = fullfile('data', subject_number, 'convolution_formant_data_table');
+    fprintf(1, strcat('Writing file to ', fp))
+    save(fp, 'convolution_data_table');
+    
+    function [data_table] = format_data(data, epoch_order_pruned, formants)
+        for formant = formants
+            % Index into correlations of specified formant
+            formant_table = find(contains(formants, formant));
+            data = array2table(data(:, :, formant_table));
 
-%     [y, Fs] = audioread('bruh.mp3')
-%     sound(y,Fs)
+            % Create array for formants
+            formant_array(1:size(epoch_order_pruned, 1), 1) = {formant};
+
+            % Add information to data table
+            formant_data = table(formant_array,...
+                [epoch_order_pruned.type],...
+                [epoch_order_pruned.epoch],...
+                [epoch_order_pruned.word],...
+                [data],...
+                'VariableNames', {'formant', 'condition', 'epoch', 'word', 'cross_correlation'});
+            
+            % Row bind to data table
+            data_table = [data_table; formant_data];
+        end
+    end
 
     %% Quit
     quit
