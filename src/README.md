@@ -4,7 +4,7 @@ Most of the files in here are run through bash scripts in `scripts/`. These file
 
 ## Preprocessing scripts
 
-**preprocess-eeg-data.m** - Automated pipeline for preprocessing eeg data
+**preprocess_eeg_data.m** - Automated pipeline for preprocessing eeg data
 
 **convolve_and_cross_correlate.m** - Takes the preprocessed eeg data and convolves or cross-correlates the waveforms with the waveform of the auditory stimuli
 
