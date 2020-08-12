@@ -9,10 +9,14 @@ Running convolutions and cross correlations between the EEG data and audio signa
     * Statistics toolbox
     * Optimization toolbox
     * Image processing toolbox
-* R version 3.6.1 with following packages.
+* R version 3.6.1 with following packages (\* only needed for certain analyses)
     * R.matlab
     * tools
     * dplyr
+    * broom\*
+    * label4mri\*
+    * igraph\*
+    * ndtv\*
 
 ## File management
 
