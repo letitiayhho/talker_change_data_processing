@@ -1,0 +1,47 @@
+#!/bin/bash
+
+set -euo pipefail
+
+usage() {
+    cat <<eof >&2
+usage: $0
+
+    downsample and filter specificed .wav files in data/stim
+eof
+    exit 1
+}
+
+#if [[ $# -ne 1 ]]; then
+#    usage
+#fi
+
+
+for f in ./data/stim/*_f.wav; do
+    if echo "$f" | grep -q "_f0"; then
+        echo "skipping $f"
+        continue
+    fi
+    f0_f="$(echo "$f" | sed -E 's/^(.*)\.wav$/\1_f0.wav/')"
+    f1_f2_f="$(echo "$f" | sed -E 's/^(.*)\.wav$/\1_f1_f2.wav/')"
+    f3_f="$(echo "$f" | sed -E 's/^(.*)\.wav$/\1_f3.wav/')"
+    sox "$f" "$f0_f" lowpass 250
+    sox "$f" "$f1_f2_f" highpass 400 lowpass 3000
+    sox "$f" "$f3_f" highpass 3000
+
+done
+
+for f in ./data/stim/word_*.wav; do
+    if echo "$f" | grep -q "_f0"; then
+        echo "skipping $f"
+        continue
+    fi
+    f0_f="$(echo "$f" | sed -E 's/^(.*)\.wav$/\1_f0.wav/')"
+    f1_f2_f="$(echo "$f" | sed -E 's/^(.*)\.wav$/\1_f1_f2.wav/')"
+    f3_f="$(echo "$f" | sed -E 's/^(.*)\.wav$/\1_f3.wav/')"
+    sox "$f" "$f0_f" lowpass 160 
+    sox "$f" "$f1_f2_f" highpass 200 lowpass 3500
+    sox "$f" "$f3_f" highpass 3500
+
+done
+
+echo "done :^)"
