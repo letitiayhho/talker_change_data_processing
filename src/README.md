@@ -2,7 +2,7 @@
 
 Most of the files in here are run through bash scripts in `scripts/`. These files do all the actual processing and analysis of the data.
 
-### Preprocessing scripts
+## Preprocessing scripts
 
 **preprocess-eeg-data.m** - Automated pipeline for preprocessing eeg data
 
@@ -10,13 +10,13 @@ Most of the files in here are run through bash scripts in `scripts/`. These file
 
 **get_shaped_data.m** - Shapes the convolution and cross-correlation values for each subject and collects them into a data frame
 
-### Main analysis
+## Main analysis
 
-### Formant analysis
+## Formant analysis
 
 **convolve_and_cross_correlate_formants.m** - Convolve or cross-correlationeeeg signal and subband-filtered versions of the stimuli. See script for frequency bands and corresponding formants
 
-### Clustering analysis
+## Clustering analysis
 
 **get_permutation_clusters.R** - Identifies clusters of spatially contiguous channels that show condition-dependent verdicality
 
@@ -24,7 +24,7 @@ Most of the files in here are run through bash scripts in `scripts/`. These file
 
 **get_cluster_map.R** - Get a pretty figure of cross-correlation or convolution values on a 2-d map of the electrodes. Node size represents cross-correlation or convolution magnitude (abs). Color represents closest cortical area. Edges are a function of the similarity of the cross-correlation/convolution between the two nodes, and their euclidean distance
 
-### RMS analysis
+## RMS analysis
 
 **get_rms.m** - Calculate the RMS of each channel
 
@@ -32,7 +32,7 @@ Most of the files in here are run through bash scripts in `scripts/`. These file
 
 **get_rms_simplified_multreg.R** - Compute the same regression but for individual conditions and only for specified temporal subregions
 
-### Electrode location analysis.
+## Electrode location analysis.
 
 **get_mni_coordinates.R** - Get MNI coordinates of the average channel locations using the transformation matrix given by DIPFIT in EEGLAB
 
