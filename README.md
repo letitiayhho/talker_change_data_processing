@@ -36,20 +36,25 @@ For this you will need a CNET log in with access to the server. Check the APEX l
 
 ## Data processing
 
-#### Preprocess
+### Preprocessing
 
-To run the preprocessing script with the wrapper bash script use `./scripts/preprocess <subject_number> ...`, where the elipses `...` denote any number of subjects. The script will run the process in the background so that it continues even if the Terminal window exits. To see the MATLAB outputs run `tail -f <name of log file.log>` the log file name should come up after you run the bash script. Kill the process to stop viewing the output, type in the same `tail` command to see it again. To kill the process, use the `kill <pid>` that the bash script also gives you when you first run it.
+To run the preprocessing script with the wrapper bash script use `./scripts/<script_name> <subject_number> ...`, where the elipses `...` denote any number of subjects. The script will run the process in the background so that it continues even if the Terminal window exits. To see the MATLAB outputs run `tail -f <name of log file.log>` the log file name should come up after you run the bash script. Kill the process to stop viewing the output, type in the same `tail` command to see it again. To kill the process, use the `kill <pid>` that the bash script also gives you when you first run it.
+
+**Preprocessing raw audio and eeg data**
 
 ```
 ./scripts/preprocess-audio <downsample frequency> <high-pass frequency> <low-pass frequency>
+./scripts/preprocess-audio-formants 
 ./scripts/preprocess-eeg-data <subject number> ...
 ```
 
-#### Compute convolutions and cross-correlations
+**Compute convolutions and cross-correlations**
 
-Convolves and cross-correlates the eeg signal with the audio signal of the stimuli. To compute for each subject use the follow code, where the elipses `...` denote any number of subjects e.g. `./scripts/analyze-individual-subject-data 301 302 303`.
+Convolves and cross-correlates the preprocessed eeg signal with the preprocessed stimuli signal.
 
 ```
-./scripts/compute_convolution_and_cross_correlations <subject_number> ...
+./scripts/run_convolution_and_cross_correlations <subject_number> ...
+./scripts/run_convolution_and_cross_correlations_with_formants <subject_number> ...
+./scripts/run_rms <subject_number> ...
 ```
 
