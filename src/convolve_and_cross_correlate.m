@@ -1,4 +1,14 @@
 function [] = convolve_and_cross_correlate(subject_number)
+% DESCRIPTION:
+%     Takes the preprocessed eeg data and convolves or cross-correlates the 
+%     waveforms with the waveform of the auditory stimuli
+%
+% INPUT:
+%     subject_number (char) - input subject numbers as strings, e.g. '302'
+%
+% OUTPUT:
+%     Writes files named <cross_correlation/convolution>_data_table.mat
+
     fprintf(1, strcat('Analyzing data from subject #', subject_number, '\n'))
 
     %% 1. Import data
@@ -94,18 +104,6 @@ function [] = convolve_and_cross_correlate(subject_number)
     % Write data
     save(fullfile('data', subject_number, 'convolution_data_table'), 'convolution_data_table')
     save(fullfile('data', subject_number, 'cross_correlation_data_table'), 'cross_correlation_data_table')
-    
-    % Save convolution data as json
-%     convolution_json = jsonencode(convolution_data_table);
-%     fp = fopen(fullfile('data', subject_number, 'convolution.json'), 'w');
-%     fprintf(fp, convolution_json);
-%     fclose(fp);
-    
-    % Save cross cross_correlation data as json
-%     cross_correlation_json = jsonencode(cross_correlation_data_table);
-%     fp = fopen(fullfile('data', subject_number, 'cross_correlation.json'), 'w');
-%     fprintf(fp, cross_correlation_json);
-%     fclose(fp);
 
     %% Quit
     quit
