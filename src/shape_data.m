@@ -1,4 +1,4 @@
-function [] = get_shaped_data(method)
+function [] = shape_data(method)
     % DESCRIPTION:
     %   Computes cross-correlations or convolutions between eeg signal and audio 
     %   stimuli across all subjects, channels and trials for each condition
