@@ -4,8 +4,8 @@ function [] = shape_data(method)
     %   stimuli across all subjects, channels and trials for each condition
     %
     % INPUT:
-    %   method - (char) 'cross_correlation', 'convolution', 'RMS', or
-    %   'formant'
+    %   method - (char) 'cross_correlation', 'convolution', 'RMS', 'cross_
+    %   correlation_formant' or 'convolution_formant'
 
     %% Main
     cd('/Applications/eeglab2019/talker-change-data-processing/')
@@ -27,7 +27,7 @@ function [] = shape_data(method)
             [subject_data, subject_number] = load_single_subject_data(method, i);
 
             % Calculate means for each channel for each condition
-            if strcmp(method, 'formant') 
+            if contains(method, 'formant') 
                 subject_means = grpstats(subject_data, {'condition', 'formant'});
             else
                 subject_means = grpstats(subject_data, {'condition'});
@@ -56,11 +56,10 @@ function [] = shape_data(method)
 
     %% Load data of a single subject
     function [subject_data, subject_number] = load_single_subject_data(method, i)
-        methods = {'cross_correlation', 'convolution', 'RMS', 'formant'};
+        methods = {'cross_correlation', 'convolution', 'RMS', 'cross_correlation_formant', 'convolution_formant'};
         if ~ismember(method, methods)
             % Throw an error if incorrect method is specified
-            error('Invalid method, valid methods are ''convolution'','\...
-                '''cross_correlation'', ''RMS'', and ''formant''')
+            error('Invalid method, valid methods are ''convolution'',''cross_correlation'', ''RMS'', ''convolution_formant'', and ''cross_correlation_formant''')
         end
 
         % Get name of the data files and their directory
@@ -73,7 +72,8 @@ function [] = shape_data(method)
 
         % Load data
         subject_data = load(data_table_full_path);
-        subject_data = subject_data.('cross_correlation_data_table'); % CHANGE TO 'data_table' next time
+        var_names = strcat(method, '_data_table');
+        subject_data = subject_data.(var_names);
 
         % Convert into easily accessible form
         subject_data = [subject_data.formant, subject_data.condition, subject_data.cross_correlation]; % CROSS CORRELATION? or just data

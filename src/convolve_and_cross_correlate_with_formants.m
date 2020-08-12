@@ -95,33 +95,32 @@ function [] = convolve_and_cross_correlate_with_formants(subject_number)
     end
 
     %% 4. Write data
-    cross_correlation_data_table = format_data(cross_correlation, epoch_order_pruned, formants);
+    cross_correlation_formant_data_table = format_data(cross_correlation, epoch_order_pruned, formants);
     fp = fullfile('data', subject_number, 'cross_correlation_formant_data_table');
-    fprintf(1, strcat('Writing file to ', fp))
-    save(fp, 'cross_correlation_data_table');
+    fprintf(1, strcat('Writing file to ', fp, '\n'))
+    save(fp, 'cross_correlation_formant_data_table');
     
-    convolution_data_table = format_data(convolution, epoch_order_pruned, formants);
+    convolution_formant_data_table = format_data(convolution, epoch_order_pruned, formants);
     fp = fullfile('data', subject_number, 'convolution_formant_data_table');
-    fprintf(1, strcat('Writing file to ', fp))
-    save(fp, 'convolution_data_table');
+    fprintf(1, strcat('Writing file to ', fp, '\n'))
+    save(fp, 'convolution_formant_data_table');
     
     % Format data into a table with columns for conditions
     function [data_table] = format_data(data, epoch_order_pruned, formants)
         data_table = [];
-        for formant = formants
-            % Index into correlations of specified formant
-            formant_table = find(contains(formants, formant));
-            data = array2table(data(:, :, formant_table));
+        for i = 1:length(formants)
+            % Get correlations for each formant
+            formant_table = array2table(data(:, :, i));
 
             % Create array for formants
-            formant_array(1:size(epoch_order_pruned, 1), 1) = {formant};
+            formant_array(1:size(epoch_order_pruned, 1), 1) = formants(i);
 
             % Add information to data table
             formant_data = table(formant_array,...
                 [epoch_order_pruned.type],...
                 [epoch_order_pruned.epoch],...
                 [epoch_order_pruned.word],...
-                [data],...
+                [formant_table],...
                 'VariableNames', {'formant', 'condition', 'epoch', 'word', 'cross_correlation'});
             
             % Row bind to data table
