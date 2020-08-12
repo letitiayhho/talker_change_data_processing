@@ -9,7 +9,7 @@ Running convolutions and cross correlations between the EEG data and audio signa
     * Statistics toolbox
     * Optimization toolbox
     * Image processing toolbox
-* R version 3.6.1 with following packages
+* R version 3.6.1 with following packages.
     * R.matlab
     * tools
     * dplyr
@@ -22,7 +22,7 @@ All scripts should be run from the root directory of this repo, i.e. if you git 
 
 **Download raw data from lab server**
 
-For this you will need a CNET log in with access to the server. Check the APEX lab wiki to see how to get access approval.
+For this you will need a CNET log in with access to the server. Check the APEX lab wiki to see how to get access approval. To download the eeg data and stimuli files use the following code to run the bash scripts.
 
 ```
 ./scripts/download-eeg-data
@@ -39,14 +39,6 @@ To run the preprocessing script with the wrapper bash script use `./scripts/prep
 ```
 ./scripts/preprocess-audio <downsample frequency> <high-pass frequency> <low-pass frequency>
 ./scripts/preprocess-eeg-data <subject number> ...
-```
-
-To run the preprocessing manually with the MATLAB script from command line use the following..
-
-```
-matlab -nodisplay -r "preprocess_eeg_data('<subject number>','<eeg data file name.raw>','<channel location file name.sfp')"
-# EXAMPLE
-#  matlab -nodisplay -r "preprocess_eeg_data('302','302_eeg_data.raw','302_channel_locations.sfp')"
 ```
 
 #### Compute convolutions and cross-correlations
