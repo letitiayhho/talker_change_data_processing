@@ -9,10 +9,10 @@ output: html_document
 require("knitr")
 library("dplyr")
 library("kableExtra")
-opts_knit$set(root.dir = "/Applications/eeglab2019/talker-change-data-processing/")
 ```
 
 ``` {r load_data, echo=FALSE}
+setwd('/Applications/eeglab2019/talker-change-data-processing/')
 xcorr <- read.csv('data/aggregate/cross_correlation_data.csv')
 conv <- read.csv('data/aggregate/convolution_data.csv')
 # xcorr_formants <- read.csv('data/aggregate/cross_correlation_formant_data.csv')
@@ -71,7 +71,7 @@ conv_tracking[which(conv_tracking$p < 0.1),]
 **Table 2. Number of channels significantly tracking the stimuli under each condition** 
 
 ```{r, message=FALSE, echo=FALSE}
-# get_frequency_table <- function(xcorr, conv, title) {
+get_frequency_table <- function(xcorr, conv, title) {
   get_one_frequency_table <- function(data) {
     thresholded = c()
     thresholded[data$p < 0.1] <- 1
@@ -80,10 +80,15 @@ conv_tracking[which(conv_tracking$p < 0.1),]
     proportions <- prop.table(table(thresholded))
     return(data.frame("counts" = c(counts[1], counts[2]), "proportion" = c(proportions[1], proportions[2])))
   }
+  
+  xcorr_freqs <- get_one_frequency_table(xcorr_talker_s)
+  conv_freqs <- get_one_frequency_table(conv_talker_s)
 
+  kable(cbind(xcorr_freqs, conv_freqs), caption = title) %>%
+    kable_styling(c("striped", "bordered")) %>%
+    add_header_above(c(" ", "Cross-correlation" = 2, "Convolution" = 2))
 
-
-# }
+}
 
 xcorr_talker_s <- filter(xcorr, talker == 'S')
 conv_talker_s <- filter(conv, talker == 'S')
@@ -95,37 +100,6 @@ conv_freqs <- get_one_frequency_table(conv_talker_s)
 #            kable(conv_freqs, caption = 'convolution')),
 #       caption = title,
 #       booktabs = TRUE, valign = 't')
-
-```
-
-```{r, message=FALSE, echo=FALSE}
-# # Cross-correlation
-# xcorr_same_talker <- get_one_sample_t(filter(xcorr, talker == 'S'))
-# xcorr_diff_talker <- get_one_sample_t(filter(xcorr, talker == 'T'))
-# xcorr_meaningful <- get_one_sample_t(filter(xcorr, meaning == 'M'))
-# xcorr_nonsense <- get_one_sample_t(filter(xcorr, meaning == 'N'))
-# xcorr_general <- get_one_sample_t(filter(xcorr, constraint == 'G'))
-# xcorr_specific <- get_one_sample_t(filter(xcorr, constraint == 'S'))
-# 
-# # Convolution
-# conv_same_talker <- get_one_sample_t(filter(conv, talker == 'S'))
-# conv_diff_talker <- get_one_sample_t(filter(conv, talker == 'T'))
-# conv_meaningful <- get_one_sample_t(filter(conv, meaning == 'M'))
-# conv_nonsense <- get_one_sample_t(filter(conv, meaning == 'N'))
-# conv_general <- get_one_sample_t(filter(conv, constraint == 'G'))
-# conv_specific <- get_one_sample_t(filter(conv, constraint == 'S'))
-# 
-# # Create frequency table
-# condition_freq_table <- data.frame("talker S" = c(sum(xcorr_same_talker$p < 0.1), sum(conv_same_talker$p < 0.1)),
-#                                    "talker T" = c(sum(xcorr_diff_talker$p < 0.1), sum(conv_diff_talker$p < 0.1)),
-#                                    "meaning M" = c(sum(xcorr_meaningful$p < 0.1), sum(conv_meaningful$p < 0.1)),
-#                                    "meaning N" = c(sum(xcorr_nonsense$p < 0.1), sum(conv_nonsense$p < 0.1)),
-#                                    "constraint S" = c(sum(xcorr_specific$p < 0.1), sum(conv_specific$p < 0.1)),
-#                                    "constraint G" = c(sum(xcorr_general$p < 0.1), sum(conv_general$p < 0.1))) 
-# row.names(condition_freq_table) <- c("cross correlation", "convolution")
-# kable(condition_freq_table) %>%
-#   kable_styling(bootstrap_options = "striped", full_width = T)
-
 
 ```
 
