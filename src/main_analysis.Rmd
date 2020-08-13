@@ -71,7 +71,10 @@ conv_tracking[which(conv_tracking$p < 0.1),]
 one_sample_t_sig <- function(data) {
   channel_columns = paste("X", 1:128, sep = "")
   channels <- select(data, channel_columns)
-  sig <- apply(channels, MARGIN = 2, function(channel) {t.test(channel)$p.value}) < 0.1
+  p <- apply(channels, MARGIN = 2, function(channel) {t.test(channel)$p.value})
+  sig <- p
+  sig[which(p < 0.1)] <- 1
+  sig[which(p > 0.1)] <- 0
   return(sig)
 }
 
@@ -82,6 +85,7 @@ one_sample_t_sig <- function(data) {
 # Cross-correlation
 xcorr_same_talker <- one_sample_t_sig(filter(xcorr, talker == 'S'))
 xcorr_same_talker
+table(xcorr_same_talker)
 # xcorr_same_talker_nchans <- sum(xcorr_same_talker$p < 0.1)
 # xcorr_diff_talker <- one_sample_t(filter(xcorr, talker == 'T'))
 # xcorr_diff_talker_nchans <- sum(xcorr_diff_talker$p < 0.1)
@@ -110,11 +114,6 @@ xcorr_same_talker
 ```
 
 **Table 2. Number of channels significantly tracking the stimuli** 
-
-<!-- | | same talker | different talker | meaningful | nonsense | general constraint | specific constraint | -->
-<!-- | --- | --- | --- | --- | --- | --- | --- | -->
-<!-- | cross correlation | `r xcorr_same_talker_nchans` | `r xcorr_diff_talker_nchans` | `r xcorr_meaningful_nchans` | `r xcorr_nonsense_nchans` |  `r xcorr_general_nchans` | `r xcorr_specific_nchans` | -->
-<!-- | convolution | `r conv_same_talker_nchans` | `r conv_diff_talker_nchans` | `r conv_meaningful_nchans` | `r conv_nonsense_nchans` |  `r conv_general_nchans` | `r conv_specific_nchans` | -->
 
 **Output 3. Sample of channels with significant cross-correlation with stimulus waveform under the same-talker condition ($\alpha$ < 0.1)**
 ```{r}
