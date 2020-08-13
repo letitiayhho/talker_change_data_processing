@@ -8,6 +8,7 @@ output: html_document
 ```{r setup, include=FALSE, echo=FALSE}
 require("knitr")
 library("dplyr")
+library("kableExtra")
 opts_knit$set(root.dir = "/Applications/eeglab2019/talker-change-data-processing/")
 ```
 
@@ -24,7 +25,7 @@ conv <- read.csv('data/aggregate/convolution_data.csv')
 #### 1. Do cortical regions track temporal variation in the speech signal?
 
 ```{r, message=FALSE, include = FALSE}
-one_sample_t <- function(data) {
+get_one_sample_t <- function(data) {
   channel_columns = paste("X", 1:128, sep = "")
   channels <- select(data, channel_columns)
   p <- apply(channels, MARGIN = 2, function(channel) {t.test(channel)$p.value})
@@ -34,12 +35,12 @@ one_sample_t <- function(data) {
 }
 
 # Cross-correlation
-xcorr_tracking <- one_sample_t(xcorr)
+xcorr_tracking <- get_one_sample_t(xcorr)
 # Number of channels with significant tracking
 xcorr_nchans <- sum(xcorr_tracking$p < 0.1)
 
 # Convolution
-conv_tracking <- one_sample_t(conv)
+conv_tracking <- get_one_sample_t(conv)
 # Number of channels with significant tracking
 conv_nchans <- sum(conv_tracking$p < 0.1)
 ```
@@ -53,13 +54,13 @@ conv_nchans <- sum(conv_tracking$p < 0.1)
 
 **Output 1. Channels with significant cross-correlation with stimulus waveform ($\alpha$ < 0.1)** Computed with a one-sample t-test for the cross-correlation of each stimulus waveform with each electrode EEG trace across all conditions.
 
-```{r}
+```{r, echo=FALSE}
 xcorr_tracking[which(xcorr_tracking$p < 0.1),]
 ```
 
 **Output 2. Channels with significant convolution with stimulus waveform ($\alpha$ < 0.1)** Computed with a one-sample t-test for the convolution of each stimulus waveform with each electrode EEG trace across all conditions.
 
-```{r}
+```{r, echo=FALSE}
 conv_tracking[which(conv_tracking$p < 0.1),]
 ```
 
@@ -67,61 +68,83 @@ conv_tracking[which(conv_tracking$p < 0.1),]
 
 #### 2. Do cortical regions track differently depending on the conditions?
 
-```{r}
-one_sample_t_sig <- function(data) {
-  channel_columns = paste("X", 1:128, sep = "")
-  channels <- select(data, channel_columns)
-  p <- apply(channels, MARGIN = 2, function(channel) {t.test(channel)$p.value})
-  sig <- p
-  sig[which(p < 0.1)] <- 1
-  sig[which(p > 0.1)] <- 0
-  return(sig)
-}
-
-```
-
+**Table 2. Number of channels significantly tracking the stimuli under each condition** 
 
 ```{r, message=FALSE, echo=FALSE}
-# Cross-correlation
-xcorr_same_talker <- one_sample_t_sig(filter(xcorr, talker == 'S'))
-xcorr_same_talker
-table(xcorr_same_talker)
-# xcorr_same_talker_nchans <- sum(xcorr_same_talker$p < 0.1)
-# xcorr_diff_talker <- one_sample_t(filter(xcorr, talker == 'T'))
-# xcorr_diff_talker_nchans <- sum(xcorr_diff_talker$p < 0.1)
-# xcorr_meaningful <- one_sample_t(filter(xcorr, meaning == 'M'))
-# xcorr_meaningful_nchans <- sum(xcorr_meaningful$p < 0.1)
-# xcorr_nonsense <- one_sample_t(filter(xcorr, meaning == 'N'))
-# xcorr_nonsense_nchans <- sum(xcorr_nonsense$p < 0.1)
-# xcorr_general <- one_sample_t(filter(xcorr, constraint == 'G'))
-# xcorr_general_nchans <- sum(xcorr_general$p < 0.1)
-# xcorr_specific <- one_sample_t(filter(xcorr, constraint == 'S'))
-# xcorr_specific_nchans <- sum(xcorr_specific$p < 0.1)
-# 
-# # Convolution
-# conv_same_talker <- one_sample_t(filter(conv, talker == 'S'))
-# conv_same_talker_nchans <- sum(conv_same_talker$p < 0.1)
-# conv_diff_talker <- one_sample_t(filter(conv, talker == 'T'))
-# conv_diff_talker_nchans <- sum(conv_diff_talker$p < 0.1)
-# conv_meaningful <- one_sample_t(filter(conv, meaning == 'M'))
-# conv_meaningful_nchans <- sum(conv_meaningful$p < 0.1)
-# conv_nonsense <- one_sample_t(filter(conv, meaning == 'N'))
-# conv_nonsense_nchans <- sum(conv_nonsense$p < 0.1)
-# conv_general <- one_sample_t(filter(conv, constraint == 'G'))
-# conv_general_nchans <- sum(conv_general$p < 0.1)
-# conv_specific <- one_sample_t(filter(conv, constraint == 'S'))
-# conv_specific_nchans <- sum(conv_specific$p < 0.1)
+# get_frequency_table <- function(xcorr, conv, title) {
+  get_one_frequency_table <- function(data) {
+    thresholded = c()
+    thresholded[data$p < 0.1] <- 1
+    thresholded[data$p > 0.1] <- 0
+    counts <- margin.table(table(thresholded), 1)
+    proportions <- prop.table(table(thresholded))
+    return(data.frame("counts" = c(counts[1], counts[2]), "proportion" = c(proportions[1], proportions[2])))
+  }
+
+
+
+# }
+
+xcorr_talker_s <- filter(xcorr, talker == 'S')
+conv_talker_s <- filter(conv, talker == 'S')
+# get_frequency_table(get_one_sample_t(xcorr_talker_s), get_one_sample_t(conv_talker_s), title = "talker S")
+
+xcorr_freqs <- get_one_frequency_table(xcorr_talker_s)
+conv_freqs <- get_one_frequency_table(conv_talker_s)
+# kable(list(kable(xcorr_freqs, caption = 'cross-correlation'),
+#            kable(conv_freqs, caption = 'convolution')),
+#       caption = title,
+#       booktabs = TRUE, valign = 't')
+
 ```
 
-**Table 2. Number of channels significantly tracking the stimuli** 
+```{r, message=FALSE, echo=FALSE}
+# # Cross-correlation
+# xcorr_same_talker <- get_one_sample_t(filter(xcorr, talker == 'S'))
+# xcorr_diff_talker <- get_one_sample_t(filter(xcorr, talker == 'T'))
+# xcorr_meaningful <- get_one_sample_t(filter(xcorr, meaning == 'M'))
+# xcorr_nonsense <- get_one_sample_t(filter(xcorr, meaning == 'N'))
+# xcorr_general <- get_one_sample_t(filter(xcorr, constraint == 'G'))
+# xcorr_specific <- get_one_sample_t(filter(xcorr, constraint == 'S'))
+# 
+# # Convolution
+# conv_same_talker <- get_one_sample_t(filter(conv, talker == 'S'))
+# conv_diff_talker <- get_one_sample_t(filter(conv, talker == 'T'))
+# conv_meaningful <- get_one_sample_t(filter(conv, meaning == 'M'))
+# conv_nonsense <- get_one_sample_t(filter(conv, meaning == 'N'))
+# conv_general <- get_one_sample_t(filter(conv, constraint == 'G'))
+# conv_specific <- get_one_sample_t(filter(conv, constraint == 'S'))
+# 
+# # Create frequency table
+# condition_freq_table <- data.frame("talker S" = c(sum(xcorr_same_talker$p < 0.1), sum(conv_same_talker$p < 0.1)),
+#                                    "talker T" = c(sum(xcorr_diff_talker$p < 0.1), sum(conv_diff_talker$p < 0.1)),
+#                                    "meaning M" = c(sum(xcorr_meaningful$p < 0.1), sum(conv_meaningful$p < 0.1)),
+#                                    "meaning N" = c(sum(xcorr_nonsense$p < 0.1), sum(conv_nonsense$p < 0.1)),
+#                                    "constraint S" = c(sum(xcorr_specific$p < 0.1), sum(conv_specific$p < 0.1)),
+#                                    "constraint G" = c(sum(xcorr_general$p < 0.1), sum(conv_general$p < 0.1))) 
+# row.names(condition_freq_table) <- c("cross correlation", "convolution")
+# kable(condition_freq_table) %>%
+#   kable_styling(bootstrap_options = "striped", full_width = T)
+
+
+```
+
+
+
+**Table 3. Number of channels tracking stimuli significantly differently between levels of the same condition**
+
+```{r}
+
+```
+
 
 **Output 3. Sample of channels with significant cross-correlation with stimulus waveform under the same-talker condition ($\alpha$ < 0.1)**
-```{r}
+```{r, echo=FALSE}
 # xcorr_same_talker[which(xcorr_same_talker$p < 0.1),]
 ```
 
 **Output 4. Sample of channels with significant convolution with stimulus waveform under the same-talker condition ($\alpha$ < 0.1)**
-```{r}
+```{r, echo=FALSE}
 # conv_same_talker[which(conv_same_talker$p < 0.1),]
 ```
 
