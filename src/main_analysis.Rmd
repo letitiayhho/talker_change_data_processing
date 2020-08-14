@@ -44,21 +44,26 @@ get_paired_samples_t <- function(group1, group2) {
   }
 ```
 
+```{r get_hot, message=FALSE, include=FALSE}
+get_hot <- function(data, label = "Matching") {
+  if (label == "Tracking") {labels = c("Tracking", "Not tracking")}
+  else if (label == "Distinguishing") {labels = c("Distinguishing", "Not distinguishing")}
+  else if (label == "Matching") {labels = c(1, 0)}
+  hot <- c()
+  hot[data$p < 0.1] <- labels[1]
+  hot[data$p > 0.1] <- labels[2]
+  return(hot)
+}
+```
+
 ```{r get_frequency_table, message=FALSE, include=FALSE}
-get_frequency_table <- function(xcorr, conv, title = NULL, tracking = TRUE) {
-  get_one_frequency_table <- function(data) {
-    thresholded = c()
-    if (tracking == FALSE) {
-      thresholded[data$p < 0.1] <- "Distinguishing"
-      thresholded[data$p > 0.1] <- "Not distinguishing" 
-    } else { 
-      thresholded[data$p < 0.1] <- "Tracking"
-      thresholded[data$p > 0.1] <- "Not tracking" }
-    counts <- margin.table(table(thresholded), 1)
-    proportions <- prop.table(table(thresholded))
+get_frequency_table <- function(xcorr, conv, title = NULL, interp = "Matching") {
+  get_one_frequency_table <- function(data, label = interp) {
+    hot <- get_hot(data, label)
+    counts <- margin.table(table(hot), 1)
+    proportions <- prop.table(table(hot))
     return(data.frame("counts" = c(counts[1], counts[2]), "proportion" = c(proportions[1], proportions[2])))
   }
-  
   xcorr_freqs <- get_one_frequency_table(xcorr)
   conv_freqs <- get_one_frequency_table(conv)
 
@@ -68,16 +73,7 @@ get_frequency_table <- function(xcorr, conv, title = NULL, tracking = TRUE) {
 }
 ```
 
-```{r get_hot, message=FALSE, include=FALSE}
-get_hot <- function(data) {
-  if (labels == "Tracking") {label = c("Tracking", "Not tracking")}
-  else (labels == "Distinguishing") {label = c("Distinguishing", "Not distinguishing")}
-  else (labels == "Matching") {label = c(1, 0)}
-  hot[which(data < 0.1)] <- label(1)
-  hot[which(data > 0.1)] <- label(2)
-  return(hot)
-}
-```
+
 
 ******
 
@@ -175,17 +171,17 @@ Tested by paired-samples t-tests between the two levels of each condition. I.e. 
 # Talker
 xcorr_talker <- get_paired_samples_t(filter(xcorr, talker == 'S'), filter(xcorr, talker == 'T'))
 conv_talker <- get_paired_samples_t(filter(conv, talker == 'S'), filter(conv, talker == 'T'))
-get_frequency_table(xcorr_talker, conv_talker, tracking = FALSE, title = "Table 9. Talker")
+get_frequency_table(xcorr_talker, conv_talker, title = "Table 9. Talker", interp = "Distinguishing")
 
 # Meaning
 xcorr_meaning <- get_paired_samples_t(filter(xcorr, meaning == 'M'), filter(xcorr, meaning == 'N'))
 conv_meaning <- get_paired_samples_t(filter(conv, meaning == 'M'), filter(conv, meaning == 'N'))
-get_frequency_table(xcorr_meaning, conv_meaning, tracking = FALSE, title = "Table 10. Meaning")
+get_frequency_table(xcorr_meaning, conv_meaning, title = "Table 10. Meaning", interp = "Distinguishing")
 
 # Constraint
 xcorr_constraint <- get_paired_samples_t(filter(xcorr, constraint == 'S'), filter(xcorr, constraint == 'G'))
 conv_constraint <- get_paired_samples_t(filter(conv, constraint == 'S'), filter(conv, constraint == 'G'))
-get_frequency_table(xcorr_constraint, conv_constraint, tracking = FALSE, title = "Table 11. Constraint")
+get_frequency_table(xcorr_constraint, conv_constraint, title = "Table 11. Constraint", interp = "Distinguishing")
 ```
 
 **Table 12. *p*-values for each condition**
@@ -193,10 +189,10 @@ get_frequency_table(xcorr_constraint, conv_constraint, tracking = FALSE, title =
 ```{r, echo=FALSE}
 # Match columns based on cross-correlation only
 
-talker_diff[which(xcorr_talker$p < 0.1)] <- 1
-talker_s_match
-talker_t_match
-talker_both_match
+# talker_diff[which(xcorr_talker$p < 0.1)] <- 1
+# talker_s_match
+# talker_t_match
+# talker_both_match
 
 condition_p_values <- data.frame(substr(row.names(xcorr_talker_s), 2, 10), 
                      xcorr_talker$p, conv_talker$p, 
