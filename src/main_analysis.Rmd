@@ -45,28 +45,27 @@ get_paired_samples_t <- function(group1, group2) {
 ```
 
 ```{r get_hot, message=FALSE, include=FALSE}
-get_hot <- function(data, label = "Matching") {
-  if (label == "Tracking") {labels = c("Tracking", "Not tracking")}
-  else if (label == "Distinguishing") {labels = c("Distinguishing", "Not distinguishing")}
-  else if (label == "Matching") {labels = c(1, 0)}
+get_hot <- function(data) {
   hot <- c()
-  hot[data$p < 0.1] <- labels[1]
-  hot[data$p > 0.1] <- labels[2]
+  hot[data$p < 0.1] <- 1
+  hot[data$p > 0.1] <- 0
   return(hot)
 }
 ```
 
 ```{r get_frequency_table, message=FALSE, include=FALSE}
-get_frequency_table <- function(xcorr, conv, title = NULL, interp = "Matching") {
-  get_one_frequency_table <- function(data, label = interp) {
-    hot <- get_hot(data, label)
+get_frequency_table <- function(data) {
+    hot <- get_hot(data)
     counts <- margin.table(table(hot), 1)
     proportions <- prop.table(table(hot))
     return(data.frame("counts" = c(counts[1], counts[2]), "proportion" = c(proportions[1], proportions[2])))
   }
-  xcorr_freqs <- get_one_frequency_table(xcorr)
-  conv_freqs <- get_one_frequency_table(conv)
+```
 
+```{r get_combined_frequency_table, message=FALSE, include=FALSE}
+get_combined_frequency_table <- function(xcorr, conv, title = NULL) {
+  xcorr_freqs <- get_frequency_table(xcorr)
+  conv_freqs <- get_frequency_table(conv)
   kable(cbind(xcorr_freqs, conv_freqs), caption = title) %>%
     kable_styling(c("striped", "condensed"), full_width = F) %>%
     add_header_above(c(" ", "Cross-correlation" = 2, "Convolution" = 2))
@@ -82,7 +81,7 @@ get_frequency_table <- function(xcorr, conv, title = NULL, interp = "Matching") 
 ``` {r, echo=FALSE}
 xcorr_all_conditions <- get_one_sample_t(xcorr)
 conv_all_conditions <- get_one_sample_t(conv)
-get_frequency_table(xcorr_all_conditions, conv_all_conditions, title = "Table 1. Channels significantly tracking the stimuli")
+get_combined_frequency_table(xcorr_all_conditions, conv_all_conditions, title = "Table 1. Channels significantly tracking the stimuli")
 ```
 
 **Output 1. Channels with significant cross-correlation with stimulus waveform ($\alpha$ < 0.1)** Computed with a one-sample t-test for the cross-correlation of each stimulus waveform with each electrode EEG trace across all conditions.
@@ -108,10 +107,10 @@ Tested by one-sample t-tests for significant waveform tracking in each level of 
 ```{r, echo=FALSE}
 xcorr_talker_s <- get_one_sample_t(filter(xcorr, talker == 'S'))
 conv_talker_s <- get_one_sample_t(filter(conv, talker == 'S'))
-get_frequency_table(xcorr_talker_s, conv_talker_s, title = "Table 2. Same talker")
+get_combined_frequency_table(xcorr_talker_s, conv_talker_s, title = "Table 2. Same talker")
 xcorr_talker_t <- get_one_sample_t(filter(xcorr, talker == 'T'))
 conv_talker_t <- get_one_sample_t(filter(conv, talker == 'T'))
-get_frequency_table(xcorr_talker_t, conv_talker_t, title = "Table 3. Different talker")
+get_combined_frequency_table(xcorr_talker_t, conv_talker_t, title = "Table 3. Different talker")
 ```
 
 **Channels significantly tracking the stimuli in the meaning condition** 
@@ -119,10 +118,10 @@ get_frequency_table(xcorr_talker_t, conv_talker_t, title = "Table 3. Different t
 ```{r, echo=FALSE}
 xcorr_meaning_m <- get_one_sample_t(filter(xcorr, meaning == 'M'))
 conv_meaning_m <- get_one_sample_t(filter(conv, meaning == 'M'))
-get_frequency_table(xcorr_meaning_m, conv_meaning_m, title = "Table 4. Meaningful")
+get_combined_frequency_table(xcorr_meaning_m, conv_meaning_m, title = "Table 4. Meaningful")
 xcorr_meaning_n <- get_one_sample_t(filter(xcorr, meaning == 'N'))
 conv_meaning_n <- get_one_sample_t(filter(conv, meaning == 'N'))
-get_frequency_table(xcorr_meaning_n, conv_meaning_n, title = "Table 5. Nonsense")
+get_combined_frequency_table(xcorr_meaning_n, conv_meaning_n, title = "Table 5. Nonsense")
 ```
 
 **Channels significantly tracking the stimuli in the constraint condition** 
@@ -130,10 +129,10 @@ get_frequency_table(xcorr_meaning_n, conv_meaning_n, title = "Table 5. Nonsense"
 ```{r, echo=FALSE}
 xcorr_constraint_s <- get_one_sample_t(filter(xcorr, constraint == 'S'))
 conv_constraint_s <- get_one_sample_t(filter(conv, constraint == 'S'))
-get_frequency_table(xcorr_constraint_s, conv_constraint_s, title = "Table 6. High constraint")
+get_combined_frequency_table(xcorr_constraint_s, conv_constraint_s, title = "Table 6. High constraint")
 xcorr_constraint_g <- get_one_sample_t(filter(xcorr, constraint == 'G'))
 conv_constraint_g <- get_one_sample_t(filter(conv, constraint == 'G'))
-get_frequency_table(xcorr_constraint_g, conv_constraint_g, title = "Table 7. Low constraint")
+get_combined_frequency_table(xcorr_constraint_g, conv_constraint_g, title = "Table 7. Low constraint")
 ```
 
 **Table 8. *p*-values for each level in each condition**
@@ -171,17 +170,17 @@ Tested by paired-samples t-tests between the two levels of each condition. I.e. 
 # Talker
 xcorr_talker <- get_paired_samples_t(filter(xcorr, talker == 'S'), filter(xcorr, talker == 'T'))
 conv_talker <- get_paired_samples_t(filter(conv, talker == 'S'), filter(conv, talker == 'T'))
-get_frequency_table(xcorr_talker, conv_talker, title = "Table 9. Talker", interp = "Distinguishing")
+get_combined_frequency_table(xcorr_talker, conv_talker, title = "Table 9. Talker")
 
 # Meaning
 xcorr_meaning <- get_paired_samples_t(filter(xcorr, meaning == 'M'), filter(xcorr, meaning == 'N'))
 conv_meaning <- get_paired_samples_t(filter(conv, meaning == 'M'), filter(conv, meaning == 'N'))
-get_frequency_table(xcorr_meaning, conv_meaning, title = "Table 10. Meaning", interp = "Distinguishing")
+get_combined_frequency_table(xcorr_meaning, conv_meaning, title = "Table 10. Meaning")
 
 # Constraint
 xcorr_constraint <- get_paired_samples_t(filter(xcorr, constraint == 'S'), filter(xcorr, constraint == 'G'))
 conv_constraint <- get_paired_samples_t(filter(conv, constraint == 'S'), filter(conv, constraint == 'G'))
-get_frequency_table(xcorr_constraint, conv_constraint, title = "Table 11. Constraint", interp = "Distinguishing")
+get_combined_frequency_table(xcorr_constraint, conv_constraint, title = "Table 11. Constraint")
 ```
 
 **Table 12. *p*-values for each condition**
@@ -193,18 +192,18 @@ get_frequency_table(xcorr_constraint, conv_constraint, title = "Table 11. Constr
 # talker_s_match
 # talker_t_match
 # talker_both_match
-
-condition_p_values <- data.frame(substr(row.names(xcorr_talker_s), 2, 10), 
-                     xcorr_talker$p, conv_talker$p, 
-                     xcorr_meaning$p, conv_meaning$p,
-                     xcorr_constraint$p, conv_constraint$p) %>%
-  mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
-  mutate_if(is.numeric, function(x) {ifelse(x < 0.1, cell_spec(x, bold = F, color = spec_color(x, direction = -1)),
-    cell_spec(x, bold = F, color = "black"))})
-
-kable(condition_p_values, escape = F, col.names = c("Channel", "XCorr", "Conv", "XCorr", "Conv", "XCorr", "Conv"))  %>%
-  add_header_above(c(" " = 1, "Talker" = 2, "Meaning" = 2, "Constraint" = 2)) %>%
-  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+# 
+# condition_p_values <- data.frame(substr(row.names(xcorr_talker_s), 2, 10), 
+#                      xcorr_talker$p, conv_talker$p, 
+#                      xcorr_meaning$p, conv_meaning$p,
+#                      xcorr_constraint$p, conv_constraint$p) %>%
+#   mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
+#   mutate_if(is.numeric, function(x) {ifelse(x < 0.1, cell_spec(x, bold = F, color = spec_color(x, direction = -1)),
+#     cell_spec(x, bold = F, color = "black"))})
+# 
+# kable(condition_p_values, escape = F, col.names = c("Channel", "XCorr", "Conv", "XCorr", "Conv", "XCorr", "Conv"))  %>%
+#   add_header_above(c(" " = 1, "Talker" = 2, "Meaning" = 2, "Constraint" = 2)) %>%
+#   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
 ************
