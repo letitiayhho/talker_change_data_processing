@@ -68,16 +68,25 @@ get_frequency_table <- function(xcorr, conv, title = NULL, tracking = TRUE) {
 }
 ```
 
+```{r get_hot, message=FALSE, include=FALSE}
+get_hot <- function(data) {
+  if (labels == "Tracking") {label = c("Tracking", "Not tracking")}
+  else (labels == "Distinguishing") {label = c("Distinguishing", "Not distinguishing")}
+  else (labels == "Matching") {label = c(1, 0)}
+  hot[which(data < 0.1)] <- label(1)
+  hot[which(data > 0.1)] <- label(2)
+  return(hot)
+}
+```
+
 ******
 
 #### 1. Do cortical regions track temporal variation in the speech signal?
 
-**Table 1. Channels significantly tracking the stimuli**
-
 ``` {r, echo=FALSE}
 xcorr_all_conditions <- get_one_sample_t(xcorr)
 conv_all_conditions <- get_one_sample_t(conv)
-get_frequency_table(xcorr_all_conditions, conv_all_conditions)
+get_frequency_table(xcorr_all_conditions, conv_all_conditions, title = "Table 1. Channels significantly tracking the stimuli")
 ```
 
 **Output 1. Channels with significant cross-correlation with stimulus waveform ($\alpha$ < 0.1)** Computed with a one-sample t-test for the cross-correlation of each stimulus waveform with each electrode EEG trace across all conditions.
@@ -103,10 +112,10 @@ Tested by one-sample t-tests for significant waveform tracking in each level of 
 ```{r, echo=FALSE}
 xcorr_talker_s <- get_one_sample_t(filter(xcorr, talker == 'S'))
 conv_talker_s <- get_one_sample_t(filter(conv, talker == 'S'))
-get_frequency_table(xcorr_talker_s, conv_talker_s, title = "Same talker")
+get_frequency_table(xcorr_talker_s, conv_talker_s, title = "Table 2. Same talker")
 xcorr_talker_t <- get_one_sample_t(filter(xcorr, talker == 'T'))
 conv_talker_t <- get_one_sample_t(filter(conv, talker == 'T'))
-get_frequency_table(xcorr_talker_t, conv_talker_t, title = "Different talker")
+get_frequency_table(xcorr_talker_t, conv_talker_t, title = "Table 3. Different talker")
 ```
 
 **Channels significantly tracking the stimuli in the meaning condition** 
@@ -114,10 +123,10 @@ get_frequency_table(xcorr_talker_t, conv_talker_t, title = "Different talker")
 ```{r, echo=FALSE}
 xcorr_meaning_m <- get_one_sample_t(filter(xcorr, meaning == 'M'))
 conv_meaning_m <- get_one_sample_t(filter(conv, meaning == 'M'))
-get_frequency_table(xcorr_meaning_m, conv_meaning_m, title = "Meaningful")
+get_frequency_table(xcorr_meaning_m, conv_meaning_m, title = "Table 4. Meaningful")
 xcorr_meaning_n <- get_one_sample_t(filter(xcorr, meaning == 'N'))
 conv_meaning_n <- get_one_sample_t(filter(conv, meaning == 'N'))
-get_frequency_table(xcorr_meaning_n, conv_meaning_n, title = "Nonsense")
+get_frequency_table(xcorr_meaning_n, conv_meaning_n, title = "Table 5. Nonsense")
 ```
 
 **Channels significantly tracking the stimuli in the constraint condition** 
@@ -125,38 +134,33 @@ get_frequency_table(xcorr_meaning_n, conv_meaning_n, title = "Nonsense")
 ```{r, echo=FALSE}
 xcorr_constraint_s <- get_one_sample_t(filter(xcorr, constraint == 'S'))
 conv_constraint_s <- get_one_sample_t(filter(conv, constraint == 'S'))
-get_frequency_table(xcorr_constraint_s, conv_constraint_s, title = "High constraint")
+get_frequency_table(xcorr_constraint_s, conv_constraint_s, title = "Table 6. High constraint")
 xcorr_constraint_g <- get_one_sample_t(filter(xcorr, constraint == 'G'))
 conv_constraint_g <- get_one_sample_t(filter(conv, constraint == 'G'))
-get_frequency_table(xcorr_constraint_g, conv_constraint_g, title = "Low constraint")
+get_frequency_table(xcorr_constraint_g, conv_constraint_g, title = "Table 7. Low constraint")
 ```
 
-***p*-values for each condition**
+**Table 8. *p*-values for each level in each condition**
 
 ```{r, echo=FALSE}
-talker <- data.frame(substr(row.names(xcorr_talker_s), 2, 10), xcorr_talker_s$p, conv_talker_s$p, xcorr_talker_t$p, conv_talker_t$p)  %>%
+level_p_values <- data.frame(substr(row.names(xcorr_talker_s), 2, 10), 
+                     xcorr_talker_s$p, conv_talker_s$p, 
+                     xcorr_talker_t$p, conv_talker_t$p,
+                     xcorr_meaning_m$p, conv_meaning_m$p,
+                     xcorr_meaning_n$p, conv_meaning_n$p,
+                     xcorr_constraint_s$p, conv_constraint_s$p,
+                     xcorr_constraint_g$p, conv_constraint_g$p)  %>%
   mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
-  mutate_if(is.numeric, function(x) {ifelse(x < 0.1, cell_spec(x, bold = T, color = spec_color(x, direction = -1)),
-    cell_spec(x, bold = T, color = "black"))})
-  # mutate_if(is.numeric, function(x) {cell_spec(x, bold = T, color = spec_color(x, end = 1, direction = -1))})%>%
-  # mutate_if(is.numeric, function(x) {cell_spec(x, bold = T, color = spec_color(x, end = 1, direction = -1))})
-  # mutate_if(is.numeric, function(x) {cell_spec(x, bold = T, color = spec_color(x, end = 1, direction = -1))})
-kable(talker, escape = F, col.names = c("Channel", "Cross correlation", "Convolution", "Cross correlation", "Convolution"))  %>%
-  add_header_above(c(" " = 1, "Same talker" = 2, "Different talker" = 2)) %>%
+  mutate_if(is.numeric, function(x) {ifelse(x < 0.1, cell_spec(x, bold = F, color = spec_color(x, direction = -1)),
+    cell_spec(x, bold = F, color = "black"))})
+
+kable(level_p_values, escape = F, col.names = c("Channel", "XCorr", "Conv", "XCorr", "Conv",
+                                        "XCorr", "Conv", "XCorr", "Conv",
+                                        "XCorr", "Conv", "XCorr", "Conv"))  %>%
+  add_header_above(c(" " = 1, "Same talker" = 2, "Different talker" = 2,
+                     "Meaningful" = 2, "Nonsense" = 2,
+                     "High constraint" = 2, "Low constraint" = 2)) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
-```
-
-
-**Output 3. Sample output of significant cross-correlation in the same-talker condition ($\alpha$ < 0.1)**
-
-```{r, echo=FALSE}
-xcorr_talker_s[which(xcorr_talker_s$p < 0.1),]
-```
-
-**Output 4. Sample output of significant convolution in the same-talker condition ($\alpha$ < 0.1)**
-
-```{r, echo=FALSE}
-conv_talker_s[which(conv_talker_s$p < 0.1),]
 ```
 
 ************
@@ -165,26 +169,61 @@ conv_talker_s[which(conv_talker_s$p < 0.1),]
 
 Tested by paired-samples t-tests between the two levels of each condition. I.e. a test of whether an electrode significantly distinguishes condition levels.
 
-**Table 5. Channels significantly distinguishing the stimuli in the talker condition** 
+**Channels significantly distinguishing the stimuli in each condition** 
 
 ```{r, echo=FALSE}
+# Talker
 xcorr_talker <- get_paired_samples_t(filter(xcorr, talker == 'S'), filter(xcorr, talker == 'T'))
 conv_talker <- get_paired_samples_t(filter(conv, talker == 'S'), filter(conv, talker == 'T'))
-get_frequency_table(xcorr_talker, conv_talker, tracking = FALSE)
-```
+get_frequency_table(xcorr_talker, conv_talker, tracking = FALSE, title = "Table 9. Talker")
 
-**Table 6. Channels significantly distinguishing the stimuli in the meaning condition** 
-
-```{r, echo=FALSE}
+# Meaning
 xcorr_meaning <- get_paired_samples_t(filter(xcorr, meaning == 'M'), filter(xcorr, meaning == 'N'))
 conv_meaning <- get_paired_samples_t(filter(conv, meaning == 'M'), filter(conv, meaning == 'N'))
-get_frequency_table(xcorr_meaning, conv_meaning, tracking = FALSE)
-```
+get_frequency_table(xcorr_meaning, conv_meaning, tracking = FALSE, title = "Table 10. Meaning")
 
-**Table 7. Channels significantly distinguishing the stimuli in the constraint condition** 
-
-```{r, echo=FALSE}
+# Constraint
 xcorr_constraint <- get_paired_samples_t(filter(xcorr, constraint == 'S'), filter(xcorr, constraint == 'G'))
 conv_constraint <- get_paired_samples_t(filter(conv, constraint == 'S'), filter(conv, constraint == 'G'))
-get_frequency_table(xcorr_constraint, conv_constraint, tracking = FALSE)
+get_frequency_table(xcorr_constraint, conv_constraint, tracking = FALSE, title = "Table 11. Constraint")
 ```
+
+**Table 12. *p*-values for each condition**
+
+```{r, echo=FALSE}
+# Match columns based on cross-correlation only
+
+talker_diff[which(xcorr_talker$p < 0.1)] <- 1
+talker_s_match
+talker_t_match
+talker_both_match
+
+condition_p_values <- data.frame(substr(row.names(xcorr_talker_s), 2, 10), 
+                     xcorr_talker$p, conv_talker$p, 
+                     xcorr_meaning$p, conv_meaning$p,
+                     xcorr_constraint$p, conv_constraint$p) %>%
+  mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
+  mutate_if(is.numeric, function(x) {ifelse(x < 0.1, cell_spec(x, bold = F, color = spec_color(x, direction = -1)),
+    cell_spec(x, bold = F, color = "black"))})
+
+kable(condition_p_values, escape = F, col.names = c("Channel", "XCorr", "Conv", "XCorr", "Conv", "XCorr", "Conv"))  %>%
+  add_header_above(c(" " = 1, "Talker" = 2, "Meaning" = 2, "Constraint" = 2)) %>%
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
+
+************
+
+#### 4. Are the brain organizations different in different conditions related to tracking?
+
+Tested by 
+
+**Subheading** 
+
+
+************
+
+#### 5. What properties are being tracked in the meaning and talker conditions?
+
+Tested by 
+
+**Subheading** 
