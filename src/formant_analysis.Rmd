@@ -1,0 +1,158 @@
+---
+title: "Talker change data processing"
+author: "Letitia Ho"
+date: "8/12/2020"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+require("knitr")
+library("dplyr")
+library("kableExtra")
+```
+
+``` {r load_data, warning=FALSE, include=FALSE}
+# Read files
+setwd("/Applications/eeglab2019/talker-change-data-processing/")
+xcorr_formants <- read.csv("data/aggregate/cross_correlation_formant_data.csv")
+
+# Function for subsetting data based on formant
+subset_formant <- function(data, formant) {
+  channel_columns = paste("X", 1:128, sep = "")
+  if (formant == "f0") {
+    data <- filter(data, formant == "f0")
+  } else if (formant == "f1_f2") {
+    M <- filter(data, formant == "f1_f2") 
+  } else if (condition == "f3") {
+    S <- filter(data, formant == "f3")
+  }
+  return(data)
+}
+
+# Function for subsetting data based on condition
+subset_condition <- function(data, condition) {
+  channel_columns = paste("X", 1:128, sep = "")
+  if (condition == "talker") {
+    S <- filter(data, talker == "S") %>% select(all_of(channel_columns))
+    T <- filter(data, talker == "T") %>% select(all_of(channel_columns))
+    return(list(S = S, T = T))
+  } else if (condition == "meaning") {
+    M <- filter(data, meaning == "M") %>% select(all_of(channel_columns))
+    N <- filter(data, meaning == "N") %>% select(all_of(channel_columns))
+    return(list(M = M, N = N))
+  } else if (condition == "constraint") {
+    S <- filter(data, constraint == "S") %>% select(all_of(channel_columns))
+    G <- filter(data, constraint == "G") %>% select(all_of(channel_columns))
+    return(list(S = S, G = G))
+  }
+}
+
+# Channel numbers
+channels <- as.character(1:128)
+channel_columns <- paste("X", 1:128, sep = "")
+
+# Subset by formants for easy access
+f0 <- subset_formant(xcorr_formants, "f0")
+f1_f2 <- subset_formant(xcorr_formants, "f1_f2")
+f3 <- subset_formant(xcorr_formants, "f3")
+
+# Subset by condition data for easy access
+f0_talker <- subset(xcorr_formants, "talker")
+f0_meaning <- subset(xcorr_formants, "meaning")
+f0_constraint <- subset(xcorr_formants, "constraint")
+f1_f2_talker <- subset(xcorr_formants, "talker")
+f1_f2_meaning <- subset(xcorr_formants, "meaning")
+f1_f2_constraint <- subset(xcorr_formants, "constraint")
+f3_talker <- subset(xcorr_formants, "talker")
+f3_meaning <- subset(xcorr_formants, "meaning")
+f3_constraint <- subset(xcorr_formants, "constraint")
+```
+
+```{r functions, warning=FALSE, include=FALSE}
+get_one_sample_t <- function(data) {
+  t <- apply(data, MARGIN = 2, function(channel) {t.test(channel)$statistic})
+  df <- apply(data, MARGIN = 2, function(channel) {t.test(channel)$parameter})
+  p <- apply(data, MARGIN = 2, function(channel) {t.test(channel)$p.value})
+  return(data.frame("t" = t, "df" = df, "p" = p))
+}
+
+get_paired_samples_t <- function(group1, group2) {
+  t <- mapply(function(x, y) {t.test(x, y, paired = TRUE)$statistic}, group1, group2)
+  df <- mapply(function(x, y) {t.test(x, y, paired = TRUE)$parameter}, group1, group2)
+  p <- mapply(function(x, y) {t.test(x, y, paired = TRUE)$p.value}, group1, group2)
+  return(data.frame("t" = t, "df" = df, "p" = p))
+  }
+
+get_ind_samples_t <- function(group1, group2) { # mostly to replicate JAMOVI t-test results
+  t <- mapply(function(x, y) {t.test(x, y, paired = FALSE, var.equal = TRUE)$statistic},
+              group1, group2)
+  df <- mapply(function(x, y) {t.test(x, y, paired = FALSE, var.equal = TRUE)$parameter}, 
+               group1, group2)
+  p <- mapply(function(x, y) {t.test(x, y, paired = FALSE, var.equal = TRUE)$p.value}, 
+              group1, group2)
+  return(data.frame("t" = t, "df" = df, "p" = p))
+}
+
+get_hot <- function(data) {
+  hot <- c()
+  hot[data$p < 0.1] <- 1
+  hot[data$p > 0.1] <- 0
+  return(hot)
+}
+
+get_match <- function(group1, group2) {
+  match <- c()
+  match <- ifelse(group1 == 1 & group2 == 1, 1, 0)
+  return(match)
+}
+```
+
+```{r plot_graphs_and_tables, warning=FALSE, include=FALSE}
+get_frequency_table <- function(data) {
+  t <- get_one_sample_t(data)
+  hot <- get_hot(t)
+  counts <- margin.table(table(hot), 1)
+  proportions <- prop.table(table(hot))
+  return(data.frame("counts" = c(counts[1], counts[2]), "proportion" = c(proportions[1], proportions[2])))
+  }
+
+get_combined_frequency_table <- function(xcorr, conv, title = NULL) {
+  xcorr_freqs <- get_frequency_table(xcorr)
+  conv_freqs <- get_frequency_table(conv)
+  kable(cbind(xcorr_freqs, conv_freqs), caption = title) %>%
+    kable_styling(c("striped", "condensed"), full_width = F) %>%
+    add_header_above(c(" ", "Cross-correlation" = 2, "Convolution" = 2))
+}
+```
+
+************
+
+#### 5. What properties are being tracked in the meaning and talker conditions?
+
+Tested by 
+
+**Subheading** 
+
+```{r}
+get_formant_frequency_table <- function(f0, f1_f2, f3, title = NULL) {
+  t_f0 <- 
+  f0_freqs <- get_frequency_table(f0)
+  f1_f2_freqs <- get_frequency_table(f1_f2)
+  f3_freqs <- get_frequency_table(f3)
+  kable(cbind(f0_freqs, f1_f2_freqs, f3_freqs), caption = title) %>%
+    kable_styling(c("striped", "condensed"), full_width = F) %>%
+    add_header_above(c(" ", "F0" = 2, "F1 + F2" = 2, "F3" = 2))
+}
+```
+
+
+```{r, warning=FALSE, echo=FALSE, include=FALSE}
+# Same talker
+t_xcorr <- get_one_sample_t(xcorr)
+get_formant_frequency_table(f0_talker$S, f1_f2_talker$S, f3_talker$S)
+```
+
+
+

@@ -18,8 +18,6 @@ library("kableExtra")
 setwd("/Applications/eeglab2019/talker-change-data-processing/")
 xcorr <- read.csv("data/aggregate/cross_correlation_data.csv")
 conv <- read.csv("data/aggregate/convolution_data.csv")
-xcorr_formants <- read.csv("data/aggregate/cross_correlation_formant_data.csv")
-conv_formants <- read.csv("data/aggregate/convolution_formant_data.csv")
 
 # Function for subsetting data based on condition and level
 subset <- function(data, condition) {
@@ -215,7 +213,7 @@ level_p_values <- data.frame(channels,
                      t_xcorr_constraint_paired$p)  %>%
   mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
-                                            cell_spec(x, bold = F, color = "black"),
+                                            cell_spec(x, NULL),
                                             cell_spec(x, background = spec_color(x, 
                                                                                  direction = 1, 
                                                                                  begin = 0.65, 
@@ -231,33 +229,9 @@ kable(level_p_values, escape = F, col.names = c("Channel", "S", "T", "Paired", "
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
-```{r, warning=FALSE, include=FALSE}
-# level_p_values <- data.frame(channels, 
-#                      t_xcorr_talker_s$p, t_conv_talker_s$p, 
-#                      t_xcorr_talker_t$p, t_conv_talker_t$p,
-#                      t_xcorr_talker_paired$p, t_conv_talker_paired$p,
-#                      t_xcorr_meaning_m$p, t_conv_meaning_m$p,
-#                      t_xcorr_meaning_n$p, t_conv_meaning_n$p,
-#                      t_xcorr_meaning_paired$p, t_conv_meaning_paired$p,
-#                      t_xcorr_constraint_s$p, t_conv_constraint_s$p,
-#                      t_xcorr_constraint_g$p, t_conv_constraint_g$p,
-#                      t_xcorr_constraint_paired$p, t_conv_constraint_paired$p)  %>%
-#   mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
-#   mutate_if(is.numeric, function(x) {ifelse(x < 0.1, cell_spec(x, bold = F, color = spec_color(x, direction = -1)),
-#     cell_spec(x, bold = F, color = "black"))})
-
-# names <- c()
-# names[1:2:18] <- c("XCorr", "Conv")
-# kable(level_p_values, escape = F, col.names = c("Channel", names))  %>%
-#   add_header_above(c(" " = 1, "Same talker" = 2, "Different talker" = 2, "Paired" = 2,
-#                      "Meaningful" = 2, "Nonsense" = 2, "Paired" = 2,
-#                      "High constraint" = 2, "Low constraint" = 2,  "Paired" = 2)) %>%
-#   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
-```
-
 **Table 13. Channels that distinguish between levels in a condition** The *condition diff* column contains channels that significantly distinguish between the two levels in a condition. The *match x* columns for individual levels indicate channels that significantly track the stimuli in the condition level. The *match both* column indicates channels that both distinguish between levels and significantly track stimuli under both levels. Differences between the *match x* columns in each condition show differences between the networks tracking speech under each condition level.
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, include=FALSE}
 # Match columns based on cross-correlation only
 talker_diff <- get_hot(t_xcorr_talker_paired)
 talker_s_match <- get_match(talker_diff, get_hot(t_xcorr_talker_s))
@@ -279,16 +253,41 @@ match_table <- data.frame(channels,
                           meaning_m_match, meaning_n_match, meaning_diff, meaning_both_match,
                           constraint_s_match, constraint_g_match, constraint_diff, constraint_both_match) %>%
   mutate_if(is.numeric, function(x) {ifelse(x == 1, 
-                                            cell_spec(x, color = "tomato3"), 
-                                            cell_spec(x, bold = F, color = "black"))})
+                                            cell_spec(x, background = "tomato"), 
+                                            cell_spec(x, NULL))})
 
-kable(match_table, align = "c", escape = F, col.names = c("Channel", 
-                                                          "match s", "match t", "diff", "match both",
-                                                          "match m", "match n", "diff", "match both",
-                                                          "match s", "match g", "diff", "match both"))  %>%
+kable(match_table, escape = F, col.names = c("Channel", 
+                                             "match s", "match t", "diff", "match both",
+                                             "match m", "match n", "diff", "match both",
+                                             "match s", "match g", "diff", "match both"))  %>%
   add_header_above(c(" " = 1, "Talker" = 4, "Meaning" = 4, "Constraint" = 4)) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
+
+```{r, echo=FALSE, include=FALSE}
+add <- function(x) apply(x, MARGIN = 1, sum)
+total <- cbind(talker_diff, meaning_diff, constraint_diff) %>% apply(MARGIN = 1, sum)
+TM <- cbind(talker_diff, meaning_diff) %>% apply(MARGIN = 1, sum)
+TC <- cbind(talker_diff, constraint_diff) %>% apply(MARGIN = 1, sum)
+MC <- cbind(meaning_diff, constraint_diff) %>% apply(MARGIN = 1, sum)
+
+condition_differences <- data.frame(channels, talker_diff, meaning_diff, constraint_diff, total, TM, TC, MC)
+  # mutate_if(is.numeric, function(x) {ifelse(x == 1, 
+  #                                           cell_spec(x, background = "tomato"), 
+  #                                           cell_spec(x, NULL))}) %>%
+  # mutate_if(is.numeric, function(x) {ifelse(x == 2, 
+  #                                           cell_spec(x, background = "blue"), 
+  #                                           cell_spec(x, NULL))})
+    # if(x == 0) {cell_spec(x, NULL)}
+    # else if(x == 1) {cell_spec(x, background = "tomato")} 
+    # else if(x == 2) {cell_spec(x, background = "turquoise")}})
+kable(condition_differences, escape = F, 
+      col.names = c("Channels", "Talker", "Meaning", "Constraint", "Total",
+                    "Talker + Meaning", "Talker + Constraint", "Meaning + Constraint")) %>%
+  add_header_above(c(" " = 1, "Discriminates one condition" = 4, "Discriminates two conditions" = 3)) %>%
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
+
 
 ************
 
@@ -297,46 +296,3 @@ kable(match_table, align = "c", escape = F, col.names = c("Channel",
 Tested by 
 
 **Subheading** 
-
-************
-
-#### 5. What properties are being tracked in the meaning and talker conditions?
-
-Tested by 
-
-**Subheading** 
-
-```{r, warning=FALSE, echo=FALSE, include=FALSE}
-get_channel_means <- function(data, condition) {
-  channel_columns = paste("X", 1:128, sep = "")
-  if (condition == "talker") {channel_means <- group_by(data, talker) %>% 
-                              summarise(across(channel_columns, mean))}
-  if (condition == "meaning") {channel_means <- group_by(data, meaning) %>% 
-                              summarise(across(channel_columns, mean))}
-  if (condition == "constraint") {channel_means <- group_by(data, constraint) %>% 
-                                  summarise(across(channel_columns, mean))}
-  return(channel_means)
-}
-
-# Talker
-talker_f0 <- get_channel_means(filter(xcorr_formants, formant == "f0"), condition = "talker")
-talker_f1_f2 <- get_channel_means(filter(xcorr_formants, formant == "f1_f2"), condition = "talker")
-talker_f3 <- get_channel_means(filter(xcorr_formants, formant == "f3"), condition = "talker")
-
-# Meaning
-meaning_f0 <- get_channel_means(filter(xcorr_formants, formant == "f0"), condition = "meaning")
-meaning_f1_f2 <- get_channel_means(filter(xcorr_formants, formant == "f1_f2"), condition = "meaning")
-meaning_f3 <- get_channel_means(filter(xcorr_formants, formant == "f3"), condition = "meaning")
-
-# Constraint
-constraint_f0 <- get_channel_means(filter(xcorr_formants, formant == "f0"), condition = "constraint")
-constraint_f1_f2 <- get_channel_means(filter(xcorr_formants, formant == "f1_f2"), condition = "constraint")
-constraint_f3 <- get_channel_means(filter(xcorr_formants, formant == "f3"), condition = "constraint")
-```
-
-```{r, include=FALSE}
-t.test(t(talker_f0[1,2:128]), t(talker_f0[2,2:128]), paired = TRUE)
-```
-
-
-
