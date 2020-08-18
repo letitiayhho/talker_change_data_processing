@@ -87,7 +87,7 @@ get_hot <- function(data) {
 
 get_match <- function(group1, group2) {
   match <- c()
-  match <- ifelse(group1 == 1 & group2 == 1, "1", "0")
+  match <- ifelse(group1 == 1 & group2 == 1, 1, 0)
   return(match)
 }
 ```
@@ -186,93 +186,121 @@ t_conv_talker_paired <- get_paired_samples_t(conv_talker$S, conv_talker$T)
 get_combined_frequency_table(t_xcorr_talker_paired, t_conv_talker_paired, title = "Table 9. Talker")
 
 # Meaning
-xcorr_meaning_paired <- get_paired_samples_t(xcorr_meaning$M, xcorr_meaning$N)
-conv_meaning_paired <- get_paired_samples_t(conv_meaning$M, conv_meaning$N)
-get_combined_frequency_table(xcorr_meaning_paired, conv_meaning_paired, title = "Table 10. Meaning")
+t_xcorr_meaning_paired <- get_paired_samples_t(xcorr_meaning$M, xcorr_meaning$N)
+t_conv_meaning_paired <- get_paired_samples_t(conv_meaning$M, conv_meaning$N)
+get_combined_frequency_table(t_xcorr_meaning_paired, t_conv_meaning_paired, title = "Table 10. Meaning")
 
 # Constraint
-xcorr_constraint_paired <- get_paired_samples_t(xcorr_constraint$S, xcorr_constraint$G)
-conv_constraint_paired <- get_paired_samples_t(conv_constraint$S, conv_constraint$G)
-get_combined_frequency_table(xcorr_constraint_paired, conv_constraint_paired, title = "Table 11. Constraint")
+t_xcorr_constraint_paired <- get_paired_samples_t(xcorr_constraint$S, xcorr_constraint$G)
+t_conv_constraint_paired <- get_paired_samples_t(conv_constraint$S, conv_constraint$G)
+get_combined_frequency_table(t_xcorr_constraint_paired, t_conv_constraint_paired, title = "Table 11. Constraint")
 ```
 
 
 **Table 8. *p*-values for each level in each condition**
 
-```{r, echo=FALSE}
-
+```{r, warning=FALSE, echo=FALSE}
+spacer <- matrix(" ", 128, 1)
 level_p_values <- data.frame(channels, 
                      t_xcorr_talker_s$p,
-                     t_xcorr_talker_t$p, t_conv_talker_t$p,
-                     t_xcorr_talker_paired$p, t_conv_talker_paired$p,
-                     t_xcorr_meaning_m$p, t_conv_meaning_m$p,
-                     t_xcorr_meaning_n$p, t_conv_meaning_n$p,
-                     t_xcorr_meaning_paired$p, t_conv_meaning_paired$p,
-                     t_xcorr_constraint_s$p, t_conv_constraint_s$p,
-                     t_xcorr_constraint_g$p, t_conv_constraint_g$p
-                     t_xcorr_constraint_paired$p, t_conv_constraint_paired$p)  %>%
+                     t_xcorr_talker_t$p, 
+                     t_xcorr_talker_paired$p,
+                     spacer,
+                     t_xcorr_meaning_m$p,
+                     t_xcorr_meaning_n$p, 
+                     t_xcorr_meaning_paired$p,
+                     spacer,
+                     t_xcorr_constraint_s$p,
+                     t_xcorr_constraint_g$p,
+                     t_xcorr_constraint_paired$p)  %>%
   mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
-  mutate_if(is.numeric, function(x) {ifelse(x < 0.1, cell_spec(x, bold = F, color = spec_color(x, direction = -1)),
-    cell_spec(x, bold = F, color = "black"))})
+  mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
+                                            cell_spec(x, bold = F, color = "black"),
+                                            cell_spec(x, background = spec_color(x, 
+                                                                                 direction = 1, 
+                                                                                 begin = 0.65, 
+                                                                                 end = 1, 
+                                                                                 option = "B", 
+                                                                                 scale_from = c(0,0.1))))})
 
-kable(level_p_values, escape = F, col.names = c("Channel", "XCorr", "Conv", "XCorr", "Conv", "Paired", 
-                                        "XCorr", "Conv", "XCorr", "Conv",
-                                        "XCorr", "Conv", "XCorr", "Conv"))  %>%
-  add_header_above(c(" " = 1, "Same talker" = 2, "Different talker" = 2,
-                     "Meaningful" = 2, "Nonsense" = 2,
-                     "High constraint" = 2, "Low constraint" = 2)) %>%
+# kable(level_p_values)
+kable(level_p_values, escape = F, col.names = c("Channel", "S", "T", "Paired", "---librar",
+                                                "M", "N", "Paired", "---",
+                                                "S", "G", "Paired")) %>%
+  add_header_above(c(" " = 1, "Talker" = 3, " "  = 1, "Meaning" = 3, " " = 1, "Constraint" = 3)) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
 
+```{r, warning=FALSE, include=FALSE}
+# level_p_values <- data.frame(channels, 
+#                      t_xcorr_talker_s$p, t_conv_talker_s$p, 
+#                      t_xcorr_talker_t$p, t_conv_talker_t$p,
+#                      t_xcorr_talker_paired$p, t_conv_talker_paired$p,
+#                      t_xcorr_meaning_m$p, t_conv_meaning_m$p,
+#                      t_xcorr_meaning_n$p, t_conv_meaning_n$p,
+#                      t_xcorr_meaning_paired$p, t_conv_meaning_paired$p,
+#                      t_xcorr_constraint_s$p, t_conv_constraint_s$p,
+#                      t_xcorr_constraint_g$p, t_conv_constraint_g$p,
+#                      t_xcorr_constraint_paired$p, t_conv_constraint_paired$p)  %>%
+#   mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
+#   mutate_if(is.numeric, function(x) {ifelse(x < 0.1, cell_spec(x, bold = F, color = spec_color(x, direction = -1)),
+#     cell_spec(x, bold = F, color = "black"))})
 
+# names <- c()
+# names[1:2:18] <- c("XCorr", "Conv")
+# kable(level_p_values, escape = F, col.names = c("Channel", names))  %>%
+#   add_header_above(c(" " = 1, "Same talker" = 2, "Different talker" = 2, "Paired" = 2,
+#                      "Meaningful" = 2, "Nonsense" = 2, "Paired" = 2,
+#                      "High constraint" = 2, "Low constraint" = 2,  "Paired" = 2)) %>%
+#   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
 **Table 13. Channels that distinguish between levels in a condition** The *condition diff* column contains channels that significantly distinguish between the two levels in a condition. The *match x* columns for individual levels indicate channels that significantly track the stimuli in the condition level. The *match both* column indicates channels that both distinguish between levels and significantly track stimuli under both levels. Differences between the *match x* columns in each condition show differences between the networks tracking speech under each condition level.
 
 ```{r, echo=FALSE}
 # Match columns based on cross-correlation only
-talker_diff <- get_hot(xcorr_talker_paired)
-talker_s_match <- get_match(talker_diff, get_hot(xcorr_talker_s))
-talker_t_match <- get_match(talker_diff, get_hot(xcorr_talker_t))
+talker_diff <- get_hot(t_xcorr_talker_paired)
+talker_s_match <- get_match(talker_diff, get_hot(t_xcorr_talker_s))
+talker_t_match <- get_match(talker_diff, get_hot(t_xcorr_talker_t))
 talker_both_match <- get_match(talker_s_match, talker_t_match)
 
-meaning_diff <- get_hot(xcorr_meaning_paired)
-meaning_m_match <- get_match(meaning_diff, get_hot(xcorr_meaning_m))
-meaning_n_match <- get_match(meaning_diff, get_hot(xcorr_meaning_n))
-meaning_both_match <- get_match(talker_s_match, talker_t_match)
+meaning_diff <- get_hot(t_xcorr_meaning_paired)
+meaning_m_match <- get_match(meaning_diff, get_hot(t_xcorr_meaning_m))
+meaning_n_match <- get_match(meaning_diff, get_hot(t_xcorr_meaning_n))
+meaning_both_match <- get_match(meaning_m_match, meaning_n_match)
 
-constraint_diff <- get_hot(xcorr_constraint_paired)
-constraint_s_match <- get_match(constraint_diff, get_hot(xcorr_constraint_s))
-constraint_g_match <- get_match(constraint_diff, get_hot(xcorr_constraint_g))
-constraint_both_match <- get_match(talker_s_match, talker_t_match)
+constraint_diff <- get_hot(t_xcorr_constraint_paired)
+constraint_s_match <- get_match(constraint_diff, get_hot(t_xcorr_constraint_s))
+constraint_g_match <- get_match(constraint_diff, get_hot(t_xcorr_constraint_g))
+constraint_both_match <- get_match(constraint_s_match, constraint_g_match)
 
-match_table <- data.frame(channel, 
+match_table <- data.frame(channels, 
                           talker_s_match, talker_t_match, talker_diff, talker_both_match,
                           meaning_m_match, meaning_n_match, meaning_diff, meaning_both_match,
                           constraint_s_match, constraint_g_match, constraint_diff, constraint_both_match) %>%
-  mutate_if(is.numeric, function(x) {round(x, digits = 3)})
+  mutate_if(is.numeric, function(x) {ifelse(x == 1, 
+                                            cell_spec(x, color = "tomato3"), 
+                                            cell_spec(x, bold = F, color = "black"))})
 
 kable(match_table, align = "c", escape = F, col.names = c("Channel", 
-                                                          "talker diff", "match s", "match t", "match both",
-                                                          "Meaning diff", "match m", "match n", "match both",
-                                                          "Constraint diff", "match s", "match g", "match both"))  %>%
+                                                          "match s", "match t", "diff", "match both",
+                                                          "match m", "match n", "diff", "match both",
+                                                          "match s", "match g", "diff", "match both"))  %>%
   add_header_above(c(" " = 1, "Talker" = 4, "Meaning" = 4, "Constraint" = 4)) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
-
-```{r}
-# Try independent samples t-test to replicate what Howard did
-
-
-# paired_talker_2 <- get_paired_samples_t(filter(xcorr, talker == "S"), filter(xcorr, talker == "T"))
-# meaning <- subset(conv, "meaning")
-# constraint <- subset(conv, "constraint")
-```
-
-
 ************
 
 #### 4. Are the brain organizations different in different conditions related to tracking?
+
+Tested by 
+
+**Subheading** 
+
+************
+
+#### 5. What properties are being tracked in the meaning and talker conditions?
 
 Tested by 
 
@@ -312,10 +340,3 @@ t.test(t(talker_f0[1,2:128]), t(talker_f0[2,2:128]), paired = TRUE)
 
 
 
-************
-
-#### 5. What properties are being tracked in the meaning and talker conditions?
-
-Tested by 
-
-**Subheading** 
