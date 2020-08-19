@@ -63,20 +63,20 @@ conv <- select(conv, all_of(channel_columns))
 xcorr <- select(xcorr, all_of(channel_columns))
 
 # Subset by formants for easy access
-f0 <- subset_formant(xcorr_formants, "f0")
-f1_f2 <- subset_formant(xcorr_formants, "f1_f2")
-f3 <- subset_formant(xcorr_formants, "f3")
+f0 <- subset_by_formant(xcorr_formants, "f0")
+f1_f2 <- subset_by_formant(xcorr_formants, "f1_f2")
+f3 <- subset_by_formant(xcorr_formants, "f3")
 
 # Subset formant data by condition for easy access
-f0_talker <- subset_condition(f0, "talker")
-f0_meaning <- subset_condition(f0, "meaning")
-f0_constraint <- subset_condition(f0, "constraint")
-f1_f2_talker <- subset_condition(f1_f2, "talker")
-f1_f2_meaning <- subset_condition(f1_f2, "meaning")
-f1_f2_constraint <- subset_condition(f1_f2, "constraint")
-f3_talker <- subset_condition(f3, "talker")
-f3_meaning <- subset_condition(f3, "meaning")
-f3_constraint <- subset_condition(f3, "constraint")
+f0_talker <- subset_by_condition(f0, "talker")
+f0_meaning <- subset_by_condition(f0, "meaning")
+f0_constraint <- subset_by_condition(f0, "constraint")
+f1_f2_talker <- subset_by_condition(f1_f2, "talker")
+f1_f2_meaning <- subset_by_condition(f1_f2, "meaning")
+f1_f2_constraint <- subset_by_condition(f1_f2, "constraint")
+f3_talker <- subset_by_condition(f3, "talker")
+f3_meaning <- subset_by_condition(f3, "meaning")
+f3_constraint <- subset_by_condition(f3, "constraint")
 ```
 
 ```{r functions, warning=FALSE, include=FALSE}
@@ -123,7 +123,8 @@ get_frequency_table <- function(data) {
     hot <- get_hot(data)
     counts <- margin.table(table(hot), 1)
     proportions <- prop.table(table(hot))
-    return(data.frame("counts" = c(counts[1], counts[2]), "proportion" = c(proportions[1], proportions[2])))
+    if (dim(counts) == 1) {return(data.frame("counts" = c(counts[1], 0), "proportion" = c(proportions[1], 0)))}
+    else {return(data.frame("counts" = c(counts[1], counts[2]), "proportion" = c(proportions[1], proportions[2])))}
   }
 
 get_combined_frequency_table <- function(xcorr, conv, title = NULL) {
@@ -132,6 +133,15 @@ get_combined_frequency_table <- function(xcorr, conv, title = NULL) {
   kable(cbind(xcorr_freqs, conv_freqs), caption = title) %>%
     kable_styling(c("striped", "condensed"), full_width = F) %>%
     add_header_above(c(" ", "Cross-correlation" = 2, "Convolution" = 2))
+}
+
+get_formant_frequency_table <- function(f0, f1_f2, f3, title = NULL) {
+  f0_freqs <- get_frequency_table(f0)
+  f1_f2_freqs <- get_frequency_table(f1_f2)
+  f3_freqs <- get_frequency_table(f3)
+  kable(cbind(f0_freqs, f1_f2_freqs, f3_freqs), caption = title) %>%
+    kable_styling(c("striped", "condensed"), full_width = F) %>%
+    add_header_above(c(" ", "F0" = 2, "F1 + F2" = 2, "F3" = 2))
 }
 ```
 
@@ -316,5 +326,89 @@ proportions <- prop.table(table(total))
 df <- data.frame("counts" = c(counts[1], counts[2], counts[3]), "proportion" = c(proportions[1], proportions[2], proportions[3]))
 row.names(df) <- c("No conditions", "One condition", "Two conditions")
 kable(df) %>% kable_styling(c("striped", "condensed"), full_width = F)
+```
+
+************
+
+#### 4. Are the brain organizations different in different conditions related to tracking?
+
+************
+
+#### 5. What properties are being tracked in the meaning and talker conditions?
+
+Tested by one-sample t-tests for significant waveform tracking in each level of each condition for each subband.
+
+**Table 1. Proportion of significantly tracking channels**
+
+``` {r, include=FALSE}
+# Calculate t-tests
+t_f0_talker_s <- get_one_sample_t(f0_talker$S)
+t_f1_f2_talker_s <- get_one_sample_t(f1_f2_talker$S)
+t_f3_talker_s <- get_one_sample_t(f3_talker$S)
+t_f0_talker_t <- get_one_sample_t(f0_talker$T)
+t_f1_f2_talker_t <- get_one_sample_t(f1_f2_talker$T)
+t_f3_talker_t <- get_one_sample_t(f3_talker$T)
+t_f0_meaning_m <- get_one_sample_t(f0_meaning$M)
+t_f1_f2_meaning_m <- get_one_sample_t(f1_f2_meaning$M)
+t_f3_meaning_m <- get_one_sample_t(f3_meaning$M)
+t_f0_meaning_n <- get_one_sample_t(f0_meaning$N)
+t_f1_f2_meaning_n <- get_one_sample_t(f1_f2_meaning$N)
+t_f3_meaning_n <- get_one_sample_t(f3_meaning$N)
+t_f0_constraint_s <- get_one_sample_t(f0_constraint$S)
+t_f1_f2_constraint_s <- get_one_sample_t(f1_f2_constraint$S)
+t_f3_constraint_s <- get_one_sample_t(f3_constraint$S)
+t_f0_constraint_g <- get_one_sample_t(f0_constraint$G)
+t_f1_f2_constraint_g <- get_one_sample_t(f1_f2_constraint$G)
+t_f3_constraint_g <- get_one_sample_t(f3_constraint$G)
+```
+
+```{r, echo=FALSE}
+talker_s <- c(get_frequency_table(t_f0_talker_s)[2,2], 
+              get_frequency_table(t_f1_f2_talker_s)[2,2], 
+              get_frequency_table(t_f3_talker_s)[2,2])
+talker_t <- c(get_frequency_table(t_f0_talker_t)[2,2], 
+              get_frequency_table(t_f1_f2_talker_t)[2,2], 
+              get_frequency_table(t_f3_talker_t)[2,2])
+meaning_m <- c(get_frequency_table(t_f0_meaning_m)[2,2], 
+              get_frequency_table(t_f1_f2_meaning_m)[2,2], 
+              get_frequency_table(t_f3_meaning_m)[2,2])
+meaning_n <- c(get_frequency_table(t_f0_meaning_n)[2,2], 
+              get_frequency_table(t_f1_f2_meaning_n)[2,2], 
+              get_frequency_table(t_f3_meaning_n)[2,2])
+constraint_s <-c(get_frequency_table(t_f0_constraint_s)[2,2], 
+              0, 
+              get_frequency_table(t_f3_constraint_s)[2,2])
+constraint_g <-c(get_frequency_table(t_f0_constraint_g)[2,2], 
+              get_frequency_table(t_f1_f2_constraint_g)[2,2], 
+              get_frequency_table(t_f3_constraint_g)[2,2])
+
+df <- as.data.frame(rbind(talker_s, talker_t, meaning_m, meaning_n, constraint_s, constraint_g)) %>%
+  mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
+  mutate_if(is.numeric, function(x) {cell_spec(x, background = spec_color(x, begin = 0.5, direction = -1, scale = c(0, 0.5)))})
+row.names(df) <- c("Same talker", "Different talker", "Meaningful", "Nonsense", "High constraint", "Low constraint")
+# always specify scale or else it scales by column
+kable(df, escape = F, col.names = c("F0", "F1 + F2", "F3")) %>%
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
+
+**Table 2. Channels significantly tracking the stimuli in the talker condition** 
+
+```{r, warning=FALSE, echo=FALSE}
+get_formant_frequency_table(t_f0_talker_s, t_f1_f2_talker_s, t_f3_talker_s, title = "Same talker")
+get_formant_frequency_table(t_f0_talker_t, t_f1_f2_talker_t, t_f3_talker_t, title = "Different talker")
+```
+
+**Table 3. Channels significantly tracking the stimuli in the meaning condition** 
+
+```{r, warning=FALSE, echo=FALSE}
+get_formant_frequency_table(t_f0_meaning_m, t_f1_f2_meaning_m, t_f3_meaning_m, title = "Meaningful")
+get_formant_frequency_table(t_f0_meaning_n, t_f1_f2_meaning_n, t_f3_meaning_n, title = "Nonsense")
+```
+
+**Table 4. Channels significantly tracking the stimuli in the constraint condition** 
+
+```{r, warning=FALSE, echo=FALSE}
+get_formant_frequency_table(t_f0_constraint_s, t_f1_f2_constraint_s, t_f3_constraint_s, title = "High constraint")
+get_formant_frequency_table(t_f0_constraint_g, t_f1_f2_constraint_g, t_f3_constraint_g, title = "Low constraint")
 ```
 
