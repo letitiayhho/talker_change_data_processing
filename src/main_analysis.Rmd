@@ -1,10 +1,9 @@
 ---
 title: "Talker change data processing"
 author: "Letitia Ho"
-date: "8/12/2020"
+date: "`r format(Sys.time(), '%d %B, %Y, %H:%M')`"
 output:
   html_document: default
-  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -18,9 +17,10 @@ library("kableExtra")
 setwd("/Applications/eeglab2019/talker-change-data-processing/")
 xcorr <- read.csv("data/aggregate/cross_correlation_data.csv")
 conv <- read.csv("data/aggregate/convolution_data.csv")
+xcorr_formants <- read.csv("data/aggregate/cross_correlation_formant_data.csv")
 
 # Function for subsetting data based on condition and level
-subset <- function(data, condition) {
+subset_by_condition <- function(data, condition) {
   channel_columns = paste("X", 1:128, sep = "")
   if (condition == "talker") {
     S <- filter(data, talker == "S") %>% select(all_of(channel_columns))
@@ -36,19 +36,47 @@ subset <- function(data, condition) {
     return(list(S = S, G = G))
   }
 }
+
+subset_by_formant <- function(data, formants) {
+  if (formants == "f0") {
+    data <- filter(data, formant == "f0")
+  } else if (formants == "f1_f2") {
+    data <- filter(data, formant == "f1_f2") 
+  } else if (formants == "f3") {
+    data <- filter(data, formant == "f3")
+  }
+  return(data)
+}
+
 # Channel numbers
 channels <- as.character(1:128)
 channel_columns <- paste("X", 1:128, sep = "")
 
-# Subset data for easy access
-xcorr_talker <- subset(xcorr, "talker")
-xcorr_meaning <- subset(xcorr, "meaning")
-xcorr_constraint <- subset(xcorr, "constraint")
-conv_talker <- subset(conv, "talker")
-conv_meaning <- subset(conv, "meaning")
-conv_constraint <- subset(conv, "constraint")
+# Subset by condition for easy access
+xcorr_talker <- subset_by_condition(xcorr, "talker")
+xcorr_meaning <- subset_by_condition(xcorr, "meaning")
+xcorr_constraint <- subset_by_condition(xcorr, "constraint")
+conv_talker <- subset_by_condition(conv, "talker")
+conv_meaning <- subset_by_condition(conv, "meaning")
+conv_constraint <- subset_by_condition(conv, "constraint")
 conv <- select(conv, all_of(channel_columns))
 xcorr <- select(xcorr, all_of(channel_columns))
+
+# Subset by formants for easy access
+f0 <- subset_formant(xcorr_formants, "f0")
+f1_f2 <- subset_formant(xcorr_formants, "f1_f2")
+f3 <- subset_formant(xcorr_formants, "f3")
+
+# Subset formant data by condition for easy access
+f0_talker <- subset_condition(f0, "talker")
+f0_meaning <- subset_condition(f0, "meaning")
+f0_constraint <- subset_condition(f0, "constraint")
+f1_f2_talker <- subset_condition(f1_f2, "talker")
+f1_f2_meaning <- subset_condition(f1_f2, "meaning")
+f1_f2_constraint <- subset_condition(f1_f2, "constraint")
+f3_talker <- subset_condition(f3, "talker")
+f3_meaning <- subset_condition(f3, "meaning")
+f3_constraint <- subset_condition(f3, "constraint")
 ```
 
 ```{r functions, warning=FALSE, include=FALSE}
@@ -136,7 +164,7 @@ t_conv[which(t_conv$p < 0.1),]
 
 Tested by one-sample t-tests for significant waveform tracking in each level of each condition.
 
-**Channels significantly tracking the stimuli in the talker condition** 
+**Channels significantly tracking the stimuli in the talker condition ($\alpha$ < 0.1)** 
 
 ```{r, echo=FALSE}
 t_xcorr_talker_s <- get_one_sample_t(xcorr_talker$S)
@@ -147,7 +175,7 @@ t_conv_talker_t <- get_one_sample_t(conv_talker$T)
 get_combined_frequency_table(t_xcorr_talker_t, t_conv_talker_t, title = "Table 3. Different talker")
 ```
 
-**Channels significantly tracking the stimuli in the meaning condition** 
+**Channels significantly tracking the stimuli in the meaning condition ($\alpha$ < 0.1)** 
 
 ```{r, echo=FALSE}
 t_xcorr_meaning_m <- get_one_sample_t(xcorr_meaning$M)
@@ -158,7 +186,7 @@ t_conv_meaning_n <- get_one_sample_t(conv_meaning$N)
 get_combined_frequency_table(t_xcorr_meaning_n, t_conv_meaning_n, title = "Table 5. Nonsense")
 ```
 
-**Channels significantly tracking the stimuli in the constraint condition** 
+**Channels significantly tracking the stimuli in the constraint condition ($\alpha$ < 0.1)** 
 
 ```{r, echo=FALSE}
 t_xcorr_constraint_s <- get_one_sample_t(xcorr_constraint$S)
@@ -175,27 +203,27 @@ get_combined_frequency_table(t_xcorr_constraint_g, t_conv_constraint_g, title = 
 
 Tested by paired-samples t-tests between the two levels of each condition. I.e. a test of whether an electrode significantly distinguishes condition levels.
 
-**Channels significantly distinguishing the stimuli in each condition** 
+**Channels significantly distinguishing the stimuli in each condition ($\alpha$ < 0.1)** 
 
 ```{r, echo=FALSE}
 # Talker
 t_xcorr_talker_paired <- get_paired_samples_t(xcorr_talker$S, xcorr_talker$T)
 t_conv_talker_paired <- get_paired_samples_t(conv_talker$S, conv_talker$T)
-get_combined_frequency_table(t_xcorr_talker_paired, t_conv_talker_paired, title = "Table 9. Talker")
+get_combined_frequency_table(t_xcorr_talker_paired, t_conv_talker_paired, title = "Table 8. Talker")
 
 # Meaning
 t_xcorr_meaning_paired <- get_paired_samples_t(xcorr_meaning$M, xcorr_meaning$N)
 t_conv_meaning_paired <- get_paired_samples_t(conv_meaning$M, conv_meaning$N)
-get_combined_frequency_table(t_xcorr_meaning_paired, t_conv_meaning_paired, title = "Table 10. Meaning")
+get_combined_frequency_table(t_xcorr_meaning_paired, t_conv_meaning_paired, title = "Table 9. Meaning")
 
 # Constraint
 t_xcorr_constraint_paired <- get_paired_samples_t(xcorr_constraint$S, xcorr_constraint$G)
 t_conv_constraint_paired <- get_paired_samples_t(conv_constraint$S, conv_constraint$G)
-get_combined_frequency_table(t_xcorr_constraint_paired, t_conv_constraint_paired, title = "Table 11. Constraint")
+get_combined_frequency_table(t_xcorr_constraint_paired, t_conv_constraint_paired, title = "Table 10. Constraint")
 ```
 
 
-**Table 8. *p*-values for each level in each condition**
+**Table 11. *p*-values for each level in each condition ($\alpha$ < 0.1)**
 
 ```{r, warning=FALSE, echo=FALSE}
 spacer <- matrix(" ", 128, 1)
@@ -222,16 +250,16 @@ level_p_values <- data.frame(channels,
                                                                                  scale_from = c(0,0.1))))})
 
 # kable(level_p_values)
-kable(level_p_values, escape = F, col.names = c("Channel", "S", "T", "Paired", "---librar",
+kable(level_p_values, escape = F, col.names = c("Channel", "S", "T", "Paired", "---",
                                                 "M", "N", "Paired", "---",
                                                 "S", "G", "Paired")) %>%
   add_header_above(c(" " = 1, "Talker" = 3, " "  = 1, "Meaning" = 3, " " = 1, "Constraint" = 3)) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
-**Table 13. Channels that distinguish between levels in a condition** The *condition diff* column contains channels that significantly distinguish between the two levels in a condition. The *match x* columns for individual levels indicate channels that significantly track the stimuli in the condition level. The *match both* column indicates channels that both distinguish between levels and significantly track stimuli under both levels. Differences between the *match x* columns in each condition show differences between the networks tracking speech under each condition level.
+**Table 12. Channels that distinguish between levels in a condition ($\alpha$ < 0.1)** The *condition diff* column contains channels that significantly distinguish between the two levels in a condition. The *match x* columns for individual levels indicate channels that significantly track the stimuli in the condition level. The *match both* column indicates channels that both distinguish between levels and significantly track stimuli under both levels. Differences between the *match x* columns in each condition show differences between the networks tracking speech under each condition level.
 
-```{r, echo=FALSE, include=FALSE}
+```{r, echo=FALSE, include=TRUE}
 # Match columns based on cross-correlation only
 talker_diff <- get_hot(t_xcorr_talker_paired)
 talker_s_match <- get_match(talker_diff, get_hot(t_xcorr_talker_s))
@@ -271,28 +299,22 @@ TM <- cbind(talker_diff, meaning_diff) %>% apply(MARGIN = 1, sum)
 TC <- cbind(talker_diff, constraint_diff) %>% apply(MARGIN = 1, sum)
 MC <- cbind(meaning_diff, constraint_diff) %>% apply(MARGIN = 1, sum)
 
-condition_differences <- data.frame(channels, talker_diff, meaning_diff, constraint_diff, total, TM, TC, MC)
-  # mutate_if(is.numeric, function(x) {ifelse(x == 1, 
-  #                                           cell_spec(x, background = "tomato"), 
-  #                                           cell_spec(x, NULL))}) %>%
-  # mutate_if(is.numeric, function(x) {ifelse(x == 2, 
-  #                                           cell_spec(x, background = "blue"), 
-  #                                           cell_spec(x, NULL))})
-    # if(x == 0) {cell_spec(x, NULL)}
-    # else if(x == 1) {cell_spec(x, background = "tomato")} 
-    # else if(x == 2) {cell_spec(x, background = "turquoise")}})
+condition_differences <- data.frame(TM, TC, MC)
+
 kable(condition_differences, escape = F, 
-      col.names = c("Channels", "Talker", "Meaning", "Constraint", "Total",
-                    "Talker + Meaning", "Talker + Constraint", "Meaning + Constraint")) %>%
-  add_header_above(c(" " = 1, "Discriminates one condition" = 4, "Discriminates two conditions" = 3)) %>%
+      col.names = c("Talker + Meaning", "Talker + Constraint", "Meaning + Constraint")) %>%
+  # add_header_above(c(" " = 1, "Discriminates one condition" = 4, "Discriminates two conditions" = 3)) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
+**Table 13. Number of conditions that distinguish by each channel ($\alpha$ < 0.1)**
 
-************
+```{r, echo=FALSE}
+total <- cbind(talker_diff, meaning_diff, constraint_diff) %>% apply(MARGIN = 1, sum)
+counts <- margin.table(table(total), 1)
+proportions <- prop.table(table(total))
+df <- data.frame("counts" = c(counts[1], counts[2], counts[3]), "proportion" = c(proportions[1], proportions[2], proportions[3]))
+row.names(df) <- c("No conditions", "One condition", "Two conditions")
+kable(df) %>% kable_styling(c("striped", "condensed"), full_width = F)
+```
 
-#### 4. Are the brain organizations different in different conditions related to tracking?
-
-Tested by 
-
-**Subheading** 
