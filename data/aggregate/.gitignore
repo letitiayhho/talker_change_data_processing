@@ -1,0 +1,10 @@
+# Ignore everything in this directory ...
+/*
+
+# ... except this file
+!/.gitignore
+
+# ... and some secret files
+!/convolution_data.csv
+!/cross_correlation_data.csv
+!/cross_correlation_formant_data.csv
