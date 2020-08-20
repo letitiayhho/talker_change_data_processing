@@ -184,6 +184,9 @@ t_xcorr[which(t_xcorr$p < 0.1),]
 t_conv[which(t_conv$p < 0.1),]
 ```
 
+
+
+
 ************
 
 #### 2. Do cortical regions track differently depending on the conditions?
@@ -228,6 +231,9 @@ t_xcorr_constraint_g <- get_one_sample_t(xcorr_constraint$G)
 t_conv_constraint_g <- get_one_sample_t(conv_constraint$G)
 get_combined_frequency_table(t_xcorr_constraint_g, t_conv_constraint_g, title = "Table 7. Low constraint")
 ```
+
+
+
 
 ************
 
@@ -337,9 +343,15 @@ row.names(df) <- c("No conditions", "One condition", "Two conditions")
 kable(df) %>% kable_styling(c("striped", "condensed"), full_width = F)
 ```
 
+
+
+
 ************
 
 #### 4. Are the brain organizations different in different conditions related to tracking?
+
+
+
 
 ************
 
