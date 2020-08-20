@@ -14,6 +14,8 @@ Most of the files in here are run through bash scripts in `scripts/`. These file
 
 ### Main analysis
 
+`main_analysis.Rmd` - t-tests to answer basic questions about the data. Outputs an `.html` file for easy reading.
+
 ### Clustering analysis
 
 `get_permutation_clusters.R` - Identifies clusters of spatially contiguous channels that show condition-dependent verdicality
