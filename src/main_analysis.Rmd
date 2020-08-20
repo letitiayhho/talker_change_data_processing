@@ -12,13 +12,7 @@ library("dplyr")
 library("kableExtra")
 ```
 
-``` {r load_data, warning=FALSE, include=FALSE}
-# Read files
-setwd("/Applications/eeglab2019/talker-change-data-processing/")
-xcorr <- read.csv("data/aggregate/cross_correlation_data.csv")
-conv <- read.csv("data/aggregate/convolution_data.csv")
-xcorr_formants <- read.csv("data/aggregate/cross_correlation_formant_data.csv")
-
+```{r FUNCTIONS, warning=FALSE, include=FALSE}
 # Function for subsetting data based on condition and level
 subset_by_condition <- function(data, condition) {
   channel_columns = paste("X", 1:128, sep = "")
@@ -37,6 +31,7 @@ subset_by_condition <- function(data, condition) {
   }
 }
 
+# Function for subsetting data based on formant
 subset_by_formant <- function(data, formants) {
   if (formants == "f0") {
     data <- filter(data, formant == "f0")
@@ -48,7 +43,87 @@ subset_by_formant <- function(data, formants) {
   return(data)
 }
 
-# Channel numbers
+# Function for running a one-sample t-test and saving the p-value, t-statistic, and df
+get_one_sample_t <- function(data) {
+  t <- apply(data, MARGIN = 2, function(channel) {t.test(channel)$statistic})
+  df <- apply(data, MARGIN = 2, function(channel) {t.test(channel)$parameter})
+  p <- apply(data, MARGIN = 2, function(channel) {t.test(channel)$p.value})
+  return(data.frame("t" = t, "df" = df, "p" = p))
+}
+
+# Function for running a paired-samples t-test and saving the p-value, t-statistic, and df
+get_paired_samples_t <- function(group1, group2) {
+  t <- mapply(function(x, y) {t.test(x, y, paired = TRUE)$statistic}, group1, group2)
+  df <- mapply(function(x, y) {t.test(x, y, paired = TRUE)$parameter}, group1, group2)
+  p <- mapply(function(x, y) {t.test(x, y, paired = TRUE)$p.value}, group1, group2)
+  return(data.frame("t" = t, "df" = df, "p" = p))
+  }
+
+# Function for running an independent-samples t-test and saving the p-value, t-statistic, and df
+get_ind_samples_t <- function(group1, group2) { # mostly to replicate JAMOVI t-test results
+  t <- mapply(function(x, y) {t.test(x, y, paired = FALSE, var.equal = TRUE)$statistic},
+              group1, group2)
+  df <- mapply(function(x, y) {t.test(x, y, paired = FALSE, var.equal = TRUE)$parameter}, 
+               group1, group2)
+  p <- mapply(function(x, y) {t.test(x, y, paired = FALSE, var.equal = TRUE)$p.value}, 
+              group1, group2)
+  return(data.frame("t" = t, "df" = df, "p" = p))
+}
+
+# Taking the p-values of the t-test results and assigning a 1 if sig, 0 if not
+get_hot <- function(data) {
+  hot <- c()
+  hot[data$p < 0.1] <- 1
+  hot[data$p > 0.1] <- 0
+  return(hot)
+}
+
+# Comparing two hot vectors and assigning a 1 if the values match, 0 if not
+get_match <- function(group1, group2) {
+  match <- c()
+  match <- ifelse(group1 == 1 & group2 == 1, 1, 0)
+  return(match)
+}
+```
+
+```{r create_data_tables_for_display, warning=FALSE, include=FALSE}
+# Get a single frequency table for results of the t-tests
+get_frequency_table <- function(data) {
+    hot <- get_hot(data)
+    counts <- margin.table(table(hot), 1)
+    proportions <- prop.table(table(hot))
+    if (dim(counts) == 1) {return(data.frame("counts" = c(counts[1], 0), "proportion" = c(proportions[1], 0)))}
+    else {return(data.frame("counts" = c(counts[1], counts[2]), "proportion" = c(proportions[1], proportions[2])))}
+  }
+
+# Get a frequency table that combines results for xcorr and conv
+get_combined_frequency_table <- function(xcorr, conv, title = NULL) {
+  xcorr_freqs <- get_frequency_table(xcorr)
+  conv_freqs <- get_frequency_table(conv)
+  kable(cbind(xcorr_freqs, conv_freqs), caption = title) %>%
+    kable_styling(c("striped", "condensed"), full_width = F) %>%
+    add_header_above(c(" ", "Cross-correlation" = 2, "Convolution" = 2))
+}
+
+# Get a frequency table that combines results for the three formant levels
+get_formant_frequency_table <- function(f0, f1_f2, f3, title = NULL) {
+  f0_freqs <- get_frequency_table(f0)
+  f1_f2_freqs <- get_frequency_table(f1_f2)
+  f3_freqs <- get_frequency_table(f3)
+  kable(cbind(f0_freqs, f1_f2_freqs, f3_freqs), caption = title) %>%
+    kable_styling(c("striped", "condensed"), full_width = F) %>%
+    add_header_above(c(" ", "F0" = 2, "F1 + F2" = 2, "F3" = 2))
+}
+```
+
+``` {r load_data, warning=FALSE, include=FALSE}
+# Read files
+setwd("/Applications/eeglab2019/talker-change-data-processing/")
+xcorr <- read.csv("data/aggregate/cross_correlation_data.csv")
+conv <- read.csv("data/aggregate/convolution_data.csv")
+xcorr_formants <- read.csv("data/aggregate/cross_correlation_formant_data.csv")
+
+# Save channel numbers
 channels <- as.character(1:128)
 channel_columns <- paste("X", 1:128, sep = "")
 
@@ -79,71 +154,7 @@ f3_meaning <- subset_by_condition(f3, "meaning")
 f3_constraint <- subset_by_condition(f3, "constraint")
 ```
 
-```{r functions, warning=FALSE, include=FALSE}
-get_one_sample_t <- function(data) {
-  t <- apply(data, MARGIN = 2, function(channel) {t.test(channel)$statistic})
-  df <- apply(data, MARGIN = 2, function(channel) {t.test(channel)$parameter})
-  p <- apply(data, MARGIN = 2, function(channel) {t.test(channel)$p.value})
-  return(data.frame("t" = t, "df" = df, "p" = p))
-}
 
-get_paired_samples_t <- function(group1, group2) {
-  t <- mapply(function(x, y) {t.test(x, y, paired = TRUE)$statistic}, group1, group2)
-  df <- mapply(function(x, y) {t.test(x, y, paired = TRUE)$parameter}, group1, group2)
-  p <- mapply(function(x, y) {t.test(x, y, paired = TRUE)$p.value}, group1, group2)
-  return(data.frame("t" = t, "df" = df, "p" = p))
-  }
-
-get_ind_samples_t <- function(group1, group2) { # mostly to replicate JAMOVI t-test results
-  t <- mapply(function(x, y) {t.test(x, y, paired = FALSE, var.equal = TRUE)$statistic},
-              group1, group2)
-  df <- mapply(function(x, y) {t.test(x, y, paired = FALSE, var.equal = TRUE)$parameter}, 
-               group1, group2)
-  p <- mapply(function(x, y) {t.test(x, y, paired = FALSE, var.equal = TRUE)$p.value}, 
-              group1, group2)
-  return(data.frame("t" = t, "df" = df, "p" = p))
-}
-
-get_hot <- function(data) {
-  hot <- c()
-  hot[data$p < 0.1] <- 1
-  hot[data$p > 0.1] <- 0
-  return(hot)
-}
-
-get_match <- function(group1, group2) {
-  match <- c()
-  match <- ifelse(group1 == 1 & group2 == 1, 1, 0)
-  return(match)
-}
-```
-
-```{r plot_graphs_and_tables, warning=FALSE, include=FALSE}
-get_frequency_table <- function(data) {
-    hot <- get_hot(data)
-    counts <- margin.table(table(hot), 1)
-    proportions <- prop.table(table(hot))
-    if (dim(counts) == 1) {return(data.frame("counts" = c(counts[1], 0), "proportion" = c(proportions[1], 0)))}
-    else {return(data.frame("counts" = c(counts[1], counts[2]), "proportion" = c(proportions[1], proportions[2])))}
-  }
-
-get_combined_frequency_table <- function(xcorr, conv, title = NULL) {
-  xcorr_freqs <- get_frequency_table(xcorr)
-  conv_freqs <- get_frequency_table(conv)
-  kable(cbind(xcorr_freqs, conv_freqs), caption = title) %>%
-    kable_styling(c("striped", "condensed"), full_width = F) %>%
-    add_header_above(c(" ", "Cross-correlation" = 2, "Convolution" = 2))
-}
-
-get_formant_frequency_table <- function(f0, f1_f2, f3, title = NULL) {
-  f0_freqs <- get_frequency_table(f0)
-  f1_f2_freqs <- get_frequency_table(f1_f2)
-  f3_freqs <- get_frequency_table(f3)
-  kable(cbind(f0_freqs, f1_f2_freqs, f3_freqs), caption = title) %>%
-    kable_styling(c("striped", "condensed"), full_width = F) %>%
-    add_header_above(c(" ", "F0" = 2, "F1 + F2" = 2, "F3" = 2))
-}
-```
 
 
 ******
@@ -151,20 +162,25 @@ get_formant_frequency_table <- function(f0, f1_f2, f3, title = NULL) {
 #### 1. Do cortical regions track temporal variation in the speech signal?
 
 ``` {r, echo=FALSE}
+# One-sample t-test for the cross-correlation values for each channel
 t_xcorr <- get_one_sample_t(xcorr)
+# One-sample t-test for the convolution values for each channel
 t_conv <- get_one_sample_t(conv)
+# Create a frequency table with the results
 get_combined_frequency_table(t_xcorr, t_conv, title = "Table 1. Channels significantly tracking the stimuli")
 ```
 
 **Output 1. Channels with significant cross-correlation with stimulus waveform ($\alpha$ < 0.1)** Computed with a one-sample t-test for the cross-correlation of each stimulus waveform with each electrode EEG trace across all conditions.
 
 ```{r, echo=FALSE}
+# Printing the t-test results for significant electrodes
 t_xcorr[which(t_xcorr$p < 0.1),]
 ```
 
 **Output 2. Channels with significant convolution with stimulus waveform ($\alpha$ < 0.1)** Computed with a one-sample t-test for the convolution of each stimulus waveform with each electrode EEG trace across all conditions.
 
 ```{r, echo=FALSE}
+# Printing the t-test results for significant electrodes
 t_conv[which(t_conv$p < 0.1),]
 ```
 
@@ -177,9 +193,11 @@ Tested by one-sample t-tests for significant waveform tracking in each level of 
 **Channels significantly tracking the stimuli in the talker condition ($\alpha$ < 0.1)** 
 
 ```{r, echo=FALSE}
+# One-sample t-tests over each electrode for the same talker condition
 t_xcorr_talker_s <- get_one_sample_t(xcorr_talker$S)
 t_conv_talker_s <- get_one_sample_t(conv_talker$S)
 get_combined_frequency_table(t_xcorr_talker_s, t_conv_talker_s, title = "Table 2. Same talker")
+# One-sample t-tests over each electrode for the different talker condition
 t_xcorr_talker_t <- get_one_sample_t(xcorr_talker$T)
 t_conv_talker_t <- get_one_sample_t(conv_talker$T)
 get_combined_frequency_table(t_xcorr_talker_t, t_conv_talker_t, title = "Table 3. Different talker")
@@ -188,9 +206,11 @@ get_combined_frequency_table(t_xcorr_talker_t, t_conv_talker_t, title = "Table 3
 **Channels significantly tracking the stimuli in the meaning condition ($\alpha$ < 0.1)** 
 
 ```{r, echo=FALSE}
+# One-sample t-tests over each electrode for the meaning condition
 t_xcorr_meaning_m <- get_one_sample_t(xcorr_meaning$M)
 t_conv_meaning_m <- get_one_sample_t(conv_meaning$M)
 get_combined_frequency_table(t_xcorr_meaning_m, t_conv_meaning_m, title = "Table 4. Meaningful")
+# One-sample t-tests over each electrode for the nonsense condition
 t_xcorr_meaning_n <- get_one_sample_t(xcorr_meaning$N)
 t_conv_meaning_n <- get_one_sample_t(conv_meaning$N)
 get_combined_frequency_table(t_xcorr_meaning_n, t_conv_meaning_n, title = "Table 5. Nonsense")
@@ -199,9 +219,11 @@ get_combined_frequency_table(t_xcorr_meaning_n, t_conv_meaning_n, title = "Table
 **Channels significantly tracking the stimuli in the constraint condition ($\alpha$ < 0.1)** 
 
 ```{r, echo=FALSE}
+# One-sample t-tests over each electrode for the high constraint condition
 t_xcorr_constraint_s <- get_one_sample_t(xcorr_constraint$S)
 t_conv_constraint_s <- get_one_sample_t(conv_constraint$S)
 get_combined_frequency_table(t_xcorr_constraint_s, t_conv_constraint_s, title = "Table 6. High constraint")
+# One-sample t-tests over each electrode for the low constraint condition
 t_xcorr_constraint_g <- get_one_sample_t(xcorr_constraint$G)
 t_conv_constraint_g <- get_one_sample_t(conv_constraint$G)
 get_combined_frequency_table(t_xcorr_constraint_g, t_conv_constraint_g, title = "Table 7. Low constraint")
@@ -216,26 +238,27 @@ Tested by paired-samples t-tests between the two levels of each condition. I.e. 
 **Channels significantly distinguishing the stimuli in each condition ($\alpha$ < 0.1)** 
 
 ```{r, echo=FALSE}
-# Talker
+# Paired t-tests for talker
 t_xcorr_talker_paired <- get_paired_samples_t(xcorr_talker$S, xcorr_talker$T)
 t_conv_talker_paired <- get_paired_samples_t(conv_talker$S, conv_talker$T)
 get_combined_frequency_table(t_xcorr_talker_paired, t_conv_talker_paired, title = "Table 8. Talker")
 
-# Meaning
+# Paired t-tests for meaning
 t_xcorr_meaning_paired <- get_paired_samples_t(xcorr_meaning$M, xcorr_meaning$N)
 t_conv_meaning_paired <- get_paired_samples_t(conv_meaning$M, conv_meaning$N)
 get_combined_frequency_table(t_xcorr_meaning_paired, t_conv_meaning_paired, title = "Table 9. Meaning")
 
-# Constraint
+# Paired t-tests for constraint
 t_xcorr_constraint_paired <- get_paired_samples_t(xcorr_constraint$S, xcorr_constraint$G)
 t_conv_constraint_paired <- get_paired_samples_t(conv_constraint$S, conv_constraint$G)
 get_combined_frequency_table(t_xcorr_constraint_paired, t_conv_constraint_paired, title = "Table 10. Constraint")
 ```
 
 
-**Table 11. *p*-values for each level in each condition ($\alpha$ < 0.1)**
+**Table 11. *p*-values for each level in each condition ($\alpha$ < 0.1, )**
 
 ```{r, warning=FALSE, echo=FALSE}
+# Creating a table to display all the p-values
 spacer <- matrix(" ", 128, 1)
 level_p_values <- data.frame(channels, 
                      t_xcorr_talker_s$p,
@@ -270,7 +293,7 @@ kable(level_p_values, escape = F, col.names = c("Channel", "S", "T", "Paired", "
 **Table 12. Channels that distinguish between levels in a condition ($\alpha$ < 0.1)** The *condition diff* column contains channels that significantly distinguish between the two levels in a condition. The *match x* columns for individual levels indicate channels that significantly track the stimuli in the condition level. The *match both* column indicates channels that both distinguish between levels and significantly track stimuli under both levels. Differences between the *match x* columns in each condition show differences between the networks tracking speech under each condition level.
 
 ```{r, echo=FALSE, include=TRUE}
-# Match columns based on cross-correlation only
+# Creating a table to display all the channels that are significant for each condition level
 talker_diff <- get_hot(t_xcorr_talker_paired)
 talker_s_match <- get_match(talker_diff, get_hot(t_xcorr_talker_s))
 talker_t_match <- get_match(talker_diff, get_hot(t_xcorr_talker_t))
@@ -302,24 +325,10 @@ kable(match_table, escape = F, col.names = c("Channel",
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
-```{r, echo=FALSE, include=FALSE}
-add <- function(x) apply(x, MARGIN = 1, sum)
-total <- cbind(talker_diff, meaning_diff, constraint_diff) %>% apply(MARGIN = 1, sum)
-TM <- cbind(talker_diff, meaning_diff) %>% apply(MARGIN = 1, sum)
-TC <- cbind(talker_diff, constraint_diff) %>% apply(MARGIN = 1, sum)
-MC <- cbind(meaning_diff, constraint_diff) %>% apply(MARGIN = 1, sum)
-
-condition_differences <- data.frame(TM, TC, MC)
-
-kable(condition_differences, escape = F, 
-      col.names = c("Talker + Meaning", "Talker + Constraint", "Meaning + Constraint")) %>%
-  # add_header_above(c(" " = 1, "Discriminates one condition" = 4, "Discriminates two conditions" = 3)) %>%
-  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
-```
-
 **Table 13. Number of conditions that distinguish by each channel ($\alpha$ < 0.1)**
 
 ```{r, echo=FALSE}
+# Creating a table to display all the channels that are significant for two condition levels
 total <- cbind(talker_diff, meaning_diff, constraint_diff) %>% apply(MARGIN = 1, sum)
 counts <- margin.table(table(total), 1)
 proportions <- prop.table(table(total))
@@ -341,7 +350,7 @@ Tested by one-sample t-tests for significant waveform tracking in each level of 
 **Table 1. Proportion of significantly tracking channels**
 
 ``` {r, include=FALSE}
-# Calculate t-tests
+# Run one-sample t-tests for each condition level for each formant
 t_f0_talker_s <- get_one_sample_t(f0_talker$S)
 t_f1_f2_talker_s <- get_one_sample_t(f1_f2_talker$S)
 t_f3_talker_s <- get_one_sample_t(f3_talker$S)
@@ -363,6 +372,7 @@ t_f3_constraint_g <- get_one_sample_t(f3_constraint$G)
 ```
 
 ```{r, echo=FALSE}
+# Create a frequency table displaying the proportion of significant channels for each level
 talker_s <- c(get_frequency_table(t_f0_talker_s)[2,2], 
               get_frequency_table(t_f1_f2_talker_s)[2,2], 
               get_frequency_table(t_f3_talker_s)[2,2])
