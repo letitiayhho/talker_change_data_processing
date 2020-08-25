@@ -10,29 +10,33 @@ output:
 require("knitr")
 library("dplyr")
 library("kableExtra")
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE
+) 
 ```
 
-```{r FUNCTIONS, warning=FALSE, include=FALSE}
-# Function for subsetting data based on condition and level
-subset_by_condition <- function(data, condition) {
-  channel_columns = paste("X", 1:128, sep = "")
-  if (condition == "talker") {
-    S <- filter(data, talker == "S") %>% select(all_of(channel_columns))
-    T <- filter(data, talker == "T") %>% select(all_of(channel_columns))
-    return(list(S = S, T = T))
-  } else if (condition == "meaning") {
-    M <- filter(data, meaning == "M") %>% select(all_of(channel_columns))
-    N <- filter(data, meaning == "N") %>% select(all_of(channel_columns))
-    return(list(M = M, N = N))
-  } else if (condition == "constraint") {
-    S <- filter(data, constraint == "S") %>% select(all_of(channel_columns))
-    G <- filter(data, constraint == "G") %>% select(all_of(channel_columns))
-    return(list(S = S, G = G))
+```{r fns_load_and_subset_data}
+# Load data
+load_data <- function(method, formants = FALSE) {
+  if (method == "xcorr") {
+    if (formants)
+      return(read.csv("data/aggregate/cross_correlation_formant_data.csv"))
+    return(read.csv("data/aggregate/cross_correlation_data.csv"))
   }
+  if (method == "conv") {
+    if (formants)
+      return(read.csv("data/aggregate/convolution_formant_data.csv"))
+    return(read.csv("data/aggregate/convolution_data.csv"))
+  }
+  stop("Invalid method, options are \"xcorr\" or \"conv\"")
 }
 
-# Function for subsetting data based on formant
-subset_by_formant <- function(data, formants) {
+# Function for subsetting data based on condition and level
+subset <- function(data, formants = NaN, condition, level) {
+  channel_columns = paste("X", 1:128, sep = "")
+  
+  # Subset by formant if specified
   if (formants == "f0") {
     data <- filter(data, formant == "f0")
   } else if (formants == "f1_f2") {
@@ -40,9 +44,25 @@ subset_by_formant <- function(data, formants) {
   } else if (formants == "f3") {
     data <- filter(data, formant == "f3")
   }
-  return(data)
+  
+  # Subset by condition if specified
+  if (condition == "talker") {
+    if (level == "S")
+      return(filter(data, talker == "S") %>% select(all_of(channel_columns)))
+    return(filter(data, talker == "T") %>% select(all_of(channel_columns)))
+  } else if (condition == "meaning") {
+    if (level == "M")
+      return(filter(data, meaning == "M") %>% select(all_of(channel_columns)))
+    return(filter(data, meaning == "N") %>% select(all_of(channel_columns)))
+  } else if (condition == "constraint") {
+    if (level == "S")
+      return(filter(data, constraint == "S") %>% select(all_of(channel_columns)))
+    return(filter(data, constraint == "G") %>% select(all_of(channel_columns)))
+  }
 }
+```
 
+```{r fns_statistical_tests}
 # Function for running a one-sample t-test and saving the p-value, t-statistic, and df
 get_one_sample_t <- function(data) {
   t <- apply(data, MARGIN = 2, function(channel) {t.test(channel)$statistic})
@@ -61,12 +81,9 @@ get_paired_samples_t <- function(group1, group2) {
 
 # Function for running an independent-samples t-test and saving the p-value, t-statistic, and df
 get_ind_samples_t <- function(group1, group2) { # mostly to replicate JAMOVI t-test results
-  t <- mapply(function(x, y) {t.test(x, y, paired = FALSE, var.equal = TRUE)$statistic},
-              group1, group2)
-  df <- mapply(function(x, y) {t.test(x, y, paired = FALSE, var.equal = TRUE)$parameter}, 
-               group1, group2)
-  p <- mapply(function(x, y) {t.test(x, y, paired = FALSE, var.equal = TRUE)$p.value}, 
-              group1, group2)
+  t <- mapply(function(x, y) {t.test(x, y, paired = FALSE, var.equal = TRUE)$statistic}, group1, group2)
+  df <- mapply(function(x, y) {t.test(x, y, paired = FALSE, var.equal = TRUE)$parameter}, group1, group2)
+  p <- mapply(function(x, y) {t.test(x, y, paired = FALSE, var.equal = TRUE)$p.value}, group1, group2)
   return(data.frame("t" = t, "df" = df, "p" = p))
 }
 
@@ -86,7 +103,7 @@ get_match <- function(group1, group2) {
 }
 ```
 
-```{r create_data_tables_for_display, warning=FALSE, include=FALSE}
+```{r fns_to_create_data_tables_for_display}
 # Get a single frequency table for results of the t-tests
 get_frequency_table <- function(data) {
     hot <- get_hot(data)
@@ -116,44 +133,6 @@ get_formant_frequency_table <- function(f0, f1_f2, f3, title = NULL) {
 }
 ```
 
-``` {r load_data, warning=FALSE, include=FALSE}
-# Read files
-setwd("/Applications/eeglab2019/talker-change-data-processing/")
-xcorr <- read.csv("data/aggregate/cross_correlation_data.csv")
-conv <- read.csv("data/aggregate/convolution_data.csv")
-xcorr_formants <- read.csv("data/aggregate/cross_correlation_formant_data.csv")
-
-# Save channel numbers
-channels <- as.character(1:128)
-channel_columns <- paste("X", 1:128, sep = "")
-
-# Subset by condition for easy access
-xcorr_talker <- subset_by_condition(xcorr, "talker")
-xcorr_meaning <- subset_by_condition(xcorr, "meaning")
-xcorr_constraint <- subset_by_condition(xcorr, "constraint")
-conv_talker <- subset_by_condition(conv, "talker")
-conv_meaning <- subset_by_condition(conv, "meaning")
-conv_constraint <- subset_by_condition(conv, "constraint")
-conv <- select(conv, all_of(channel_columns))
-xcorr <- select(xcorr, all_of(channel_columns))
-
-# Subset by formants for easy access
-f0 <- subset_by_formant(xcorr_formants, "f0")
-f1_f2 <- subset_by_formant(xcorr_formants, "f1_f2")
-f3 <- subset_by_formant(xcorr_formants, "f3")
-
-# Subset formant data by condition for easy access
-f0_talker <- subset_by_condition(f0, "talker")
-f0_meaning <- subset_by_condition(f0, "meaning")
-f0_constraint <- subset_by_condition(f0, "constraint")
-f1_f2_talker <- subset_by_condition(f1_f2, "talker")
-f1_f2_meaning <- subset_by_condition(f1_f2, "meaning")
-f1_f2_constraint <- subset_by_condition(f1_f2, "constraint")
-f3_talker <- subset_by_condition(f3, "talker")
-f3_meaning <- subset_by_condition(f3, "meaning")
-f3_constraint <- subset_by_condition(f3, "constraint")
-```
-
 
 
 
@@ -161,25 +140,37 @@ f3_constraint <- subset_by_condition(f3, "constraint")
 
 #### 1. Do cortical regions track temporal variation in the speech signal?
 
-``` {r, echo=FALSE}
+``` {r}
+# Read files
+setwd("/Applications/eeglab2019/talker-change-data-processing/") # Set root dir
+xcorr <- load_data("xcorr")
+conv <- load_data("conv")
+xcorr_formants <- load_data("xcorr", formants = TRUE)
+
+# Save channel numbers
+channels <- as.character(1:128)
+channel_columns <- paste("X", 1:128, sep = "")
+```
+
+``` {r}
 # One-sample t-test for the cross-correlation values for each channel
-t_xcorr <- get_one_sample_t(xcorr)
+t_xcorr <- get_one_sample_t(select(xcorr, all_of(channel_columns)))
 # One-sample t-test for the convolution values for each channel
-t_conv <- get_one_sample_t(conv)
+t_conv <- get_one_sample_t(select(conv, all_of(channel_columns)))
 # Create a frequency table with the results
 get_combined_frequency_table(t_xcorr, t_conv, title = "Table 1. Channels significantly tracking the stimuli")
 ```
 
 **Output 1. Channels with significant cross-correlation with stimulus waveform ($\alpha$ < 0.1)** Computed with a one-sample t-test for the cross-correlation of each stimulus waveform with each electrode EEG trace across all conditions.
 
-```{r, echo=FALSE}
+```{r}
 # Printing the t-test results for significant electrodes
 t_xcorr[which(t_xcorr$p < 0.1),]
 ```
 
 **Output 2. Channels with significant convolution with stimulus waveform ($\alpha$ < 0.1)** Computed with a one-sample t-test for the convolution of each stimulus waveform with each electrode EEG trace across all conditions.
 
-```{r, echo=FALSE}
+```{r}
 # Printing the t-test results for significant electrodes
 t_conv[which(t_conv$p < 0.1),]
 ```
@@ -195,40 +186,43 @@ Tested by one-sample t-tests for significant waveform tracking in each level of 
 
 **Channels significantly tracking the stimuli in the talker condition ($\alpha$ < 0.1)** 
 
-```{r, echo=FALSE}
+```{r}
 # One-sample t-tests over each electrode for the same talker condition
-t_xcorr_talker_s <- get_one_sample_t(xcorr_talker$S)
-t_conv_talker_s <- get_one_sample_t(conv_talker$S)
+t_xcorr_talker_s <- get_one_sample_t(subset(xcorr, condition = "talker", level = "S"))
+t_conv_talker_s <- get_one_sample_t(subset(conv, condition = "talker", level = "S"))
 get_combined_frequency_table(t_xcorr_talker_s, t_conv_talker_s, title = "Table 2. Same talker")
+
 # One-sample t-tests over each electrode for the different talker condition
-t_xcorr_talker_t <- get_one_sample_t(xcorr_talker$T)
-t_conv_talker_t <- get_one_sample_t(conv_talker$T)
+t_xcorr_talker_t <- get_one_sample_t(subset(xcorr, condition = "talker", level = "T"))
+t_conv_talker_t <- get_one_sample_t(subset(conv, condition = "talker", level = "T"))
 get_combined_frequency_table(t_xcorr_talker_t, t_conv_talker_t, title = "Table 3. Different talker")
 ```
 
 **Channels significantly tracking the stimuli in the meaning condition ($\alpha$ < 0.1)** 
 
-```{r, echo=FALSE}
+```{r}
 # One-sample t-tests over each electrode for the meaning condition
-t_xcorr_meaning_m <- get_one_sample_t(xcorr_meaning$M)
-t_conv_meaning_m <- get_one_sample_t(conv_meaning$M)
+t_xcorr_meaning_m <- get_one_sample_t(subset(xcorr, condition = "meaning", level = "M"))
+t_conv_meaning_m <- get_one_sample_t(subset(conv, condition = "meaning", level = "M"))
 get_combined_frequency_table(t_xcorr_meaning_m, t_conv_meaning_m, title = "Table 4. Meaningful")
+
 # One-sample t-tests over each electrode for the nonsense condition
-t_xcorr_meaning_n <- get_one_sample_t(xcorr_meaning$N)
-t_conv_meaning_n <- get_one_sample_t(conv_meaning$N)
+t_xcorr_meaning_n <- get_one_sample_t(subset(xcorr, condition = "meaning", level = "N"))
+t_conv_meaning_n <- get_one_sample_t(subset(conv, condition = "meaning", level = "N"))
 get_combined_frequency_table(t_xcorr_meaning_n, t_conv_meaning_n, title = "Table 5. Nonsense")
 ```
 
 **Channels significantly tracking the stimuli in the constraint condition ($\alpha$ < 0.1)** 
 
-```{r, echo=FALSE}
+```{r}
 # One-sample t-tests over each electrode for the high constraint condition
-t_xcorr_constraint_s <- get_one_sample_t(xcorr_constraint$S)
-t_conv_constraint_s <- get_one_sample_t(conv_constraint$S)
+t_xcorr_constraint_s <- get_one_sample_t(subset(xcorr, condition = "constraint", level = "S"))
+t_conv_constraint_s <- get_one_sample_t(subset(conv, condition = "constraint", level = "S"))
 get_combined_frequency_table(t_xcorr_constraint_s, t_conv_constraint_s, title = "Table 6. High constraint")
+
 # One-sample t-tests over each electrode for the low constraint condition
-t_xcorr_constraint_g <- get_one_sample_t(xcorr_constraint$G)
-t_conv_constraint_g <- get_one_sample_t(conv_constraint$G)
+t_xcorr_constraint_g <- get_one_sample_t(subset(xcorr, condition = "constraint", level = "G"))
+t_conv_constraint_g <-get_one_sample_t(subset(conv, condition = "constraint", level = "G"))
 get_combined_frequency_table(t_xcorr_constraint_g, t_conv_constraint_g, title = "Table 7. Low constraint")
 ```
 
@@ -243,27 +237,33 @@ Tested by paired-samples t-tests between the two levels of each condition. I.e. 
 
 **Channels significantly distinguishing the stimuli in each condition ($\alpha$ < 0.1)** 
 
-```{r, echo=FALSE}
+```{r}
 # Paired t-tests for talker
-t_xcorr_talker_paired <- get_paired_samples_t(xcorr_talker$S, xcorr_talker$T)
-t_conv_talker_paired <- get_paired_samples_t(conv_talker$S, conv_talker$T)
+t_xcorr_talker_paired <- get_paired_samples_t(subset(xcorr, condition = "talker", level = "S"),
+                                              subset(xcorr, condition = "talker", level = "T"))
+t_conv_talker_paired <- get_paired_samples_t(subset(conv, condition = "talker", level = "S"),
+                                             subset(conv, condition = "talker", level = "T"))
 get_combined_frequency_table(t_xcorr_talker_paired, t_conv_talker_paired, title = "Table 8. Talker")
 
 # Paired t-tests for meaning
-t_xcorr_meaning_paired <- get_paired_samples_t(xcorr_meaning$M, xcorr_meaning$N)
-t_conv_meaning_paired <- get_paired_samples_t(conv_meaning$M, conv_meaning$N)
+t_xcorr_meaning_paired <- get_paired_samples_t(subset(xcorr, condition = "meaning", level = "M"),
+                                               subset(xcorr, condition = "meaning", level = "N"))
+t_conv_meaning_paired <- get_paired_samples_t(subset(conv, condition = "meaning", level = "M"),
+                                              subset(conv, condition = "meaning", level = "N"))
 get_combined_frequency_table(t_xcorr_meaning_paired, t_conv_meaning_paired, title = "Table 9. Meaning")
 
 # Paired t-tests for constraint
-t_xcorr_constraint_paired <- get_paired_samples_t(xcorr_constraint$S, xcorr_constraint$G)
-t_conv_constraint_paired <- get_paired_samples_t(conv_constraint$S, conv_constraint$G)
+t_xcorr_constraint_paired <- get_paired_samples_t(subset(xcorr, condition = "constraint", level = "S"),
+                                                  subset(xcorr, condition = "constraint", level = "G"))
+t_conv_constraint_paired <- get_paired_samples_t(subset(conv, condition = "constraint", level = "S"),
+                                                 subset(conv, condition = "constraint", level = "G"))
 get_combined_frequency_table(t_xcorr_constraint_paired, t_conv_constraint_paired, title = "Table 10. Constraint")
 ```
 
 
 **Table 11. *p*-values for each level in each condition ($\alpha$ < 0.1, )**
 
-```{r, warning=FALSE, echo=FALSE}
+```{r}
 # Creating a table to display all the p-values
 spacer <- matrix(" ", 128, 1)
 level_p_values <- data.frame(channels, 
@@ -298,7 +298,7 @@ kable(level_p_values, escape = F, col.names = c("Channel", "S", "T", "Paired", "
 
 **Table 12. Channels that distinguish between levels in a condition ($\alpha$ < 0.1)** The *condition diff* column contains channels that significantly distinguish between the two levels in a condition. The *match x* columns for individual levels indicate channels that significantly track the stimuli in the condition level. The *match both* column indicates channels that both distinguish between levels and significantly track stimuli under both levels. Differences between the *match x* columns in each condition show differences between the networks tracking speech under each condition level.
 
-```{r, echo=FALSE, include=TRUE}
+```{r}
 # Creating a table to display all the channels that are significant for each condition level
 talker_diff <- get_hot(t_xcorr_talker_paired)
 talker_s_match <- get_match(talker_diff, get_hot(t_xcorr_talker_s))
@@ -333,7 +333,7 @@ kable(match_table, escape = F, col.names = c("Channel",
 
 **Table 13. Number of conditions that distinguish by each channel ($\alpha$ < 0.1)**
 
-```{r, echo=FALSE}
+```{r}
 # Creating a table to display all the channels that are significant for two condition levels
 total <- cbind(talker_diff, meaning_diff, constraint_diff) %>% apply(MARGIN = 1, sum)
 counts <- margin.table(table(total), 1)
@@ -363,27 +363,27 @@ Tested by one-sample t-tests for significant waveform tracking in each level of 
 
 ``` {r, include=FALSE}
 # Run one-sample t-tests for each condition level for each formant
-t_f0_talker_s <- get_one_sample_t(f0_talker$S)
-t_f1_f2_talker_s <- get_one_sample_t(f1_f2_talker$S)
-t_f3_talker_s <- get_one_sample_t(f3_talker$S)
-t_f0_talker_t <- get_one_sample_t(f0_talker$T)
-t_f1_f2_talker_t <- get_one_sample_t(f1_f2_talker$T)
-t_f3_talker_t <- get_one_sample_t(f3_talker$T)
-t_f0_meaning_m <- get_one_sample_t(f0_meaning$M)
-t_f1_f2_meaning_m <- get_one_sample_t(f1_f2_meaning$M)
-t_f3_meaning_m <- get_one_sample_t(f3_meaning$M)
-t_f0_meaning_n <- get_one_sample_t(f0_meaning$N)
-t_f1_f2_meaning_n <- get_one_sample_t(f1_f2_meaning$N)
-t_f3_meaning_n <- get_one_sample_t(f3_meaning$N)
-t_f0_constraint_s <- get_one_sample_t(f0_constraint$S)
-t_f1_f2_constraint_s <- get_one_sample_t(f1_f2_constraint$S)
-t_f3_constraint_s <- get_one_sample_t(f3_constraint$S)
-t_f0_constraint_g <- get_one_sample_t(f0_constraint$G)
-t_f1_f2_constraint_g <- get_one_sample_t(f1_f2_constraint$G)
-t_f3_constraint_g <- get_one_sample_t(f3_constraint$G)
+t_f0_talker_s <- get_one_sample_t(subset(xcorr_formants, formant = "f0", condition = "talker", level = "S"))
+t_f1_f2_talker_s <- get_one_sample_t(subset(xcorr_formants, formant = "f1_f2", condition = "talker", level = "S"))
+t_f3_talker_s <- get_one_sample_t(subset(xcorr_formants, formant = "f3", condition = "talker", level = "S"))
+t_f0_talker_t <- get_one_sample_t(subset(xcorr_formants, formant = "f0", condition = "talker", level = "T"))
+t_f1_f2_talker_t <- get_one_sample_t(subset(xcorr_formants, formant = "f1_f2", condition = "talker", level = "T"))
+t_f3_talker_t <- get_one_sample_t(subset(xcorr_formants, formant = "f3", condition = "talker", level = "T"))
+t_f0_meaning_m <- get_one_sample_t(subset(xcorr_formants, formant = "f0", condition = "meaning", level = "M"))
+t_f1_f2_meaning_m <- get_one_sample_t(subset(xcorr_formants, formant = "f1_f2", condition = "meaning", level = "M"))
+t_f3_meaning_m <- get_one_sample_t(subset(xcorr_formants, formant = "f3", condition = "meaning", level = "M"))
+t_f0_meaning_n <- get_one_sample_t(subset(xcorr_formants, formant = "f0", condition = "meaning", level = "N"))
+t_f1_f2_meaning_n <- get_one_sample_t(subset(xcorr_formants, formant = "f1_f2", condition = "meaning", level = "N"))
+t_f3_meaning_n <- get_one_sample_t(subset(xcorr_formants, formant = "f3", condition = "meaning", level = "N"))
+t_f0_constraint_s <- get_one_sample_t(subset(xcorr_formants, formant = "f0", condition = "constraint", level = "S"))
+t_f1_f2_constraint_s <- get_one_sample_t(subset(xcorr_formants, formant = "f1_f2", condition = "meaning", level = "S"))
+t_f3_constraint_s <- get_one_sample_t(subset(xcorr_formants, formant = "f3", condition = "constraint", level = "S"))
+t_f0_constraint_g <- get_one_sample_t(subset(xcorr_formants, formant = "f0", condition = "constraint", level = "G"))
+t_f1_f2_constraint_g <- get_one_sample_t(subset(xcorr_formants, formant = "f1_f2", condition = "meaning", level = "G"))
+t_f3_constraint_g <- get_one_sample_t(subset(xcorr_formants, formant = "f3", condition = "constraint", level = "G"))
 ```
 
-```{r, echo=FALSE}
+```{r}
 # Create a frequency table displaying the proportion of significant channels for each level
 talker_s <- c(get_frequency_table(t_f0_talker_s)[2,2], 
               get_frequency_table(t_f1_f2_talker_s)[2,2], 
@@ -415,21 +415,21 @@ kable(df, escape = F, col.names = c("F0", "F1 + F2", "F3")) %>%
 
 **Table 2. Channels significantly tracking the stimuli in the talker condition** 
 
-```{r, warning=FALSE, echo=FALSE}
+```{r}
 get_formant_frequency_table(t_f0_talker_s, t_f1_f2_talker_s, t_f3_talker_s, title = "Same talker")
 get_formant_frequency_table(t_f0_talker_t, t_f1_f2_talker_t, t_f3_talker_t, title = "Different talker")
 ```
 
 **Table 3. Channels significantly tracking the stimuli in the meaning condition** 
 
-```{r, warning=FALSE, echo=FALSE}
+```{r}
 get_formant_frequency_table(t_f0_meaning_m, t_f1_f2_meaning_m, t_f3_meaning_m, title = "Meaningful")
 get_formant_frequency_table(t_f0_meaning_n, t_f1_f2_meaning_n, t_f3_meaning_n, title = "Nonsense")
 ```
 
 **Table 4. Channels significantly tracking the stimuli in the constraint condition** 
 
-```{r, warning=FALSE, echo=FALSE}
+```{r}
 get_formant_frequency_table(t_f0_constraint_s, t_f1_f2_constraint_s, t_f3_constraint_s, title = "High constraint")
 get_formant_frequency_table(t_f0_constraint_g, t_f1_f2_constraint_g, t_f3_constraint_g, title = "Low constraint")
 ```
