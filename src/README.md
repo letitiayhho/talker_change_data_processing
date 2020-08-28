@@ -14,7 +14,9 @@ Most of the files in here are run through bash scripts in `scripts/`. These file
 
 ### Main analysis
 
-`main_analysis.Rmd` - t-tests to answer basic questions about the data. Outputs an `.html` file for easy reading.
+`main_analysis.Rmd` - t-tests to answer basic questions about the data. Outputs an `.html` file for easy reading
+
+`main_analysis_maps.Rmd` - map the test statistics for each condition onto a 2D map of the electrodes
 
 ### Clustering analysis
 
