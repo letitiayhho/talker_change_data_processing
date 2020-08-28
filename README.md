@@ -61,7 +61,7 @@ Convolves and cross-correlates the preprocessed eeg signal with the preprocessed
 
 ### Main analysis
 
-Run statistical tests and generate output frequency tables and figures in a .html document.
+Run statistical tests and generate output frequency tables and figures in a .html document. To see the results just open `src/main_analysis.html` and `src/main_analysis_maps.html` in your browser.
 
 ```
 R -e "rmarkdown::render('src/main_analysis.Rmd')"
