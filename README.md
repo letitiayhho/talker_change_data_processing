@@ -20,9 +20,10 @@ Running convolutions and cross correlations between the EEG data and audio signa
 
 ## File management
 
-As seen in this repo, everything in your working directory should be divided into three folders- `scripts`, `src`, and `data`. `scripts` is for wrapper bash scripts that you call to run the MATLAB files in `src`. `data` is where all the raw, preprocessed, and analyzed data end up, each subject has its own subdirectory within `data`. If you run everything using the scripts in `scripts`, you shouldn't have to directly touch anything in `src` or `data`, the bash scripts should take the correct files, apply correct MATLAB scripts to them and spit output into their correct subject folders.
+To run anything your folders data files and scripts should be organized as they are in this repo. Everything is run from the root directory i.e. if you git cloned it then you should run everything from `talker-change-data-processing/`.
 
-All scripts should be run from the root directory of this repo, i.e. if you git cloned it then you should run everything from `talker-change-data-processing/`.
+The files in this repo are divided into three folders- `scripts`, `src`, and `data`. `scripts` is for wrapper bash scripts that you call to run the MATLAB files in `src`. `data` is where all the raw, preprocessed, and analyzed data end up, each subject has its own subdirectory within `data`. If you run everything using the scripts in `scripts`, you shouldn't have to directly touch anything in `src` or `data`, the bash scripts should take the correct files, apply correct MATLAB scripts to them and spit output into their correct subject folders.
+
 
 **Download raw data from lab server**
 
@@ -58,3 +59,11 @@ Convolves and cross-correlates the preprocessed eeg signal with the preprocessed
 ./scripts/run_rms <subject_number> ...
 ```
 
+### Main analysis
+
+Run statistical tests and generate output frequency tables and figures in a .html document.
+
+```
+R -e "rmarkdown::render('src/main_analysis.Rmd')"
+R -e "rmarkdown::render('src/main_analysis_maps.Rmd')"
+```
