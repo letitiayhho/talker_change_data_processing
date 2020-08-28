@@ -1,0 +1,165 @@
+---
+title: "Talker change data processing"
+author: "Letitia Ho"
+date: "`r format(Sys.time(), '%d %B, %Y, %H:%M')`"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+require("knitr")
+library("dplyr")
+library("kableExtra")
+library("ggplot2")
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE
+) 
+```
+
+```{r fns_load_and_subset_data}
+# Load data
+load_data <- function(method, formants = FALSE) {
+  if (method == "xcorr") {
+    if (formants)
+      return(read.csv("data/aggregate/cross_correlation_formant_data.csv"))
+    return(read.csv("data/aggregate/cross_correlation_data.csv"))
+  }
+  if (method == "conv") {
+    if (formants)
+      return(read.csv("data/aggregate/convolution_formant_data.csv"))
+    return(read.csv("data/aggregate/convolution_data.csv"))
+  }
+  stop("Invalid method, options are \"xcorr\" or \"conv\"")
+}
+
+# Function for subsetting data based on condition and level
+subset <- function(data, formants = NaN, condition, level) {
+  channel_columns = paste("X", 1:128, sep = "")
+  
+  # Subset by formant if specified
+  if (formants == "f0") {
+    data <- filter(data, formant == "f0")
+  } else if (formants == "f1_f2") {
+    data <- filter(data, formant == "f1_f2") 
+  } else if (formants == "f3") {
+    data <- filter(data, formant == "f3")
+  }
+  
+  # Subset by condition if specified
+  if (condition == "talker") {
+    if (level == "S")
+      return(filter(data, talker == "S") %>% select(all_of(channel_columns)))
+    return(filter(data, talker == "T") %>% select(all_of(channel_columns)))
+  } else if (condition == "meaning") {
+    if (level == "M")
+      return(filter(data, meaning == "M") %>% select(all_of(channel_columns)))
+    return(filter(data, meaning == "N") %>% select(all_of(channel_columns)))
+  } else if (condition == "constraint") {
+    if (level == "S")
+      return(filter(data, constraint == "S") %>% select(all_of(channel_columns)))
+    return(filter(data, constraint == "G") %>% select(all_of(channel_columns)))
+  }
+}
+```
+
+```{r fns_statistical_tests}
+# Function for running a one-sample t-test and saving the p-value, t-statistic, and df
+get_one_sample_t <- function(data) {
+  t <- apply(data, MARGIN = 2, function(channel) {t.test(channel)$statistic})
+  return(t)
+}
+
+# Function for running a paired-samples t-test and saving the p-value, t-statistic, and df
+get_paired_samples_t <- function(group1, group2) {
+  t <- mapply(function(x, y) {t.test(x, y, paired = TRUE)$statistic}, group1, group2)
+  return(t)
+  }
+```
+
+```{r plotting}
+get_layout <- function() { 
+  fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/electrode_points"
+  coordinates <- read.delim(fp, header = FALSE)
+  x <- coordinates[[1]]
+  y <- coordinates[[2]]
+  return(list(x = x, y = y))
+}
+
+get_map <- function(paired, group1, group2, levels, layout, title) {
+  # Create data frame for plotting
+  channels <- 
+  groups <- matrix("none", 128, 1)
+  groups[intersect(which(abs(paired) > 1.681), which(abs(group1) > 1.681))] <- levels[1]
+  groups[intersect(which(abs(paired) > 1.681), which(abs(group2) > 1.681))] <- levels[2]
+  groups[intersect(which(abs(group1) > 1.681), which(abs(group2) > 1.681))] <- "both"
+  groups <- factor(groups, levels = c(levels, "both", "none"))
+  df <- data.frame(t = abs(paired), x = layout$x, y = layout$y, groups = groups)
+  
+  # Create a custom color scale
+  myColors <- c("#B8DE29FF", "#287D8EFF", "#29AF7FFF", "#a0a0a0")
+  names(myColors) <- levels(df$groups)
+  
+  # Plot
+  plot <- ggplot() +
+    geom_point(data = df, aes(x = x, y = y, size = t, color = groups)) +
+    geom_text(data = df, aes(x = x, y = y, label = ifelse(t > 1.681, as.character(1:128), " ")), vjust = -1) +
+    scale_colour_manual(name = "group",values = myColors) +
+    ggtitle(title) +
+    xlim(0, 900) +
+    ylim(0, 900) +
+    theme(axis.line=element_blank(),axis.text.x=element_blank(),
+          axis.text.y=element_blank(),axis.ticks=element_blank(),
+          axis.title.x=element_blank(),
+          axis.title.y=element_blank(),
+          panel.background=element_blank(),
+          panel.border=element_blank(),
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
+          plot.background=element_blank())
+  
+  return(plot)
+}
+```
+
+
+
+************
+
+#### 3. Do cortical regions track the levels of each condition differently?
+
+Tested by paired-samples t-tests between the two levels of each condition. I.e. a test of whether an electrode significantly distinguishes condition levels.
+
+``` {r}
+# Read files
+setwd("/Applications/eeglab2019/talker-change-data-processing/") # Set root dir
+xcorr <- load_data("xcorr")
+```
+
+```{r}
+# One-sample t-tests over each electrode for the same talker condition
+t_talker_s <- get_one_sample_t(subset(xcorr, condition = "talker", level = "S"))
+t_talker_t <- get_one_sample_t(subset(xcorr, condition = "talker", level = "T"))
+t_talker_paired <- get_paired_samples_t(subset(xcorr, condition = "talker", level = "S"),
+                                        subset(xcorr, condition = "talker", level = "T"))
+
+# One-sample t-tests over each electrode for the meaning condition
+t_meaning_m <- get_one_sample_t(subset(xcorr, condition = "meaning", level = "M"))
+t_meaning_n <- get_one_sample_t(subset(xcorr, condition = "meaning", level = "N"))
+t_meaning_paired <- get_paired_samples_t(subset(xcorr, condition = "meaning", level = "M"),
+                                         subset(xcorr, condition = "meaning", level = "N"))
+
+# One-sample t-tests over each electrode for the high constraint condition
+t_constraint_s <- get_one_sample_t(subset(xcorr, condition = "constraint", level = "S"))
+t_constraint_g <- get_one_sample_t(subset(xcorr, condition = "constraint", level = "G"))
+t_constraint_paired <- get_paired_samples_t(subset(xcorr, condition = "constraint", level = "S"),
+                                            subset(xcorr, condition = "constraint", level = "G"))
+```
+
+```{r}
+layout <- get_layout()
+get_map(t_talker_paired, t_talker_t, t_talker_s, c("different", "same"), layout, "Talker")
+get_map(t_meaning_paired, t_meaning_m, t_meaning_n, c("meaningful", "nonsense"), layout, "Meaning")
+get_map(t_constraint_paired, t_constraint_s, t_constraint_g, c("high constraint", "low constraint"), layout, "Constraint")
+```
+
