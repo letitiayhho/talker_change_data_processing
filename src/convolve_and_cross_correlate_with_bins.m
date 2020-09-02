@@ -1,0 +1,129 @@
+function [] = convolve_and_cross_correlate_with_formants(subject_number)
+% DESCRIPTION:
+%     Takes the preprocessed eeg data and convolves or cross-correlates the 
+%     waveforms with the waveform of the auditory stimuli
+%
+% INPUT:
+%     subject_number (char) - input subject numbers as strings, e.g. '302'
+%
+% OUTPUT:
+%     Writes files named <cross_correlation/convolution>_formant_data_table.mat
+
+    fprintf(1, strcat('Analyzing data from subject #', subject_number, '\n'))
+
+    %% 1. Import data
+    cd('/Applications/eeglab2019/talker-change-data-processing')
+    addpath(fullfile('data', subject_number)) % add subject data to path
+    addpath(fullfile('data/stim/formants')) % add audio stimuli directory to path
+
+    % Import EEG data
+    eeg_data = load('eeg_data').('eeg_data');
+
+    % Import original epoch order
+    epoch_order_original = load('epoch_order_original').('epoch_order_original');
+
+    % Import pruned epoch order
+    epoch_order_pruned = load('epoch_order_pruned').('epoch_order_pruned');
+
+    % Import stimuli order
+    stim_order = readtable('stim_order.txt');
+
+    %% 2. Match EEG epochs with words
+    % Sort original epoch order by condition
+    epoch_order_original = struct2table(epoch_order_original);
+    epoch_order_original = sortrows(epoch_order_original, 'type');
+    epoch_order_original = epoch_order_original(endsWith(epoch_order_original.type, 'E'),:);
+
+    % Sort pruned epoch order by condition
+    epoch_order_pruned = struct2table(epoch_order_pruned);
+    epoch_order_pruned = sortrows(epoch_order_pruned, 'type');
+
+    % Match pruned epochs with corresponding epochs
+    k = 1;
+    for j = 1:height(epoch_order_original)
+        % Match original epochs with corresponding stim 
+        epoch_order_original.word(j) = stim_order.ending(j);
+        
+        % Break at the end of pruned epochs to avoid exceeding array length
+        if k > height(epoch_order_pruned)
+            break
+        end
+        
+        % Match pruned epochs with corresponding stim
+        if epoch_order_original.urevent(j) == epoch_order_pruned.urevent(k)
+            epoch_order_pruned.word(k) = stim_order.ending(j);
+            k = k+1;
+        end
+    end
+
+    % Sort pruned epoch order by latency
+    epoch_order_pruned = sortrows(epoch_order_pruned, 'latency');
+ 
+    %% 3. Compute cross-correlations
+    freqs = [-1, -0.5, 0, 1, 1.5, 2, 2.5, 3, 3.5, 4];
+    cross_correlation = zeros(size(eeg_data, 3), size(eeg_data, 1), size(freqs, 2));
+
+    % Loop over frequency
+    for i = 1:length(freqs)
+
+        % Create filter around frequency
+        freq = freq(i);
+        [b, a] = butter(10, [(freq*0.8)/500, (freq*1.25)/500], 'bandpass');
+        fprintf(1, ['Correlating audio with eeg signals filtered around ', char(freq), '\n'])
+
+        % Loop over channels
+        for j = 1:size(eeg_data, 1)
+            fprintf(1, ['Channel #', num2str(j), '\n'])
+
+            % Loop over epochs
+             for k = 1:size(eeg_data, 3)
+
+                 % Extract epoch from subject data
+                 epoch = eeg_data(j, :, k);
+
+                 % Filter epoch
+                 filtered_epoch = filter(b, a, epoch);
+
+                 % Load stimuli .wav file for epoch
+                 word = strcat(erase(char(epoch_order_pruned.word(k)), ".wav"), "_", formant, ".wav");
+                 auditory_stimuli = audioread(word);
+
+                 % Compute convolution and cross correlation
+                 cross_correlation(k, j, i) = mean(xcorr(epoch, auditory_stimuli)); % should be #stim * #channels * #formants
+
+             end
+        end
+    end
+
+    %% 4. Write data
+    cross_correlation_formant_data_table = format_data(cross_correlation, epoch_order_pruned, formants);
+    fp = fullfile('data', subject_number, 'cross_correlation_formant_data_table');
+    fprintf(1, strcat('Writing file to ', fp, '\n'))
+    save(fp, 'cross_correlation_formant_data_table');
+    
+    % Format data into a table with columns for conditions
+    function [data_table] = format_data(data, epoch_order_pruned, formants)
+        data_table = [];
+        for i = 1:length(formants)
+            % Get correlations for each formant
+            formant_table = array2table(data(:, :, i));
+
+            % Create array for formants
+            formant_array(1:size(epoch_order_pruned, 1), 1) = formants(i);
+
+            % Add information to data table
+            formant_data = table(formant_array,...
+                [epoch_order_pruned.type],...
+                [epoch_order_pruned.epoch],...
+                [epoch_order_pruned.word],...
+                [formant_table],...
+                'VariableNames', {'formant', 'condition', 'epoch', 'word', 'cross_correlation'});
+            
+            % Row bind to data table
+            data_table = [data_table; formant_data];
+        end
+    end
+
+    %% Quit
+    quit
+end
