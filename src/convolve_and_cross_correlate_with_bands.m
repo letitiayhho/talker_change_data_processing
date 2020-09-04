@@ -74,7 +74,7 @@ function [] = convolve_and_cross_correlate_with_bands(subject_number)
 
         % Create filter around frequency band
         [b, a] = butter(10, [(bands.lower_lims(i)), bands.upper_lims(i)]/500, 'bandpass');
-        band = class(bands.names(i));
+        band = char(bands.names(i));
         fprintf(1, ['Correlating audio with eeg signals filtered around ', band, '\n'])
 
         % Loop over channels
