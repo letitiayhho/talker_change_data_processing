@@ -1,4 +1,4 @@
-function [] = convolve_and_cross_correlate_with_formants(subject_number)
+function [] = convolve_and_cross_correlate_with_bands(subject_number)
 % DESCRIPTION:
 %     Takes the preprocessed eeg data and convolves or cross-correlates the 
 %     waveforms with the waveform of the auditory stimuli
@@ -7,14 +7,14 @@ function [] = convolve_and_cross_correlate_with_formants(subject_number)
 %     subject_number (char) - input subject numbers as strings, e.g. '302'
 %
 % OUTPUT:
-%     Writes files named <cross_correlation/convolution>_formant_data_table.mat
+%     Writes files named <cross_correlation/convolution>_band_data_table.mat
 
     fprintf(1, strcat('Analyzing data from subject #', subject_number, '\n'))
 
     %% 1. Import data
     cd('/Applications/eeglab2019/talker-change-data-processing')
     addpath(fullfile('data', subject_number)) % add subject data to path
-    addpath(fullfile('data/stim/formants')) % add audio stimuli directory to path
+    addpath(fullfile('data/stim/')) % add audio stimuli directory to path
 
     % Import EEG data
     eeg_data = load('eeg_data').('eeg_data');
@@ -60,16 +60,22 @@ function [] = convolve_and_cross_correlate_with_formants(subject_number)
     epoch_order_pruned = sortrows(epoch_order_pruned, 'latency');
  
     %% 3. Compute cross-correlations
-    freqs = [-1, -0.5, 0, 1, 1.5, 2, 2.5, 3, 3.5, 4];
-    cross_correlation = zeros(size(eeg_data, 3), size(eeg_data, 1), size(freqs, 2));
+    
+    % Create struct of frequency bands
+    bands.names = {'delta', 'theta', 'alpha', 'beta1', 'beta2', 'gamma1', 'gamma2'};
+    bands.lower_lims = [1, 4, 8, 14, 20, 30, 50];
+    bands.upper_lims = [4, 8, 14, 20, 30, 50, 100];
 
-    % Loop over frequency
-    for i = 1:length(freqs)
+    % Init data matrix
+    cross_correlation = zeros(size(eeg_data, 3), size(eeg_data, 1), size(bands.names, 2));
 
-        % Create filter around frequency
-        freq = freq(i);
-        [b, a] = butter(10, [(freq*0.8)/500, (freq*1.25)/500], 'bandpass');
-        fprintf(1, ['Correlating audio with eeg signals filtered around ', char(freq), '\n'])
+    % Loop over frequency bands
+    for i = 1:length(bands.names)
+
+        % Create filter around frequency band
+        [b, a] = butter(10, [(bands.lower_lims(i)), bands.upper_lims(i)]/500, 'bandpass');
+        band = class(bands.names(i));
+        fprintf(1, ['Correlating audio with eeg signals filtered around ', band, '\n'])
 
         % Loop over channels
         for j = 1:size(eeg_data, 1)
@@ -85,42 +91,48 @@ function [] = convolve_and_cross_correlate_with_formants(subject_number)
                  filtered_epoch = filter(b, a, epoch);
 
                  % Load stimuli .wav file for epoch
-                 word = strcat(erase(char(epoch_order_pruned.word(k)), ".wav"), "_", formant, ".wav");
+                 word = char(epoch_order_pruned.word(k));
                  auditory_stimuli = audioread(word);
 
                  % Compute convolution and cross correlation
-                 cross_correlation(k, j, i) = mean(xcorr(epoch, auditory_stimuli)); % should be #stim * #channels * #formants
+                 cross_correlation(k, j, i) = mean(xcorr(epoch, auditory_stimuli)); % should be #stim * #channels * #bands
 
              end
         end
     end
 
     %% 4. Write data
-    cross_correlation_formant_data_table = format_data(cross_correlation, epoch_order_pruned, formants);
-    fp = fullfile('data', subject_number, 'cross_correlation_formant_data_table');
+    cross_correlation_band_data_table = format_data(cross_correlation, epoch_order_pruned, bands);
+    fp = fullfile('data', subject_number, 'cross_correlation_band_data_table');
     fprintf(1, strcat('Writing file to ', fp, '\n'))
-    save(fp, 'cross_correlation_formant_data_table');
+    save(fp, 'cross_correlation_band_data_table');
     
     % Format data into a table with columns for conditions
-    function [data_table] = format_data(data, epoch_order_pruned, formants)
+    function [data_table] = format_data(data, epoch_order_pruned, bands) 
+                                        % Probably shouldn't be looping over 
+                                        % everything again copy lower part 
+                                        % after band_table to the end
+                                        % of the last loop, I think
+                                        % BEFORE all of that, check that it
+                                        % works as is
         data_table = [];
-        for i = 1:length(formants)
-            % Get correlations for each formant
-            formant_table = array2table(data(:, :, i));
+        for i = 1:length(bands.names)
+            % Get correlations for each frequency band
+            band_table = array2table(data(:, :, i));
 
-            % Create array for formants
-            formant_array(1:size(epoch_order_pruned, 1), 1) = formants(i);
+            % Create array for frequency band
+            band_label(1:size(epoch_order_pruned, 1), 1) = bands.names(i);
 
             % Add information to data table
-            formant_data = table(formant_array,...
+            band_data = table(band_label,...
                 [epoch_order_pruned.type],...
                 [epoch_order_pruned.epoch],...
                 [epoch_order_pruned.word],...
-                [formant_table],...
-                'VariableNames', {'formant', 'condition', 'epoch', 'word', 'cross_correlation'});
+                [band_table],...
+                'VariableNames', {'band', 'condition', 'epoch', 'word', 'cross_correlation'});
             
             % Row bind to data table
-            data_table = [data_table; formant_data];
+            data_table = [data_table; band_data];
         end
     end
 
