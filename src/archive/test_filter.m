@@ -1,9 +1,10 @@
 function [] = test_filter(subject, channel, epoch, bin_center)
-    % Parameters
-    subject = 302
-    channel = 40
-    epoch = 10
-    bin_center = 5
+
+    % Convert string args to ints and print for sanity check
+    subject = str2num(subject)
+    channel = str2num(channel)
+    epoch = str2num(epoch)
+    bin_center = str2num(bin_center)
 
     % Load eeg data
     fprintf(1, 'Loading data...\n');
