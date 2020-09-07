@@ -82,7 +82,7 @@ get_layout <- function() {
   fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/electrode_points"
   coordinates <- read.delim(fp, header = FALSE)
   x <- coordinates[[1]]
-  y <- coordinates[[2]]
+  y <- -coordinates[[2]]+ 2*mean(coordinates[[2]]) # flip y coords and return to original center
   return(list(x = x, y = y))
 }
 
