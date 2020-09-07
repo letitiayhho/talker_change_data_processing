@@ -1,4 +1,4 @@
-function [] = convolve_and_cross_correlate(subject_number)
+function [] = convolve_and_cross_correlate(git_home, subject_number)
 % DESCRIPTION:
 %     Takes the preprocessed eeg data and convolves or cross-correlates the 
 %     waveforms with the waveform of the auditory stimuli
@@ -12,7 +12,7 @@ function [] = convolve_and_cross_correlate(subject_number)
     fprintf(1, strcat('Analyzing data from subject #', subject_number, '\n'))
 
     %% 1. Import data
-    cd('/Applications/eeglab2019/talker-change-data-processing')
+    cd(git_home)
     addpath(fullfile('data', subject_number)) % add subject data to path
     addpath(fullfile('data/stim')) % add audio stimuli directory to path
     
