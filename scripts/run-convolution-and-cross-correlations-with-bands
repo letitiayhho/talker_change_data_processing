@@ -7,8 +7,9 @@ usage: $0 <subject number> ...
 
     description
         wrapper script for convolve_and_cross_correlate.m
-        convolve and cross correlate eeg signal from each epoch
-        and each channel with its corresponding auditory stimuli
+        convolve and cross correlate eeg signals filtered at each
+        eeg frequency band from each epoch and each channel with
+        its corresponding auditory stimuli
 eof
     exit 1
 }
@@ -21,5 +22,5 @@ GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME"
 
 for subject_number in  "$@"; do
-    matlab -nodisplay -r "addpath('src'); convolve_and_cross_correlate('$GIT_HOME', '$subject_number')"
+    matlab -nodisplay -r "addpath('src'); convolve_and_cross_correlate_with_bands('$GIT_HOME', '$subject_number')"
 done
