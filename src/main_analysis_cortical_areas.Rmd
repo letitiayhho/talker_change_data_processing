@@ -9,8 +9,8 @@ output:
 ```{r setup, include=FALSE}
 require("knitr")
 library("dplyr")
-library("kableExtra")
 library("ggplot2")
+library("scatterpie")
 knitr::opts_chunk$set(
   echo = FALSE,
   warning = FALSE
@@ -25,19 +25,6 @@ get_layout <- function() {
   return(layout)
 }
 
-# get_contains_area <- function(areas) {
-#   contains = c()
-#   for (i in 1:128) {
-#     temporal <- sum(grep('Temporal', areas[[i]]))
-#     frontal <- sum(grep('Frontal', areas[[i]]))
-#     if (temporal > 0) {contains[i] <- 'Temporal'}
-#     if (frontal > 0) {contains[i] <- 'Frontal'}
-#     if (temporal > 0 & frontal > 0) {contains[i] <- 'Both'}
-#     if (temporal == 0 & frontal == 0) {contains[i] <- 'None'}
-#   }
-#   return(contains)
-# }
-
 get_combined_central <- function(aal) {
   for (i in 1:length(aal)) {
     indexes <- grep('central', aal[[i]])
@@ -46,9 +33,8 @@ get_combined_central <- function(aal) {
   return(aal)
 }
 
-get_main_areas <- function(aal) {
+get_main_areas <- function(aal, areas) {
   # Init a matrix to store tallies of areas labeled
-  areas = c("Temporal", "Frontal", "Occipital", "Supp", "Central", "SupraMarginal", "Angular", "Parietal")
   tallies = matrix(0, 128, 8) 
   colnames(tallies) <- areas
   
@@ -56,7 +42,6 @@ get_main_areas <- function(aal) {
   for (i in 1:length(aal)) {
     for (j in 1:length(aal[[i]])) {
       main_area <- sub("\\_.*", "", aal[[i]][j])
-      # aal[[i]][j] <- ifelse(main_area %in% areas, main_area, "Other")
       tallies[i, grep(main_area, areas)] <- tallies[i, grep(main_area, areas)] + 1
     }
   }
@@ -64,42 +49,43 @@ get_main_areas <- function(aal) {
 }
 ```
 
-```{r import}
-load("/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates_areas_aal.Rdata")
-layout <- get_layout()
-```
-
 ```{r identify main cortical areas}
+# Basic graph features
+channels <- as.character(1:128)
+areas <- c("Temporal", "Frontal", "Occipital", "Supp", "Central", "SupraMarginal", "Angular", "Parietal")
+
+# Load and clean data
+load("/Applications/eeglab2019/talker-change-data-processing/data/aggregate/mni_coordinates_areas_aal.Rdata")
 aal_cleaned <- get_combined_central(aal)
-aal_reduced <- get_main_areas(aal_cleaned)
-df <- cbind(layout, aal_reduced)
+aal_reduced <- get_main_areas(aal_cleaned, areas)
 
+# Load coordinates and create data frame for plotting
+layout <- get_layout()
+df <- cbind(channels, layout, aal_reduced)
 
+# Create a custom color scale
+myColors <- c("#2c8497", "#2c4f97", "#3f2c97", "#752c97", "#972c84", "#972c4f", "#97452c", "#97702c")
+names(myColors) <- levels(df$groups)
 
-# # Create a custom color scale
-# myColors <- c("#fc9d03", "#coloffd91c", "#a0a0a0", "#fc8003")
-# names(myColors) <- levels(df$groups)
-# channels <- as.character(1:128)
-# 
-# ggplot() +
-#   geom_point(data = df, aes(x = x, y = y, color = major_regions, size = 7)) +
-#   geom_text(data = df, aes(x = x, y = y, label = channels), vjust = -1) +
-#   scale_color_manual(name = "Region", values = myColors) + 
-#   ylim(0, 900) +
-#   xlim(0, 900) +
-#   theme(axis.line=element_blank(),axis.text.x=element_blank(),
-#         axis.text.y=element_blank(),axis.ticks=element_blank(),
-#         axis.title.x=element_blank(),
-#         axis.title.y=element_blank(),
-#         panel.background=element_blank(),
-#         panel.border=element_blank(),
-#         panel.grid.major=element_blank(),
-#         panel.grid.minor=element_blank(),
-#         plot.background=element_blank())
+ggplot() +
+  geom_scatterpie(data = df, cols = areas, aes(x = x, y = y)) +
+  coord_equal() +
+  geom_text(data = df, aes(x = x, y = y, label = channels), vjust = -1.2, size= 3) +
+  scale_color_manual(name = "Region", values = myColors) +
+  ylim(0, 900) +
+  xlim(0, 900) +
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.background=element_blank())
 
-
-# all_areas <- unique(sub("\\_.*", "", unlist(aal)))
-
+# add other
+# remove midnight
 
 ```
 
