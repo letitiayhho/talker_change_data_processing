@@ -20,11 +20,13 @@ for subject_dir in data/*; do
 
     if ! scp uchicago:"'$REMOTE_SFP_DATA_PATH/${subject_number}_${subject_number}_${subject_number}.sfp'" "$subject_dir/channel_locations.sfp"; then
         echo "Couldn't find channel_locations.sfp for subject $subject_number, skipping ..." >&2
+        mv "$subject_dir" "/tmp/$subject_dir-$(uuidgen)"
         continue  # no point in downloading the *.raw file if we don't have the *.sfp one
     fi
 
     if ! scp uchicago:"'$REMOTE_EEG_DATA_PATH/${subject_number}_*.raw'" "$subject_dir/eeg_data.raw"; then
         echo "Couldn't find eeg_data.raw for subject $subject_number, skipping ..." >&2
+        mv "$subject_dir" "/tmp/$subject_dir-$(uuidgen)"
     fi
 
 done
