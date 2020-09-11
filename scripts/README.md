@@ -24,8 +24,8 @@ Scripts in this folder download and install necessary files and run all the sour
 
 `preprocess-eeg-data` - wrapper script to run `src/preprocess_eeg_data.m`. Enables automated preprocessing of all subjects at once. Uses the EEGLAB plugin for MATLAB
 
-`run-convolution-and-cross-correlations` - wrapper script to run `src/convolve_and_cross_correlate.m` on all subjects at once
+`run-cross-correlations` - wrapper script to run `src/cross_correlate.m` on all subjects at once
 
-`run-convolution-and-cross-correlatinos-with-formants` - wrapper script to run `src/convolve_and_cross_correlate_with_formants.m` on all subjects at once
+`run-cross-correlations-with-formants` - wrapper script to run `src/cross_correlate_with_formants.m` on all subjects at once
 
 `run-rms` - wrapper script to run `src/get_rms.m` on all subjects at once
