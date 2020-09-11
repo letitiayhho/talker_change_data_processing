@@ -6,6 +6,8 @@ Most of the files in here are run through bash scripts in `scripts/`. These file
 
 `preprocess_eeg_data.m` - Automated pipeline for preprocessing eeg data using EEGLAB toolbox on MATLAB
 
+`preprocess_eeg_data_with_bands.m` - Automated pipeline for preprocessing eeg data using EEGLAB toolbox on MATLAB. Filters eeg signals by eeg band specified, e.g. 'alpha', 'theta'
+
 `convolve_and_cross_correlate.m` - Takes the preprocessed eeg data and convolves or cross-correlates the waveforms with the waveform of the auditory stimuli
 
 `convolve_and_cross_correlate_formants.m` - Takes the preprocessed eeg data and convolves or cross-correlates the waveforms with the subband-filtered versions of the auditory stimuli. See script for frequency bands and corresponding formants
