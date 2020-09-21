@@ -84,8 +84,9 @@ get_nearest_cortical_areas <- function(radius = 10) {
             "Region_name"
             ]
         )
-        label <- ifelse(length(result$label) == 0, "NULL", result$label)
-        # label <- ifelse(length(result$label) == 0 | result$distance > 30, "NULL", result$label)
+        
+        # Exclude results more than 4 cm away from reference point, 5 cm away from centroid
+        label <- ifelse(length(result$label) == 0 | result$distance > 40, "NULL", result$label)
         return(label)
       }
     )
@@ -117,10 +118,6 @@ get_nearest_cortical_areas <- function(radius = 10) {
   library(label4MRI)
   
   
-  ## TMP:
-  radius <- 10 # in mm
-  
-  
   ## MAIN:
   coordinates <- get_coordinates()
   min_distance <- get_min_distance()
@@ -135,10 +132,10 @@ get_nearest_cortical_areas <- function(radius = 10) {
   
   
   ## SAVE:
-  aal2 <- labels[["aal.label"]]
-  ba2 <- labels[["ba.label"]]
-  save(aal2, file = 'data/aggregate/mni_coordinates_areas_aal_2.RData')
-  save(ba2, file = 'data/aggregate/mni_coordinates_areas_ba_2.RData')
+  aal <- labels[["aal.label"]]
+  ba <- labels[["ba.label"]]
+  save(aal, file = 'data/aggregate/mni_coordinates_areas_aal.RData')
+  save(ba, file = 'data/aggregate/mni_coordinates_areas_ba.RData')
   
 }
 

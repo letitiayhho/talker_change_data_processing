@@ -86,28 +86,70 @@ get_layout <- function() {
   return(list(x = x, y = y))
 }
 
-get_map <- function(paired, group1, group2, levels, layout, title) {
-  # Create data frame for plotting
-  channels <- 
+get_t_threshold <- function(a) {
+  return(abs(qt(a/2, df = 43)))
+}
+
+recode_hot <- function(group) {
+  # Flag all significant channels with a>0.1 as *
+  group[group > get_t_threshold(0.1)] <- '*'
+  return(group)
+}
+
+recode_paired_t <- function(group) {
+  # Recode t-values so a>0.1, t=*; a>0.5, t=**, a>0.01, t=***
+  sig <- matrix(0.1, 128, 1)
+  sig[group > get_t_threshold(0.1)] <- 1
+  sig[group > get_t_threshold(0.05)] <- 2
+  sig[group > get_t_threshold(0.01)] <- 3
+  return(sig)
+}
+
+recode_groups <- function(paired, group1, group2, levels) {
+  # Group as none, both, or subject levels depending on t-test results
   groups <- matrix("none", 128, 1)
-  groups[intersect(which(abs(paired) > 1.681), which(abs(group1) > 1.681))] <- levels[1]
-  groups[intersect(which(abs(paired) > 1.681), which(abs(group2) > 1.681))] <- levels[2]
-  groups[intersect(which(abs(group1) > 1.681), which(abs(group2) > 1.681))] <- "both"
+  groups[which(paired == group1)] <- levels[1]
+  groups[which(paired == group2)] <- levels[2]
+  groups[which(group1 == group2)] <- "both"
   groups <- factor(groups, levels = c(levels, "both", "none"))
-  df <- data.frame(t = abs(paired), x = layout$x, y = layout$y, groups = groups)
+  return(groups)
+}
+
+get_map <- function(paired, group1, group2, levels, layout, title) {
+  # Flag significant t-values
+  group1_recoded <- recode_hot(abs(group1))
+  group2_recoded <- recode_hot(abs(group2))
+  paired_recoded <- recode_hot(abs(paired))
+  
+  # Create data frame for plotting
+  groups <- recode_groups(paired_recoded, group1_recoded, group2_recoded, levels)
+  
+  # Extract significance level of paired-t-test
+  # sig <- abs(paired) # Continuous t-values
+  sig <- recode_paired_t(abs(paired)) # Discrete signifiance levels instead of t
+  
+  # Create data frame for plotting
+  df <- data.frame(groups = groups, sig = sig, x = layout$x, y = layout$y)
   
   # Create a custom color scale
   myColors <- c("#B8DE29FF", "#287D8EFF", "#29AF7FFF", "#a0a0a0")
   names(myColors) <- levels(df$groups)
+  channels <- as.character(1:128)
   
   # Plot
   plot <- ggplot() +
-    geom_point(data = df, aes(x = x, y = y, size = t, color = groups)) +
-    geom_text(data = df, aes(x = x, y = y, label = ifelse(t > 1.681, as.character(1:128), " ")), vjust = -1) +
-    scale_colour_manual(name = "group",values = myColors) +
+    geom_point(data = df, aes(x = x, y = y, size = sig, color = groups)) +
+    
+    # Continuous t-values
+    # geom_text(data = df, aes(x = x, y = y, label = ifelse(sig > 1.681, channels, " ")), vjust = -1) +
+    
+    # Discrete significance levels, instead of t
+    geom_text(data = df, aes(x = x, y = y, label = ifelse(sig > 0.1, channels, " ")), vjust = -1) +
+    
+    scale_colour_manual(name = "Group", values = myColors) +
     ggtitle(title) +
-    xlim(0, 900) +
     ylim(0, 900) +
+    xlim(0, 900) +
     theme(axis.line=element_blank(),axis.text.x=element_blank(),
           axis.text.y=element_blank(),axis.ticks=element_blank(),
           axis.title.x=element_blank(),
