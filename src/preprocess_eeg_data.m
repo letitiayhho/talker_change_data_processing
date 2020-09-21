@@ -70,7 +70,7 @@ function [] = preprocess_eeg_data(subject_number)
 
     %% 6. Extract epochs
     fprintf(1, '\n\n6. Extracting epochs\n\n\n')
-    EEG = pop_epoch( EEG, {  'GMSE'  'GMTE'  'GNSE'  'GNTE'  'SMSE'  'SMTE'  'SNSE'  'SNTE'  }, [0  1.5], 'epochinfo', 'yes');
+    EEG = pop_epoch( EEG, {  'GMSE'  'GMTE'  'GNSE'  'GNTE'  'SMSE'  'SMTE'  'SNSE'  'SNTE'  }, [-0.1 1.5], 'epochinfo', 'yes');
     set_name = strcat(set_name, '_epo')
     EEG = name_and_save(EEG, set_name);
 
