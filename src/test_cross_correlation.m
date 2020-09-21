@@ -24,17 +24,16 @@ function [] = test_cross_correlation(git_home, subject_number)
     epoch_order_pruned = get_epoch_order(subject_number);
 
     %% 3. Convolve over 20 middle epochs and 20 channels
-    % Initialize data arrays
-    average = zeros(20, 30, 3); % epochs 100:130, channels 30:50, features (mean, max, lag)
-    max = zeros(20, 30, 3);
-    lag = zeros(20, 30, 3);
+    % Initialize data tables
+    cross_correlation = zeros(20, 20, 3); % epochs 100:120, channels 30:50, features (mean, max, lag)
+    lags = zeros(20, 20, 1.5*44100);
 
     % Loop over channels
     for i = 1:20
         disp(strcat('Channel #', num2str(i+30)))
 
         % Loop over epochs
-         for j = 1:30
+         for j = 1:20
              
              % Extract eeg epoch and interpolate
              epoch = interp(eeg_data(i+30, :, j+60), 44);
@@ -44,13 +43,7 @@ function [] = test_cross_correlation(git_home, subject_number)
              auditory_stimuli = audioread(word);
 
              % Compute convolution and cross correlation
-             [cross_correlations, lags] = xcorr(auditory_stimuli, epoch);
-             
-             % Write statistics to data arrays % take ABS?
-             average(i, j) = mean(cross_correlations);
-             [max(i, j), I] = max(cross_correlations);
-             lag(i, j) = lags(I);
-             
+             xc_len = length(auditory_stimuli)*2-1;
              [cross_correlation(j, i, 1:xc_len), lags(j, i, 1:xc_len)] = xcorr(auditory_stimuli, epoch); % REMOVE
              % MAYBE I DONT NEED TO, JUST SAVE MAX AND Index (and lag)
              % or only really have to save lags once
