@@ -1,4 +1,4 @@
-function [] = convolve_and_cross_correlate_with_formants(git_home, subject_number)
+function [] = cross_correlate_with_formants(git_home, subject_number)
 % DESCRIPTION:
 %     Takes the preprocessed eeg data and convolves or cross-correlates the 
 %     waveforms with the waveform of the auditory stimuli
@@ -24,11 +24,12 @@ function [] = convolve_and_cross_correlate_with_formants(git_home, subject_numbe
     % Import pruned epoch order
     epoch_order_pruned = get_epoch_order(subject_number);
     
-    %% 3. Compute cross correlations and convolutions for formants
+    %% 2. Cross correlate with formants
+    average = zeros(size(eeg_data, 3), size(eeg_data, 1));
+    abs_average = zeros(size(eeg_data, 3), size(eeg_data, 1));
+    maximum = zeros(size(eeg_data, 3), size(eeg_data, 1));
+    lag = zeros(size(eeg_data, 3), size(eeg_data, 1));
     formants = {'f0', 'f1_f2', 'f3'};
-    
-    % Initialize matrix for data
-    cross_correlation = []; 
 
     % Loop over formants
     for i = 1:length(formants)
@@ -42,31 +43,42 @@ function [] = convolve_and_cross_correlate_with_formants(git_home, subject_numbe
             % Loop over epochs
              for k = 1:size(eeg_data, 3)
                  epoch = eeg_data(j, :, k);
-
+                 
+                 % Extract eeg epoch and interpolate
+                 epoch = interp(eeg_data(j, :, k), 44);
+                 
                  % Load stimuli .wav file for epoch
                  word = strcat(erase(char(epoch_order_pruned.word(k)), ".wav"), "_", formant, ".wav");
                  auditory_stimuli = audioread(word);
-
+                 
                  % Compute convolution and cross correlation
-                 cross_correlation(k, j, i) = mean(xcorr(epoch, auditory_stimuli)); % should be #stim * #channels * #formants
-
+                 [cross_correlations, lags] = xcorr(auditory_stimuli, epoch);
+                 
+                 % Write statistics to data arrays
+                 average(k, j) = mean(cross_correlations);
+                 abs_average(k, j) = mean(abs(cross_correlations));
+                 [maximum(k, j), I] = max(abs(cross_correlations));
+                 lag(k, j) = lags(I);
+                 
              end
         end
         
         formant_array(1:size(epoch_order_pruned, 1), 1) = formants(i);
-        formant_data = table(formant_array,...
-                [epoch_order_pruned.type],...
-                [epoch_order_pruned.epoch],...
-                [epoch_order_pruned.word],...
-                [formant_table],...
-                'VariableNames', {'formant', 'condition', 'epoch', 'word', 'cross_correlation'});
-        cross_correlation = [cross_correlation; formant_data];
+        cross_correlations = table(formant_array,...
+            [epoch_order_pruned.type],...
+            [epoch_order_pruned.epoch],...
+            [epoch_order_pruned.word],...
+            [average],...
+            [abs_average],...
+            [maximum],...
+            [lag],...
+            'VariableNames', {'condition', 'epoch', 'word', 'average', 'abs_average', 'maximum', 'lag'});
+        
+        % Write data
+        fp = fullfile('data', subject_number, 'cross_correlations_formant');
+        fprintf(1, strcat('Writing file to ', fp, '\n'))
+        save(fp, 'cross_correlations', '-append');
     end
-
-    %% 4. Write data
-    fp = fullfile('data', subject_number, 'cross_correlation_formant_data_table');
-    fprintf(1, strcat('Writing file to ', fp, '\n'))
-    save(fp, 'cross_correlation');
 
     %% Quit
     quit
