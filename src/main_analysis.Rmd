@@ -36,10 +36,8 @@ channel_columns <- paste("X", 1:128, sep = "")
 ``` {r}
 # One-sample t-test for the cross-correlation values for each channel
 t_xcorr <- get_one_sample_t(select(xcorr, all_of(channel_columns)))
-# One-sample t-test for the convolution values for each channel
-t_conv <- get_one_sample_t(select(conv, all_of(channel_columns)))
 # Create a frequency table with the results
-get_combined_frequency_table(t_xcorr, t_conv, title = "Table 1. Channels significantly tracking the stimuli")
+get_frequency_table(t_xcorr, title = "Table 1. Channels significantly tracking the stimuli")
 ```
 
 **Output 1. Channels with significant cross-correlation with stimulus waveform ($\alpha$ < 0.1)** Computed with a one-sample t-test for the cross-correlation of each stimulus waveform with each electrode EEG trace across all conditions.
@@ -47,13 +45,6 @@ get_combined_frequency_table(t_xcorr, t_conv, title = "Table 1. Channels signifi
 ```{r}
 # Printing the t-test results for significant electrodes
 t_xcorr[which(t_xcorr$p < 0.1),]
-```
-
-**Output 2. Channels with significant convolution with stimulus waveform ($\alpha$ < 0.1)** Computed with a one-sample t-test for the convolution of each stimulus waveform with each electrode EEG trace across all conditions.
-
-```{r}
-# Printing the t-test results for significant electrodes
-t_conv[which(t_conv$p < 0.1),]
 ```
 
 
@@ -70,13 +61,10 @@ Tested by one-sample t-tests for significant waveform tracking in each level of 
 ```{r}
 # One-sample t-tests over each electrode for the same talker condition
 t_xcorr_talker_s <- get_one_sample_t(subset(xcorr, condition = "talker", level = "S"))
-t_conv_talker_s <- get_one_sample_t(subset(conv, condition = "talker", level = "S"))
-get_combined_frequency_table(t_xcorr_talker_s, t_conv_talker_s, title = "Table 2. Same talker")
-
-# One-sample t-tests over each electrode for the different talker condition
+# get_frequency_table(t_xcorr_talker_s, title = "Table 2. Same talker")
 t_xcorr_talker_t <- get_one_sample_t(subset(xcorr, condition = "talker", level = "T"))
-t_conv_talker_t <- get_one_sample_t(subset(conv, condition = "talker", level = "T"))
-get_combined_frequency_table(t_xcorr_talker_t, t_conv_talker_t, title = "Table 3. Different talker")
+get_combined_frequency_table(t_xcorr_talker_s, t_xcorr_talker_t, 
+                             title = "Table 3. Talker", group1 = "Same talker", group2 = "Different talker")
 ```
 
 **Channels significantly tracking the stimuli in the meaning condition ($\alpha$ < 0.1)** 
@@ -84,13 +72,9 @@ get_combined_frequency_table(t_xcorr_talker_t, t_conv_talker_t, title = "Table 3
 ```{r}
 # One-sample t-tests over each electrode for the meaning condition
 t_xcorr_meaning_m <- get_one_sample_t(subset(xcorr, condition = "meaning", level = "M"))
-t_conv_meaning_m <- get_one_sample_t(subset(conv, condition = "meaning", level = "M"))
-get_combined_frequency_table(t_xcorr_meaning_m, t_conv_meaning_m, title = "Table 4. Meaningful")
-
-# One-sample t-tests over each electrode for the nonsense condition
 t_xcorr_meaning_n <- get_one_sample_t(subset(xcorr, condition = "meaning", level = "N"))
-t_conv_meaning_n <- get_one_sample_t(subset(conv, condition = "meaning", level = "N"))
-get_combined_frequency_table(t_xcorr_meaning_n, t_conv_meaning_n, title = "Table 5. Nonsense")
+get_combined_frequency_table(t_xcorr_meaning_m, t_xcorr_meaning_n, 
+                             title = "Table 4. Nonsense", group1 = "Meaningful", group2 = "Nonsense")
 ```
 
 **Channels significantly tracking the stimuli in the constraint condition ($\alpha$ < 0.1)** 
@@ -98,13 +82,9 @@ get_combined_frequency_table(t_xcorr_meaning_n, t_conv_meaning_n, title = "Table
 ```{r}
 # One-sample t-tests over each electrode for the high constraint condition
 t_xcorr_constraint_s <- get_one_sample_t(subset(xcorr, condition = "constraint", level = "S"))
-t_conv_constraint_s <- get_one_sample_t(subset(conv, condition = "constraint", level = "S"))
-get_combined_frequency_table(t_xcorr_constraint_s, t_conv_constraint_s, title = "Table 6. High constraint")
-
-# One-sample t-tests over each electrode for the low constraint condition
 t_xcorr_constraint_g <- get_one_sample_t(subset(xcorr, condition = "constraint", level = "G"))
-t_conv_constraint_g <-get_one_sample_t(subset(conv, condition = "constraint", level = "G"))
-get_combined_frequency_table(t_xcorr_constraint_g, t_conv_constraint_g, title = "Table 7. Low constraint")
+get_combined_frequency_table(t_xcorr_constraint_s, t_xcorr_constraint_g, 
+                             title = "Table 5. Low constraint", group1 = "High constraint", group2 = "Low constraint")
 ```
 
 
@@ -122,23 +102,17 @@ Tested by paired-samples t-tests between the two levels of each condition. I.e. 
 # Paired t-tests for talker
 t_xcorr_talker_paired <- get_paired_samples_t(subset(xcorr, condition = "talker", level = "S"),
                                               subset(xcorr, condition = "talker", level = "T"))
-t_conv_talker_paired <- get_paired_samples_t(subset(conv, condition = "talker", level = "S"),
-                                             subset(conv, condition = "talker", level = "T"))
-get_combined_frequency_table(t_xcorr_talker_paired, t_conv_talker_paired, title = "Table 8. Talker")
+get_frequency_table(t_xcorr_talker_paired, title = "Table 8. Talker")
 
 # Paired t-tests for meaning
 t_xcorr_meaning_paired <- get_paired_samples_t(subset(xcorr, condition = "meaning", level = "M"),
                                                subset(xcorr, condition = "meaning", level = "N"))
-t_conv_meaning_paired <- get_paired_samples_t(subset(conv, condition = "meaning", level = "M"),
-                                              subset(conv, condition = "meaning", level = "N"))
-get_combined_frequency_table(t_xcorr_meaning_paired, t_conv_meaning_paired, title = "Table 9. Meaning")
+get_frequency_table(t_xcorr_meaning_paired, title = "Table 9. Meaning")
 
 # Paired t-tests for constraint
 t_xcorr_constraint_paired <- get_paired_samples_t(subset(xcorr, condition = "constraint", level = "S"),
                                                   subset(xcorr, condition = "constraint", level = "G"))
-t_conv_constraint_paired <- get_paired_samples_t(subset(conv, condition = "constraint", level = "S"),
-                                                 subset(conv, condition = "constraint", level = "G"))
-get_combined_frequency_table(t_xcorr_constraint_paired, t_conv_constraint_paired, title = "Table 10. Constraint")
+get_frequency_table(t_xcorr_constraint_paired, title = "Table 10. Constraint")
 ```
 
 

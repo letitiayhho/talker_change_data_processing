@@ -113,12 +113,13 @@ get_frequency_table <- function(xcorr, title = NULL) {
 }
 
 # Get a frequency table that combines results for xcorr and conv
-get_combined_frequency_table <- function(xcorr, conv, title = NULL) {
+get_combined_frequency_table <- function(xcorr, conv, title = NULL, 
+                                         group1 = "Cross-correlation", group2 = "Convolution") {
   xcorr_freqs <- get_frequency_counts(xcorr)
   conv_freqs <- get_frequency_counts(conv)
   kable(cbind(xcorr_freqs, conv_freqs), caption = title) %>%
     kable_styling(c("striped", "condensed"), full_width = F) %>%
-    add_header_above(c(" ", "Cross-correlation" = 2, "Convolution" = 2))
+    add_header_above(c(" ", group1 = 2, group2 = 2))
 }
 
 # Get a frequency table that combines results for the three formant levels
