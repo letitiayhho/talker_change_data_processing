@@ -5,6 +5,4 @@
 !/.gitignore
 
 # ... and some secret files
-!/convolution_data.csv
-!/cross_correlation_data.csv
-!/cross_correlation_formant_data.csv
+!/cross_correlation*.csv
