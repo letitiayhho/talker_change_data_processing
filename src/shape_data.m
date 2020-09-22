@@ -1,21 +1,28 @@
-function [] = shape_data(method)
-    % DESCRIPTION:
-    %   Computes cross-correlations or convolutions between eeg signal and audio 
-    %   stimuli across all subjects, channels and trials for each condition
-    %
-    % INPUT:
-    %   method - (char) 'cross_correlation', 'convolution', 'RMS', 'cross_
-    %   correlation_formant' or 'convolution_formant'
+function [] = shape_data(git_home, file_name)
+% DESCRIPTION:
+%   Computes cross-correlations or convolutions between eeg signal and audio
+%   stimuli across all subjects, channels and trials for each condition
+%
+% INPUT:
+%   git_home - (char) path to git root directory
+%   file_name - (char) 'cross_correlations'
 
     %% Main
-    cd('/Applications/eeglab2019/talker-change-data-processing/')
-    [data] = shape_data(method);
-
-    % Export data
-    writetable(data, strcat('data/aggregate/', method, '_data.csv'));
+    cd(git_home)
+    shape_all(file_name)
+        
+    %% Call shape data on each statistic
+    function shape_all(file_name)
+        for i = 1:4
+            statistics = {'average', 'abs_average', 'lag', 'maximum'};
+            statistic = statistics{i};
+            [data] = shape_data(file_name, statistic);
+            writetable(data, strcat('data/aggregate/', file_name, '_', statistic, '.csv'));
+        end
+    end
 
     %% Shape data
-    function [data] = shape_data(method)
+    function [data] = shape_data(file_name, statistic)
         % Set general stats
         number_of_subjects = 11;
 
@@ -24,10 +31,10 @@ function [] = shape_data(method)
 
         % Iterate over subjects
         for i = 1:number_of_subjects
-            [subject_data, subject_number] = load_single_subject_data(method, i);
+            [subject_data, subject_number] = load_single_subject_data(file_name, statistic, i);
 
             % Calculate means for each channel for each condition
-            if contains(method, 'formant') 
+            if contains(file_name, 'formant') 
                 subject_means = grpstats(subject_data, {'condition', 'formant'});
             else
                 subject_means = grpstats(subject_data, {'condition'});
@@ -39,7 +46,8 @@ function [] = shape_data(method)
 
             % Clean up the data table, add labels
             subject_means = removevars(subject_means, {'condition', 'GroupCount'}); 
-            subject_means.Properties.VariableNames = ['formant', string(1:128)];
+%             subject_means.Properties.VariableNames = ['formant', string(1:128)];
+            subject_means.Properties.VariableNames = string(1:128);
             subject_means.Properties.RowNames = {};
 
             % Add condition codes to data table
@@ -55,29 +63,33 @@ function [] = shape_data(method)
     end
 
     %% Load data of a single subject
-    function [subject_data, subject_number] = load_single_subject_data(method, i)
-        methods = {'cross_correlation', 'convolution', 'RMS', 'cross_correlation_formant', 'convolution_formant'};
-        if ~ismember(method, methods)
+    function [subject_data, subject_number] = load_single_subject_data(file_name, statistic, i)
+        methods = {'cross_correlations'};
+        if ~ismember(file_name, methods)
             % Throw an error if incorrect method is specified
-            error('Invalid method, valid methods are ''convolution'',''cross_correlation'', ''RMS'', ''convolution_formant'', and ''cross_correlation_formant''')
+            error('File name not found')
         end
 
         % Get name of the data files and their directory
-        file_names = strcat(method, '_data_table.mat');
+        file_names = strcat(file_name, '.mat');
         data_files = dir(fullfile('data/**/', file_names));
-        data_table_full_path = fullfile(data_files(i).folder, file_names);
+        data_file_full_path = fullfile(data_files(i).folder, file_names);
 
         % Get subject number
         subject_number = string(extractAfter(data_files(i).folder, 'data/'));
 
         % Load data
-        subject_data = load(data_table_full_path);
-        var_names = strcat(method, '_data_table');
-        subject_data = subject_data.(var_names);
+        subject_data = load(data_file_full_path);
+        subject_data = subject_data.cross_correlations;
 
         % Convert into easily accessible form
-        subject_data = [subject_data.formant, subject_data.condition, subject_data.cross_correlation]; % CROSS CORRELATION? or just data
-        subject_data.Properties.VariableNames = ['formant', 'condition', string(1:128)];
+        if contains(file_name, 'formant')
+            subject_data = cell2table([subject_data.formant, subject_data.condition, num2cell(subject_data.(statistic))]);
+            subject_data.Properties.VariableNames = ['formant', 'condition', string(1:128)];
+        else
+            subject_data = cell2table([subject_data.condition, num2cell(subject_data.(statistic))]);
+            subject_data.Properties.VariableNames = ['condition', string(1:128)];
+        end
     end
 
     %% Split four-letter condition code up into individual columns
