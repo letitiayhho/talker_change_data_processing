@@ -19,7 +19,7 @@ function [] = cross_correlate(git_home, subject_number)
     addpath('src/')
     
     % Import EEG data
-    eeg_data = load('eeg_data').eeg_data;
+    load('eeg_data')
 
     % Import pruned epoch order
     epoch_order_pruned = get_epoch_order(subject_number);
