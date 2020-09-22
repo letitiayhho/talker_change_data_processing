@@ -117,7 +117,7 @@ get_clusters <- function(method = "cross_correlation",
   }
   
   get_layout <- function(hemisphere, drops) { 
-    coordinates <- read.delim("data/aggregate/electrode_points", header = FALSE)
+    coordinates <- read.delim("data/aggregate/2d_coordinates", header = FALSE)
     colnames(coordinates) <- c("x", "y")
     layout <- as.matrix(coordinates) 
     

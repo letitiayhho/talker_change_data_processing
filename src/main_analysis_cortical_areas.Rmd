@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 
 ```{r fns_load_and_subset_data}
 get_layout <- function() { 
-  fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/electrode_points"
+  fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/2d_coordinates"
   coordinates <- read.delim(fp, header = FALSE)
   layout <- data.frame(x = coordinates[[1]], y = -coordinates[[2]]+ 2*mean(coordinates[[2]])) # flip y coords
   return(layout)

@@ -79,7 +79,7 @@ get_paired_samples_t <- function(group1, group2) {
 
 ```{r plotting}
 get_layout <- function() { 
-  fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/electrode_points"
+  fp <- "/Applications/eeglab2019/talker-change-data-processing/data/aggregate/2d_coordinates"
   coordinates <- read.delim(fp, header = FALSE)
   x <- coordinates[[1]]
   y <- -coordinates[[2]]+ 2*mean(coordinates[[2]]) # flip y coords and return to original center
