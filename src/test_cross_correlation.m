@@ -18,15 +18,16 @@ function [] = test_cross_correlation(git_home, subject_number)
     addpath('src/') 
     
     % Import EEG data
-    eeg_data = load('eeg_data').eeg_data;
+    load('eeg_data');
 
-    % Import pruned epoch order
+    % Get order of stimuli files
     epoch_order_pruned = get_epoch_order(subject_number);
 
-    %% 2. Convolve over 20 middle epochs and 30 channels
-    average = zeros(20, 30); % epochs 100:130, channels 30:50
-    maximum = zeros(20, 30);
-    lag = zeros(20, 30);
+    %% 2. Convolve over 30 middle epochs and 20 channels
+%     average = zeros(30, 20); % epochs 100:129, channels 30:49
+%     maximum = zeros(30, 20);
+%     lag = zeros(30, 20);
+    cross_correlations = zeros(30, 20, 141119);
 
     % Loop over channels
     for i = 1:20
@@ -35,25 +36,22 @@ function [] = test_cross_correlation(git_home, subject_number)
         % Loop over epochs
          for j = 1:30
              
-             % Extract eeg epoch and interpolate
-             epoch = interp(eeg_data(i+30, :, j+60), 44);
-             fprintf(1, strcat('eeg signal length:', num2str(size(epoch)), '\n'))
+             % Extract eeg epoch and resample to 44.1 kHz
+             epoch = double(eeg_data(i+29, :, j+99));
+             resampled_epoch = resample(epoch, 44100, 1000);
              
              % Load stimuli .wav file for epoch
-             word = char(epoch_order_pruned.word(j+60));
+             word = char(epoch_order_pruned.word(j+100));
              auditory_stimuli = audioread(word);
 
              % Compute convolution and cross correlation
-             [cross_correlations, lags] = xcorr(auditory_stimuli, epoch);
-             fprintf(1, strcat('xcorr length:', num2str(size(cross_correlations)), '\n'))
-             
-             % Take envelope of cross correlations
-%              [yupper, ~] = envelope(cross_correlations, 100);
+             cross_correlations(j, i, :) = xcorr(auditory_stimuli, epoch); % 70,560*2-1 length
              
              % Write statistics to data arrays
-             average(i, j) = mean(abs(cross_correlations));
-             [maximum(i, j), I] = max(abs(cross_correlations));
-             lag(i, j) = lags(I);
+%              [cross_correlations, lags] = xcorr(auditory_stimuli, epoch);
+%              average(j, i) = mean(abs(cross_correlations));
+%              [maximum(j, i), I] = max(abs(cross_correlations));
+%              lag(j, i) = lags(I);
          end
     end
 
@@ -62,15 +60,17 @@ function [] = test_cross_correlation(git_home, subject_number)
     cross_correlation_data_table = table([epoch_order_pruned.type(61:80)],...
         [epoch_order_pruned.epoch(61:80)],...
         [epoch_order_pruned.word(61:80)],...
-        [average],...
-        [maximum],...
-        [lag],...
-        'VariableNames', {'condition', 'epoch', 'word', 'average', 'max', 'lag'});
+        [cross_correlations],...
+        'VariableNames', {'condition', 'epoch', 'word', 'cross_correlations'});
+%         [average],...
+%         [maximum],...
+%         [lag],...
+%         'VariableNames', {'condition', 'epoch', 'word', 'average', 'max', 'lag'});
 
     % Write data
-%     fp = fullfile('data', subject_number, 'cross_correlation_data_table_full');
-%     fprintf(1, strcat('Writing file to ', fp, '\n'))
-%     save(fp, 'cross_correlation_data_table')
+    fp = fullfile('data', subject_number, 'cross_correlation_data_table_full');
+    fprintf(1, strcat('Writing file to ', fp, '\n'))
+    save(fp, 'cross_correlation_data_table')
     
     %% Quit
 %     quit
