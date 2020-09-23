@@ -20,6 +20,9 @@ fi
 GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME"
 
+log_file="data/tmp/$(date +%s).log"
+
 for subject_number in  "$@"; do
-    matlab -nodisplay -r "addpath('src'); cross_correlate('$GIT_HOME', '$subject_number')"
+    matlab -nodisplay -r "addpath('src'); cross_correlate('$GIT_HOME', '$subject_number')" 2>&1 \
+        | tee -a "$log_file"
 done
