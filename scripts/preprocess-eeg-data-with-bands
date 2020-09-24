@@ -16,7 +16,7 @@ eof
     exit 1
 }
 
-if [[ $# -eq 0 ]]; then
+if [[ $# -ne 0 ]]; then
     usage
 fi
 
@@ -35,4 +35,4 @@ while read -r subject_number; do
     matlab -nodisplay -r "addpath('src'); preprocess_eeg_data_with_bands('$subject_number', '$band')" 2>&1 \
         | tee "$log_file"
     echo "done >:)"
-done < subject_numbers.txt
+done < ./scripts/subject_numbers.txt

@@ -7,13 +7,14 @@ usage: $0
 
     description
         wrapper script for cross_correlate.m
+        loops over data from all subjects
         cross correlates eeg signal from each epoch
         and each channel with its corresponding auditory stimuli
 eof
     exit 1
 }
 
-if [[ $# == 0 ]]; then
+if [[ $# -ne 0 ]]; then
     usage
 fi
 
@@ -25,4 +26,4 @@ log_file="data/tmp/$(date +%s).log"
 while read -r subject_number; do
     matlab -nodisplay -r "addpath('src'); cross_correlate('$GIT_HOME', '$subject_number')" 2>&1 \
         | tee -a "$log_file"
-done < subject_numbers.txt
+done < ./scripts/subject_numbers.txt

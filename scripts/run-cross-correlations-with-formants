@@ -14,7 +14,7 @@ eof
     exit 1
 }
 
-if [[ $# == 0 ]]; then
+if [[ $# -ne 0 ]]; then
     usage
 fi
 
@@ -23,4 +23,4 @@ cd "$GIT_HOME"
 
 while read -r subject_number; do
     matlab -nodisplay -r "addpath('src'); convolve_and_cross_correlate_with_formants('$GIT_HOME', '$subject_number')"
-done < subject_numbers.txt
+done < ./scripts/subject_numbers.txt
