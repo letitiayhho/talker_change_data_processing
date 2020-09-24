@@ -1,0 +1,72 @@
+---
+title: "Basic t-tests"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+require("knitr")
+library("dplyr")
+library("kableExtra")
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE
+) 
+```
+
+```{r load_files}
+setwd("~/src/talker_change_data_processing")
+source("src/main_analysis_functions.R")
+avg <- read.csv("data/aggregate/cross_correlations_abs_average.csv")
+```
+
+``` {r}
+# Calculate group means
+talker <- aggregate(avg[, 5:132], list(talker = avg$talker, subject = avg$subject), mean)
+meaning <- aggregate(avg[, 5:132], list(meaning = avg$meaning, subject = avg$subject), mean)
+constraint <- aggregate(avg[, 5:132], list(constraint = avg$constraint, subject = avg$subject), mean)
+```
+
+*Basic t-tests *
+
+```{r, warning=FALSE, echo=TRUE}
+# One-sample t-test against mu=0
+t_talker_S <- get_one_sample_t(subset(talker, condition = "talker", level = "S"))
+t_talker_T <- get_one_sample_t(subset(talker, condition = "talker", level = "T"))
+t_meaning_M <- get_one_sample_t(subset(talker, condition = "meaning", level = "M"))
+t_meaning_N <- get_one_sample_t(subset(talker, condition = "meaning", level = "N"))
+t_constraint_S <- get_one_sample_t(subset(talker, condition = "constraint", level = "S"))
+t_constraint_G <- get_one_sample_t(subset(talker, condition = "constraint", level = "G"))
+
+# Number of significant channels
+kable(cbind(talker_s = sum(t_talker_S$p < 0.05),
+            talker_t = sum(t_talker_T$p < 0.05),
+            meaning_m = sum(t_meaning_M$p < 0.05),
+            meaning_n = sum(t_meaning_N$p < 0.05),
+            constraint_s = sum(t_constraint_S$p < 0.05),
+            constraint_g = sum(t_constraint_G$p < 0.05))) %>%
+      kable_styling(c("striped", "condensed"), full_width = F)
+```
+
+```{r, echo=TRUE}
+# Paired samples t-test between levels
+t_talker <- get_paired_samples_t(subset(talker, condition = "talker", level = "S"),
+                                 subset(talker, condition = "talker", level = "T"))
+t_meaning <- get_paired_samples_t(subset(talker, condition = "meaning", level = "M"),
+                                  subset(talker, condition = "meaning", level = "N"))
+t_constraint <- get_paired_samples_t(subset(talker, condition = "constraint", level = "S"),
+                                     subset(talker, condition = "constraint", level = "G"))
+
+# Number of significant channels
+kable(cbind(talker = sum(t_talker$p < 0.05),
+            meaning = sum(t_meaning$p < 0.05),
+            constraint = sum(t_constraint$p < 0.05))) %>%
+      kable_styling(c("striped", "condensed"), full_width = F)
+
+# List of not-significant channels
+which(t_talker$p > 0.05)
+which(t_meaning$p > 0.05)
+which(t_constraint$p > 0.05)
+```
+

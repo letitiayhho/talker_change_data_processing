@@ -37,7 +37,7 @@ function [] = test_cross_correlation(git_home, subject_number)
          for j = 1:30
              
              % Extract eeg epoch and resample to 44.1 kHz
-             epoch = double(eeg_data(i+29, :, j+99));
+             epoch = double(eeg_data(i+30, :, j+100));
              resampled_epoch = resample(epoch, 44100, 1000);
              
              % Load stimuli .wav file for epoch
@@ -45,7 +45,7 @@ function [] = test_cross_correlation(git_home, subject_number)
              auditory_stimuli = audioread(word);
 
              % Compute convolution and cross correlation
-             cross_correlations(j, i, :) = xcorr(auditory_stimuli, epoch); % 70,560*2-1 length
+             cross_correlations(j, i, :) = xcorr(auditory_stimuli, resampled_epoch); % 70,560*2-1 length
              
              % Write statistics to data arrays
 %              [cross_correlations, lags] = xcorr(auditory_stimuli, epoch);
@@ -57,9 +57,9 @@ function [] = test_cross_correlation(git_home, subject_number)
 
     %% 4. Write data
     % Add relevant info to data tables
-    cross_correlation_data_table = table([epoch_order_pruned.type(61:80)],...
-        [epoch_order_pruned.epoch(61:80)],...
-        [epoch_order_pruned.word(61:80)],...
+    cross_correlations = table([epoch_order_pruned.type(101:130)],...
+        [epoch_order_pruned.epoch(101:130)],...
+        [epoch_order_pruned.word(101:130)],...
         [cross_correlations],...
         'VariableNames', {'condition', 'epoch', 'word', 'cross_correlations'});
 %         [average],...
@@ -68,9 +68,9 @@ function [] = test_cross_correlation(git_home, subject_number)
 %         'VariableNames', {'condition', 'epoch', 'word', 'average', 'max', 'lag'});
 
     % Write data
-    fp = fullfile('data', subject_number, 'cross_correlation_data_table_full');
+    fp = fullfile('data', subject_number, 'cross_correlations_full');
     fprintf(1, strcat('Writing file to ', fp, '\n'))
-    save(fp, 'cross_correlation_data_table')
+    save(fp, 'cross_correlations')
     
     %% Quit
 %     quit
