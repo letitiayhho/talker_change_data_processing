@@ -9,8 +9,6 @@ editor_options:
 require("knitr")
 library("dplyr")
 library("kableExtra")
-setwd('~/src/talker_change_data_processing')
-source("src/main_analysis_functions.R")
 knitr::opts_chunk$set(
   echo = FALSE,
   warning = FALSE
@@ -18,8 +16,9 @@ knitr::opts_chunk$set(
 ```
 
 ```{r load_files}
-library("dplyr")
-avg <- read.csv('data/aggregate/cross_correlations_abs_average.csv')
+setwd("~/src/talker_change_data_processing")
+source("src/main_analysis_functions.R")
+avg <- read.csv("data/aggregate/cross_correlations_abs_average.csv")
 ```
 
 
@@ -32,10 +31,52 @@ avg <- read.csv('data/aggregate/cross_correlations_abs_average.csv')
 Conducting a bootstrapping permutation test that scrambles the stimuli order within each subject then computes cross correlations between eeg-signals and the scrambled stimuli. This resampling is repeated 1000 times and the mean absolute cross-correlation for channel over all conditions is calculated each time to generate null values. The number of null values greater than the observed channel cross correlation is divided by the number of resamplings to yield the *p*-value of the permutation test. A channel with a mean cross-correlation with *p* < 0.05 is considered to be significantly tracking the stimuli.
 
 ``` {r}
-## Calculate group mean
+# Calculate group means
 talker <- aggregate(avg[, 5:132], list(talker = avg$talker, subject = avg$subject), mean)
 meaning <- aggregate(avg[, 5:132], list(meaning = avg$meaning, subject = avg$subject), mean)
 constraint <- aggregate(avg[, 5:132], list(constraint = avg$constraint, subject = avg$subject), mean)
+```
+
+*Basic t-tests *
+
+```{r, warning=FALSE, echo=TRUE}
+# One-sample t-test against mu=0
+t_talker_S <- get_one_sample_t(subset(talker, condition = "talker", level = "S"))
+t_talker_T <- get_one_sample_t(subset(talker, condition = "talker", level = "T"))
+t_meaning_M <- get_one_sample_t(subset(talker, condition = "meaning", level = "M"))
+t_meaning_N <- get_one_sample_t(subset(talker, condition = "meaning", level = "N"))
+t_constraint_S <- get_one_sample_t(subset(talker, condition = "constraint", level = "S"))
+t_constraint_G <- get_one_sample_t(subset(talker, condition = "constraint", level = "G"))
+
+# Number of significant channels
+kable(cbind(talker_s = sum(t_talker_S$p < 0.05),
+            talker_t = sum(t_talker_T$p < 0.05),
+            meaning_m = sum(t_meaning_M$p < 0.05),
+            meaning_n = sum(t_meaning_N$p < 0.05),
+            constraint_s = sum(t_constraint_S$p < 0.05),
+            constraint_g = sum(t_constraint_G$p < 0.05))) %>%
+      kable_styling(c("striped", "condensed"), full_width = F)
+```
+
+```{r, echo=TRUE}
+# Paired samples t-test between levels
+t_talker <- get_paired_samples_t(subset(talker, condition = "talker", level = "S"),
+                                 subset(talker, condition = "talker", level = "T"))
+t_meaning <- get_paired_samples_t(subset(talker, condition = "meaning", level = "M"),
+                                  subset(talker, condition = "meaning", level = "N"))
+t_constraint <- get_paired_samples_t(subset(talker, condition = "constraint", level = "S"),
+                                     subset(talker, condition = "constraint", level = "G"))
+
+# Number of significant channels
+kable(cbind(talker = sum(t_talker$p < 0.05),
+            meaning = sum(t_meaning$p < 0.05),
+            constraint = sum(t_constraint$p < 0.05))) %>%
+      kable_styling(c("striped", "condensed"), full_width = F)
+
+# List of not-significant channels
+which(t_talker$p > 0.05)
+which(t_meaning$p > 0.05)
+which(t_constraint$p > 0.05)
 ```
 
 
@@ -67,10 +108,7 @@ scramble groups S&T, find mean for condition T, find mean for condition S
 
 
 ``` {r}
-## Calculate group mean
-talker <- aggregate(avg[, 5:132], list(talker = avg$talker, subject = avg$subject), mean)
-meaning <- aggregate(avg[, 5:132], list(meaning = avg$meaning, subject = avg$subject), mean)
-constraint <- aggregate(avg[, 5:132], list(constraint = avg$constraint, subject = avg$subject), mean)
+
 ```
 
 

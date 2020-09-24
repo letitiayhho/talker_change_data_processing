@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 ``` {r load_files}
 # Read files
 setwd('~/src/talker_change_data_processing')
-xcorr <- load_data("xcorr")
+xcorr <- read.csv("data/aggregate/cross_correlation_data.csv"))
 
 # Save channel numbers
 channels <- as.character(1:128)

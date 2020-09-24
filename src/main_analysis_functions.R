@@ -7,19 +7,19 @@ library("kableExtra")
 ## Generic data wrangling
 
 # Load data
-load_data <- function(method, formants = FALSE) {
-  if (method == "xcorr") {
-    if (formants)
-      return(read.csv("data/aggregate/cross_correlation_formant_data.csv"))
-    return(read.csv("data/aggregate/cross_correlation_data.csv"))
-  }
-  if (method == "conv") {
-    if (formants)
-      return(read.csv("data/aggregate/convolution_formant_data.csv"))
-    return(read.csv("data/aggregate/convolution_data.csv"))
-  }
-  stop("Invalid method, options are \"xcorr\" or \"conv\"")
-}
+# load_data <- function(method, formants = FALSE) {
+#   if (method == "xcorr") {
+#     if (formants)
+#       return(read.csv("data/aggregate/cross_correlation_formant_data.csv"))
+#     return(read.csv("data/aggregate/cross_correlation_data.csv"))
+#   }
+#   if (method == "conv") {
+#     if (formants)
+#       return(read.csv("data/aggregate/convolution_formant_data.csv"))
+#     return(read.csv("data/aggregate/convolution_data.csv"))
+#   }
+#   stop("Invalid method, options are \"xcorr\" or \"conv\"")
+# }
 
 # Function for subsetting data based on condition and level
 subset <- function(data, formants = NaN, condition, level) {
