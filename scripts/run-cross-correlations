@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
     cat <<eof >&2
-usage: $0 <subject number> ...
+usage: $0
 
     description
         wrapper script for cross_correlate.m
@@ -22,7 +22,7 @@ cd "$GIT_HOME"
 
 log_file="data/tmp/$(date +%s).log"
 
-for subject_number in  "$@"; do
+while read -r subject_number; do
     matlab -nodisplay -r "addpath('src'); cross_correlate('$GIT_HOME', '$subject_number')" 2>&1 \
         | tee -a "$log_file"
-done
+done < subject_numbers.txt

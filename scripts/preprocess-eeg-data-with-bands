@@ -26,7 +26,7 @@ band="$1"
 
 shift
 
-for subject_number in "$@"; do
+while read -r subject_number; do
     # create a log file
     log_file="data/$subject_number/$(date +%s).log"
 
@@ -35,4 +35,4 @@ for subject_number in "$@"; do
     matlab -nodisplay -r "addpath('src'); preprocess_eeg_data_with_bands('$subject_number', '$band')" 2>&1 \
         | tee "$log_file"
     echo "done >:)"
-done
+done < subject_numbers.txt
