@@ -21,7 +21,7 @@ fi
 GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME"
 
-log_file="data/tmp/$(date +%s).log"
+log_file="data/logs/$(date +%s).log"
 
 while read -r subject_number; do
     matlab -nodisplay -r "addpath('src'); cross_correlate('$GIT_HOME', '$subject_number')" 2>&1 \

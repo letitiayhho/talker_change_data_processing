@@ -10,6 +10,8 @@ function [] = cross_correlate(git_home, subject_number)
 % OUTPUT:
 %     Writes files named cross_correlation_data_table.mat
 
+    tic
+
     fprintf(1, strcat('Analyzing data from subject #', subject_number, '\n'))
 
     %% 1. Import data
@@ -25,7 +27,6 @@ function [] = cross_correlate(git_home, subject_number)
     epoch_order_pruned = get_epoch_order(subject_number);
 
     %% 2. Cross correlate
-    average = zeros(size(eeg_data, 3), size(eeg_data, 1));
     abs_average = zeros(size(eeg_data, 3), size(eeg_data, 1));
     maximum = zeros(size(eeg_data, 3), size(eeg_data, 1));
     lag = zeros(size(eeg_data, 3), size(eeg_data, 1));
@@ -38,17 +39,17 @@ function [] = cross_correlate(git_home, subject_number)
          for j = 1:size(eeg_data, 3)
              
              % Extract eeg epoch and interpolate
-             epoch = interp(eeg_data(i, :, j), 44);
+             epoch = double(eeg_data(i, :, j));
+             resampled_epoch = resample(epoch, 44100, 1000);
              
              % Load stimuli .wav file for epoch
              word = char(epoch_order_pruned.word(j));
              auditory_stimuli = audioread(word);
 
              % Compute convolution and cross correlation
-             [cross_correlations, lags] = xcorr(auditory_stimuli, epoch);
+             [cross_correlations, lags] = xcorr(auditory_stimuli, resampled_epoch);
              
              % Write statistics to data arrays
-             average(j, i) = mean(cross_correlations);
              abs_average(j, i) = mean(abs(cross_correlations));
              [maximum(j, i), I] = max(abs(cross_correlations));
              lag(j, i) = lags(I);
@@ -60,16 +61,17 @@ function [] = cross_correlate(git_home, subject_number)
     cross_correlations = table([epoch_order_pruned.type],...
         [epoch_order_pruned.epoch],...
         [epoch_order_pruned.word],...
-        [average],...
         [abs_average],...
         [maximum],...
         [lag],...
-        'VariableNames', {'condition', 'epoch', 'word', 'average', 'abs_average', 'maximum', 'lag'});
+        'VariableNames', {'condition', 'epoch', 'word', 'abs_average', 'maximum', 'lag'});
 
     % Write data
     fp = fullfile('data', subject_number, 'cross_correlations');
     fprintf(1, strcat('Writing file to ', fp, '\n'))
     save(fp, 'cross_correlations');
+
+    fprintf(1, strcat(sprintf('%.6f', toc), ' sec'))
 
     %% Quit
     quit
