@@ -9,12 +9,12 @@ function [] = shape_data(git_home, file_name)
 
     %% Main
     cd(git_home)
-    shape_all(file_name)
+    statistics = {'abs_average', 'lag', 'maximum'};
+    shape_all(file_name, statistics)
         
     %% Call shape data on each statistic
-    function shape_all(file_name)
-        for i = 1:4
-            statistics = {'average', 'abs_average', 'lag', 'maximum'};
+    function shape_all(file_name, statistics)
+        for i = 1:length(statistics)
             statistic = statistics{i};
             [data] = shape_data(file_name, statistic);
             writetable(data, strcat('data/aggregate/', file_name, '_', statistic, '.csv'));
