@@ -2,10 +2,10 @@ function [] = shape_data(git_home, file_name)
 % DESCRIPTION:
 %   Computes cross-correlations or convolutions between eeg signal and audio
 %   stimuli across all subjects, channels and trials for each condition
-%
-% INPUT:
-%   git_home - (char) path to git root directory
-%   file_name - (char) 'cross_correlations'
+    arguments
+        git_home char
+        file_name {mustBeMember(file_name, {'cross_correlations'})} = 'cross_correlations'
+    end
 
     %% Main
     cd(git_home)
@@ -63,12 +63,7 @@ function [] = shape_data(git_home, file_name)
     end
 
     %% Load data of a single subject
-    function [subject_data, subject_number] = load_single_subject_data(file_name, statistic, i)
-        methods = {'cross_correlations'};
-        if ~ismember(file_name, methods)
-            % Throw an error if incorrect method is specified
-            error('File name not found')
-        end
+    function [cross_correlations, subject_number] = load_single_subject_data(file_name, statistic, i)
 
         % Get name of the data files and their directory
         file_names = strcat(file_name, '.mat');
@@ -79,16 +74,15 @@ function [] = shape_data(git_home, file_name)
         subject_number = string(extractAfter(data_files(i).folder, 'data/'));
 
         % Load data
-        subject_data = load(data_file_full_path);
-        subject_data = subject_data.cross_correlations;
+        load(data_file_full_path);
 
         % Convert into easily accessible form
         if contains(file_name, 'formant')
-            subject_data = cell2table([subject_data.formant, subject_data.condition, num2cell(subject_data.(statistic))]);
-            subject_data.Properties.VariableNames = ['formant', 'condition', string(1:128)];
+            cross_correlations = cell2table([cross_correlations.formant, cross_correlations.condition, num2cell(cross_correlations.(statistic))]);
+            cross_correlations.Properties.VariableNames = ['formant', 'condition', string(1:128)];
         else
-            subject_data = cell2table([subject_data.condition, num2cell(subject_data.(statistic))]);
-            subject_data.Properties.VariableNames = ['condition', string(1:128)];
+            cross_correlations = cell2table([cross_correlations.condition, num2cell(cross_correlations.(statistic))]);
+            cross_correlations.Properties.VariableNames = ['condition', string(1:128)];
         end
     end
 
