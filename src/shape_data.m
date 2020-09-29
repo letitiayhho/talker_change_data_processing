@@ -34,11 +34,7 @@ function [] = shape_data(git_home, file_name)
             [subject_data, subject_number] = load_single_subject_data(file_name, statistic, i);
 
             % Calculate means for each channel for each condition
-            if contains(file_name, 'formant') 
-                subject_means = grpstats(subject_data, {'condition', 'formant'});
-            else
-                subject_means = grpstats(subject_data, {'condition'});
-            end
+            subject_means = grpstats(subject_data, {'condition'});
 
             % Split conditions up
             conditions = subject_means.condition;
@@ -46,7 +42,6 @@ function [] = shape_data(git_home, file_name)
 
             % Clean up the data table, add labels
             subject_means = removevars(subject_means, {'condition', 'GroupCount'}); 
-%             subject_means.Properties.VariableNames = ['formant', string(1:128)];
             subject_means.Properties.VariableNames = string(1:128);
             subject_means.Properties.RowNames = {};
 
@@ -77,13 +72,8 @@ function [] = shape_data(git_home, file_name)
         load(data_file_full_path);
 
         % Convert into easily accessible form
-        if contains(file_name, 'formant')
-            cross_correlations = cell2table([cross_correlations.formant, cross_correlations.condition, num2cell(cross_correlations.(statistic))]);
-            cross_correlations.Properties.VariableNames = ['formant', 'condition', string(1:128)];
-        else
-            cross_correlations = cell2table([cross_correlations.condition, num2cell(cross_correlations.(statistic))]);
-            cross_correlations.Properties.VariableNames = ['condition', string(1:128)];
-        end
+        cross_correlations = cell2table([cross_correlations.condition, num2cell(cross_correlations.(statistic))]);
+        cross_correlations.Properties.VariableNames = ['condition', string(1:128)];
     end
 
     %% Split four-letter condition code up into individual columns
