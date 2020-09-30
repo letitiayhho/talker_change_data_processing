@@ -2,10 +2,11 @@ function [] = shape_data(git_home, file_name)
 % DESCRIPTION:
 %   Computes cross-correlations or convolutions between eeg signal and audio
 %   stimuli across all subjects, channels and trials for each condition
-    arguments
-        git_home char
-        file_name {mustBeMember(file_name, {'cross_correlations'})} = 'cross_correlations'
-    end
+
+arguments
+    git_home char
+    file_name {mustBeMember(file_name, {'cross_correlations'})} = 'cross_correlations'
+end
 
     %% Main
     cd(git_home)
