@@ -17,7 +17,7 @@ function [] = shape_data(git_home, file_name)
         for i = 1:length(statistics)
             statistic = statistics{i};
             [data] = shape_data(file_name, statistic);
-            writetable(data, strcat('data/aggregate/', file_name, '_', statistic, '_test.csv'));
+            writetable(data, strcat('data/aggregate/', file_name, '_', statistic, '.csv'));
         end
     end
 
