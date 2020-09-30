@@ -77,7 +77,4 @@ end
     save(fp, 'cross_correlations');
 
     toc
-
-    %% Quit
-    quit
 end
