@@ -34,8 +34,9 @@ end
     lag = zeros(size(eeg_data, 3), size(eeg_data, 1));
 
     % Loop over channels
+    fprintf(1, 'Channel #')
     for i = 1:size(eeg_data, 1)
-        disp(strcat('Channel #', num2str(i)))
+        fprintf(1, strcat(num2str(i), ', #'))
 
         % Loop over epochs
          for j = 1:size(eeg_data, 3)
@@ -49,10 +50,7 @@ end
              auditory_stimuli = audioread(word);
 
              % Compute convolution and cross correlation
-             cross_correlations = i;
-             lags = j;
-%              [cross_correlations, lags] = xcorr(auditory_stimuli,
-%              resampled_epoch); CHANGE BACK
+             [cross_correlations, lags] = xcorr(auditory_stimuli, resampled_epoch);
              
              % Write statistics to data arrays
              abs_average(j, i) = mean(abs(cross_correlations));
@@ -73,7 +71,7 @@ end
 
     % Write data
     fp = fullfile('data', subject_number, 'cross_correlations_test'); 
-    fprintf(1, strcat('Writing file to ', fp, '\n'))
+    fprintf(1, strcat('Writing data to /', fp, '\n'))
     save(fp, 'cross_correlations');
 
     toc
