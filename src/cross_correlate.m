@@ -1,14 +1,16 @@
-function [] = cross_correlate(git_home, subject_number)
+function [] = cross_correlate(git_home, subject_number, scramble)
 % DESCRIPTION:
 %     Takes the preprocessed eeg data and convolves or cross-correlates the 
 %     waveforms with the waveform of the auditory stimuli
 %
-% INPUT:
-%     git_home (char) - path to git root directory
-%     subject_number (char) - input subject numbers as strings, e.g. '302'
-%
 % OUTPUT:
 %     Writes files named cross_correlation_data_table.mat
+
+arguments
+    git_home char
+    subject_number char
+    scrambled logical = false
+end
 
     tic
 
@@ -24,7 +26,7 @@ function [] = cross_correlate(git_home, subject_number)
     load('eeg_data')
 
     % Import pruned epoch order
-    epoch_order_pruned = get_epoch_order(subject_number);
+    stim_order = get_stim_order(subject_number, scrambled);
 
     %% 2. Cross correlate
     abs_average = zeros(size(eeg_data, 3), size(eeg_data, 1));
@@ -43,7 +45,7 @@ function [] = cross_correlate(git_home, subject_number)
              resampled_epoch = resample(epoch, 44100, 1000);
              
              % Load stimuli .wav file for epoch
-             word = char(epoch_order_pruned.word(j));
+             word = char(stim_order.word(j));
              auditory_stimuli = audioread(word);
 
              % Compute convolution and cross correlation
@@ -58,9 +60,9 @@ function [] = cross_correlate(git_home, subject_number)
 
     %% 3. Write data files
     % Add relevant info to data tables
-    cross_correlations = table([epoch_order_pruned.type],...
-        [epoch_order_pruned.epoch],...
-        [epoch_order_pruned.word],...
+    cross_correlations = table([stim_order.type],...
+        [stim_order.epoch],...
+        [stim_order.word],...
         [abs_average],...
         [maximum],...
         [lag],...
@@ -71,7 +73,7 @@ function [] = cross_correlate(git_home, subject_number)
     fprintf(1, strcat('Writing file to ', fp, '\n'))
     save(fp, 'cross_correlations');
 
-    fprintf(1, strcat(sprintf('%.6f', toc), ' sec'))
+    toc
 
     %% Quit
     quit
