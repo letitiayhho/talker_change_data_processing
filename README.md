@@ -13,10 +13,7 @@ This is basically an exploratory data analysis using data from a previous [study
     * R.matlab
     * tools
     * dplyr
-    * broom\*
     * label4mri\*
-    * igraph\*
-    * ndtv\*
 
 ## File management
 
