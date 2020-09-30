@@ -1,4 +1,4 @@
-function [] = cross_correlate(git_home, subject_number, scramble)
+function [] = cross_correlate(git_home, subject_number, resample)
 % DESCRIPTION:
 %     Takes the preprocessed eeg data and convolves or cross-correlates the 
 %     waveforms with the waveform of the auditory stimuli
@@ -9,7 +9,7 @@ function [] = cross_correlate(git_home, subject_number, scramble)
 arguments
     git_home char
     subject_number char
-    scramble logical = false
+    resample logical = false
 end
 
     tic
@@ -26,7 +26,7 @@ end
     load('eeg_data')
 
     % Import pruned epoch order
-    stim_order = get_stim_order(subject_number, scramble);
+    stim_order = get_stim_order(subject_number, resample);
 
     %% 2. Cross correlate
     abs_average = zeros(size(eeg_data, 3), size(eeg_data, 1));
@@ -69,7 +69,9 @@ end
         'VariableNames', {'condition', 'epoch', 'word', 'abs_average', 'maximum', 'lag'});
 
     % Write data
-    fp = fullfile('data', subject_number, 'cross_correlations_scrambled');
+    fp = fullfile('data', subject_number, 'cross_correlations'); 
+        % probably remove this and just return the var and append to file
+        % from main
     fprintf(1, strcat('Writing file to ', fp, '\n'))
     save(fp, 'cross_correlations');
 
