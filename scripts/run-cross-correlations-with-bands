@@ -22,5 +22,5 @@ GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME"
 
 while read -r subject_number; do
-    matlab -nodisplay -r "addpath('src'); convolve_and_cross_correlate_with_bands('$GIT_HOME', '$subject_number')"
+    matlab -nodisplay -r "addpath('src'); convolve_and_cross_correlate_with_bands('$GIT_HOME', '$subject_number'); quit"
 done < ./scripts/subject_numbers.txt
