@@ -1,37 +1,29 @@
-function [epoch_order_pruned] = get_epoch_order(subject_number)
+function [stim_order] = get_stim_order(subject_number, scrambled)
 % DESCRIPTION:
-%     Get the pruned epoch order and corresponding stim files
-%
-% INPUT:
-%     subject_number (char) - input subject numbers as strings, e.g. '302'
-%
-% OUTPUT:
-%     Writes files named <cross_correlation/convolution>_data_table.mat
+%     Get the stimuli file names 
 
-    fprintf(1, strcat('Fetching epoch order for subject #', subject_number, '\n'))
+arguments
+    subject_number char
+    scrambled logical = false
+end
+
+    fprintf(1, strcat('Fetching stim order for subject #', subject_number, '\n'))
 
     %% 1. Import data
     addpath(fullfile('data', subject_number)) % add subject data to path
-    
-    % Import EEG data
-    eeg_data = load('eeg_data').eeg_data;
-
-    % Import original epoch order
-    epoch_order_original = load('epoch_order_original').epoch_order_original;
-
-    % Import pruned epoch order
-    epoch_order_pruned = load('epoch_order_pruned').epoch_order_pruned;
-
-    % Import stimuli order
-    stim_order = readtable('stim_order.txt');
+    load('eeg_data');
+    load('epoch_order_original');
+    load('epoch_order_pruned');
+    stim_order_original = readtable('stim_order.txt');
 
     %% 2. Match EEG epochs with words
-    % Sort original epoch order by condition
+    % Sort original epochs by condition as stim_order.txt is sorted
+    % by condition
     epoch_order_original = struct2table(epoch_order_original);
     epoch_order_original = sortrows(epoch_order_original, 'type');
     epoch_order_original = epoch_order_original(endsWith(epoch_order_original.type, 'E'),:);
 
-    % Sort pruned epoch order by condition
+    % Sort pruned epochs by condition
     epoch_order_pruned = struct2table(epoch_order_pruned);
     epoch_order_pruned = sortrows(epoch_order_pruned, 'type');
 
@@ -39,7 +31,7 @@ function [epoch_order_pruned] = get_epoch_order(subject_number)
     j = 1;
     for i = 1:height(epoch_order_original)
         % Match original epochs with corresponding stim 
-        epoch_order_original.word(i) = stim_order.ending(i);
+        epoch_order_original.word(i) = stim_order_original.ending(i);
         
         % Break at the end of pruned epochs to avoid exceeding array length
         if j > height(epoch_order_pruned)
@@ -48,11 +40,16 @@ function [epoch_order_pruned] = get_epoch_order(subject_number)
         
         % Match pruned epochs with corresponding stim
         if epoch_order_original.urevent(i) == epoch_order_pruned.urevent(j)
-            epoch_order_pruned.word(j) = stim_order.ending(i);
+            epoch_order_pruned.word(j) = stim_order_original.ending(i);
             j = j+1;
         end
     end
-
-    % Sort pruned epoch order by latency
     epoch_order_pruned = sortrows(epoch_order_pruned, 'latency');
+
+    %% 3. Scramble if specified
+    if scrambled
+        stim_order = epoch_order_pruned(randperm(size(epoch_order_pruned, 1)), :);
+    else
+        stim_order = epoch_order_pruned;
+    end
 end
