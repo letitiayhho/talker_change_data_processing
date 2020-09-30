@@ -1,10 +1,10 @@
-function [stim_order] = get_stim_order(subject_number, scrambled)
+function [stim_order] = get_stim_order(subject_number, scramble)
 % DESCRIPTION:
 %     Get the stimuli file names 
 
 arguments
     subject_number char
-    scrambled logical = false
+    scramble logical = false
 end
 
     fprintf(1, strcat('Fetching stim order for subject #', subject_number, '\n'))
@@ -47,7 +47,7 @@ end
     epoch_order_pruned = sortrows(epoch_order_pruned, 'latency');
 
     %% 3. Scramble if specified
-    if scrambled
+    if scramble
         stim_order = epoch_order_pruned(randperm(size(epoch_order_pruned, 1)), :);
     else
         stim_order = epoch_order_pruned;

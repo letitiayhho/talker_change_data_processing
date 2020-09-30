@@ -9,7 +9,7 @@ function [] = cross_correlate(git_home, subject_number, scramble)
 arguments
     git_home char
     subject_number char
-    scrambled logical = false
+    scramble logical = false
 end
 
     tic
@@ -26,7 +26,7 @@ end
     load('eeg_data')
 
     % Import pruned epoch order
-    stim_order = get_stim_order(subject_number, scrambled);
+    stim_order = get_stim_order(subject_number, scramble);
 
     %% 2. Cross correlate
     abs_average = zeros(size(eeg_data, 3), size(eeg_data, 1));
@@ -69,7 +69,7 @@ end
         'VariableNames', {'condition', 'epoch', 'word', 'abs_average', 'maximum', 'lag'});
 
     % Write data
-    fp = fullfile('data', subject_number, 'cross_correlations');
+    fp = fullfile('data', subject_number, 'cross_correlations_scrambled');
     fprintf(1, strcat('Writing file to ', fp, '\n'))
     save(fp, 'cross_correlations');
 
