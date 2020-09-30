@@ -13,17 +13,18 @@ end
     statistics = {'abs_average', 'maximum', 'lag'};
     shape_all(file_name, statistics)
         
-    %% Call shape data on each statistic
+    %% Call shape data on each statistic and append to file
     function shape_all(file_name, statistics)
         for i = 1:length(statistics)
             statistic = statistics{i};
-            [data] = shape_data(file_name, statistic);
-            writetable(data, strcat('data/aggregate/', file_name, '_', statistic, '.csv'));
+            data = shape(file_name, statistic);
+            fileID = strcat('data/aggregate/', file_name, '_', statistic, '_test.csv');
+            save(fileID, 'data', '-append')            
         end
     end
 
     %% Shape data
-    function [data] = shape_data(file_name, statistic)
+    function [data] = shape(file_name, statistic)
         % Set general stats
         number_of_subjects = 11;
 
