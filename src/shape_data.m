@@ -18,8 +18,15 @@ end
         for i = 1:length(statistics)
             statistic = statistics{i};
             data = shape(file_name, statistic);
-            fileID = strcat('data/aggregate/', file_name, '_', statistic, '_test.csv');
-            save(fileID, 'data', '-append')            
+            fileID = strcat('data/aggregate/', file_name, '_', statistic, '_test.mat');
+            
+            % Append if file exists, save if not
+            if isfile(fileID)
+                previous_data = load(fileID).data;
+                data = [previous_data; data];
+            end
+            fprintf(1, strcat('Writing data to /', fileID, '\n'))
+            save(fileID, 'data')
         end
     end
 
