@@ -1,0 +1,27 @@
+#!/bin/bash
+set -euo pipefail
+
+usage() {
+    cat <<eof >&2
+usage: $0
+
+    description
+        Runs cross correlations and then runs the script to shape the cross correlations
+eof
+    exit 1
+}
+
+if [[ $# -ne 0 ]]; then
+    usage
+fi
+
+GIT_HOME="$(git rev-parse --show-toplevel)"
+scrambles="$1"
+log_file="data/logs/$(date +%s).log"
+
+cd "GIT_HOME"
+
+matlab -nodisplay -r "addpath('src'); scramble('$GIT_HOME', '$scrambles')" 2>&1 \
+    | tee -a "$log_file"
+
+tar czvf archive.tar.gz data/aggregate/*.csv
