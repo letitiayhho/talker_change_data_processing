@@ -18,7 +18,7 @@ end
         end
         
         % Shape
-        shape_data(git_home, 'cross_correlations')
+        shape_data(git_home, 'cross_correlations_scramble')
         
     end
 end

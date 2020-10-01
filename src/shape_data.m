@@ -5,7 +5,7 @@ function [] = shape_data(git_home, file_name)
 
 arguments
     git_home char
-    file_name {mustBeMember(file_name, {'cross_correlations'})} = 'cross_correlations'
+    file_name char = 'cross_correlations'
 end
 
     %% Main
@@ -18,7 +18,7 @@ end
         for i = 1:length(statistics)
             statistic = statistics{i};
             data = shape(file_name, statistic);
-            fileID = strcat('data/aggregate/', file_name, '_', statistic, '_test.mat');
+            fileID = strcat('data/aggregate/', file_name, '_', statistic, '.mat');
             
             % Append if file exists, save if not
             if isfile(fileID)
@@ -76,7 +76,6 @@ end
     end
 
     %% Load data of a single subject
-%     function [cross_correlations, subject_number] = load_single_subject_data(file_name, statistic, i)
     function [subject_number, conditions, cross_correlations] = load_single_subject_data(file_name, statistic, i)
 
         % Get name of the data files and their directory

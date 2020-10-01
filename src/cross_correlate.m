@@ -70,7 +70,11 @@ end
         'VariableNames', {'condition', 'epoch', 'word', 'abs_average', 'maximum', 'lag'});
 
     % Write data
-    fp = fullfile('data', subject_number, 'cross_correlations_test'); 
+    if scramble
+        fp = fullfile('data', subject_number, 'cross_correlations_scramble');
+    else
+        fp = fullfile('data', subject_number, 'cross_correlations');
+    end
     fprintf(1, strcat('Writing data to /', fp, '\n'))
     save(fp, 'cross_correlations');
 
