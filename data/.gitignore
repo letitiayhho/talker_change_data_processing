@@ -1,8 +1,0 @@
-# Ignore everything in this directory ...
-/*
-
-# ... except this file
-!/.gitignore
-
-# ... and some of the files in ./aggregate
-!/aggregate/
