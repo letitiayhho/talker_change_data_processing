@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
     cat <<eof >&2
-usage: $0
+usage: $0 <number of scrambles>
 
     description
         Runs cross correlations and then runs the script to shape the cross correlations
@@ -11,7 +11,7 @@ eof
     exit 1
 }
 
-if [[ $# -ne 0 ]]; then
+if [[ $# -ne 1 ]]; then
     usage
 fi
 
@@ -19,9 +19,11 @@ GIT_HOME="$(git rev-parse --show-toplevel)"
 scrambles="$1"
 log_file="data/logs/$(date +%s).log"
 
-cd "GIT_HOME"
+cd "$GIT_HOME"
 
 matlab -nodisplay -r "addpath('src'); scramble('$GIT_HOME', '$scrambles')" 2>&1 \
     | tee -a "$log_file"
+
+printf "\n\n Permutation tests complete \n\n"
 
 tar czvf archive.tar.gz data/aggregate/*.csv

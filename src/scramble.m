@@ -1,7 +1,7 @@
 function [] = scramble(git_home, scrambles)
 arguments
     git_home char
-    scrambles single
+    scrambles string
 end
 
     %% Paths
@@ -9,7 +9,9 @@ end
     load('scripts/subject_numbers.txt')
     
     %% Iterate
+    scrambles = str2num(scrambles);
     for i = 1:scrambles
+        
         
         % Cross correlate each subject
         for j = 1:11

@@ -20,6 +20,8 @@ Most of the files in here are run through bash scripts in `scripts/`. These file
 
 `main_analysis_maps.Rmd` - map the test statistics for each condition onto a 2D map of the electrodes
 
+`scramble` - computer cross correlations between scrambled eeg-stimuli pairs
+
 ### Clustering analysis
 
 `get_permutation_clusters.R` - Identifies clusters of spatially contiguous channels that show condition-dependent verdicality

@@ -75,7 +75,7 @@ end
     else
         fp = fullfile('data', subject_number, 'cross_correlations');
     end
-    fprintf(1, strcat('Writing data to /', fp, '\n'))
+    fprintf(1, strcat('\n Writing data to /', fp, '\n'))
     save(fp, 'cross_correlations');
 
     toc
