@@ -26,4 +26,4 @@ matlab -nodisplay -r "addpath('src'); scramble('$GIT_HOME', '$scrambles')" 2>&1 
 
 printf "\n\n Permutation tests complete \n\n"
 
-tar czvf archive.tar.gz data/aggregate/*.csv
+tar cJvf output.tar.xz data/aggregate/*.csv data/logs

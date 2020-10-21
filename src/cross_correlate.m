@@ -4,7 +4,8 @@ function [] = cross_correlate(git_home, subject_number, scramble)
 %     waveforms with the waveform of the auditory stimuli
 %
 % OUTPUT:
-%     Writes files named cross_correlation_data_table.mat
+%     Writes files named cross_correlations.mat or
+%     cross_correlations_scrambled.mat
 
 arguments
     git_home char
@@ -19,7 +20,7 @@ end
     %% 1. Import data
     cd(git_home)
     addpath(fullfile('data', subject_number)) % add subject data to path
-    addpath(fullfile('data/stim')) % add audio stimuli directory to path
+    addpath(fullfile('data/stim/original')) % add audio stimuli directory to path
     addpath('src/')
     
     % Import EEG data

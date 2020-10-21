@@ -11,3 +11,6 @@
 
 # machine-specific installation files
 installer_input.txt
+
+# data files
+data/
