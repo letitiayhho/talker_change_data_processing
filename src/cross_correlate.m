@@ -1,4 +1,4 @@
-function [] = cross_correlate(git_home, subject_number, scramble)
+function [cross_correlations_file_name] = cross_correlate(git_home, subject_number, unique_id, scramble)
 % DESCRIPTION:
 %     Takes the preprocessed eeg data and convolves or cross-correlates the 
 %     waveforms with the waveform of the auditory stimuli
@@ -10,6 +10,7 @@ function [] = cross_correlate(git_home, subject_number, scramble)
 arguments
     git_home char
     subject_number char
+    unique_id char
     scramble logical = false
 end
 
@@ -72,9 +73,11 @@ end
 
     % Write data
     if scramble
-        fp = fullfile('data', subject_number, 'cross_correlations_scramble');
+        cross_correlations_file_name = strcat(unique_id, '_cross_correlations_scramble');
+        fp = fullfile('data', subject_number, cross_correlations_file_name);
     else
-        fp = fullfile('data', subject_number, 'cross_correlations');
+        cross_correlations_file_name = strcat(unique_id, '_cross_correlations');
+        fp = fullfile('data', subject_number, cross_correlations_file_name);
     end
     fprintf(1, strcat('\nWriting data to /', fp, '\n'))
     save(fp, 'cross_correlations');

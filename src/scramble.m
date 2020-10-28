@@ -1,8 +1,8 @@
-function [] = scramble(git_home, scrambles, output_file_name)
+function [] = scramble(git_home, scrambles, unique_id)
 arguments
     git_home string
     scrambles string
-    output_file_name string
+    unique_id string
 end
 
     %% Paths
@@ -17,11 +17,11 @@ end
         % Cross correlate each subject
         for j = 1:11
             subject_number = num2str(subject_numbers(j));
-            cross_correlate(git_home, subject_number, true)
+            cross_correlations_file_name = cross_correlate(git_home, subject_number, unique_id, true)
         end
         
         % Shape
-        shape_data(git_home, output_file_name, 'cross_correlations_scramble')
+        shape_data(git_home, unique_id, cross_correlations_file_name)
         
     end
 end
