@@ -1,7 +1,8 @@
-function [] = scramble(git_home, scrambles)
+function [] = scramble(git_home, scrambles, output_file_name)
 arguments
-    git_home char
+    git_home string
     scrambles string
+    output_file_name string
 end
 
     %% Paths
@@ -20,7 +21,7 @@ end
         end
         
         % Shape
-        shape_data(git_home, 'cross_correlations_scramble')
+        shape_data(git_home, output_file_name, 'cross_correlations_scramble')
         
     end
 end

@@ -2,6 +2,7 @@
 #
 # You shouldn't run this directly! It should be run by scripts/parallel.sbatch !
 
+set -x
 set -euo pipefail
 
 if [[ $# -ne 2 ]]; then
@@ -15,7 +16,7 @@ cd "$GIT_HOME"
 unique_id="$1.$2"
 log_file="data/logs/$unique_id.log"
 
-matlab -nodisplay -r "addpath('src'); scramble('$GIT_HOME', '1')" 2>&1 \
+matlab -nodisplay -r "addpath('src'); scramble('$GIT_HOME', '1', "$unique_id")" 2>&1 \
     | tee -a "$log_file"
 
 printf "\n\n Permutation tests complete \n\n"

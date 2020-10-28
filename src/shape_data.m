@@ -1,11 +1,12 @@
-function [] = shape_data(git_home, file_name)
+function [] = shape_data(git_home, output_file_name, file_name)
 % DESCRIPTION:
 %   Computes cross-correlations or convolutions between eeg signal and audio
 %   stimuli across all subjects, channels and trials for each condition
 
 arguments
-    git_home char
-    file_name char = 'cross_correlations'
+    git_home string
+    output_file_name string
+    file_name string = 'cross_correlations'
 end
 
     %% Main
@@ -18,7 +19,7 @@ end
         for i = 1:length(statistics)
             statistic = statistics{i};
             data = shape(file_name, statistic);
-            fileID = strcat('data/aggregate/', file_name, '_', statistic, '.mat');
+            fileID = strcat('data/aggregate/', output_file_name, '_', statistic, '.mat');
             
             % Append if file exists, save if not
             if isfile(fileID)
