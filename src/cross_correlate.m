@@ -28,7 +28,7 @@ end
     load('eeg_data')
 
     % Import pruned epoch order
-    stim_order = get_stim_order(subject_number, scramble);
+    stim_order = get_stim_order(subject_number, unique_id, scramble);
 
     %% 2. Cross correlate
     abs_average = zeros(size(eeg_data, 3), size(eeg_data, 1));

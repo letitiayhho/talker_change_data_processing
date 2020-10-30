@@ -1,9 +1,10 @@
-function [stim_order] = get_stim_order(subject_number, scramble)
+function [stim_order] = get_stim_order(subject_number, unique_id, scramble)
 % DESCRIPTION:
 %     Get the stimuli file names 
 
 arguments
     subject_number char
+    unique_id string
     scramble logical = false
 end
 
@@ -48,7 +49,10 @@ end
 
     %% 3. Scramble if specified
     if scramble
-        stim_order = epoch_order_pruned(randperm(size(epoch_order_pruned, 1)), :);
+        s = RandStream('dsfmt19937', 'Seed', str2double(unique_id));
+        stim_order = epoch_order_pruned(randperm(s, size(epoch_order_pruned, 1)), :);
+        stim_order
+        exit 1
     else
         stim_order = epoch_order_pruned;
     end
