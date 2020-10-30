@@ -1,22 +1,20 @@
 #!/bin/bash
-#
-# You shouldn't run this directly! It should be run by scripts/parallel.sbatch !
 
-set -x
 set -euo pipefail
-
-if [[ $# -ne 2 ]]; then
-    echo "usage: $0 <slurm job id> <parallel job id>" >&2
-    exit 1
-fi
 
 GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME"
 
-unique_id="$1.$2"
-log_file="data/logs/$unique_id.log"
+if [[ $# -ne 1 ]]; then
+    echo "usage: $0 <n-tasks>" >&2
+    exit 1
+fi
 
-matlab -nodisplay -r "addpath('src'); scramble('$GIT_HOME', '1', "$unique_id")" 2>&1 \
-    | tee -a "$log_file"
+n_tasks="$1"
 
-printf "\n\n Permutation tests complete \n\n"
+for i in $(seq 1 "$n_tasks"); do
+    sbatch scripts/wrapped.sbatch
+    sleep 0.2
+done
+
+#tar cJvf output.tar.xz data/aggregate/*.mat data/logs
