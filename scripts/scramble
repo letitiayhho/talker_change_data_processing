@@ -1,54 +1,20 @@
 #!/bin/bash
-#SBATCH --job-name=scramble
-#SBATCH --output=scramble.out
-#SBATCH --error=scramble.err
-#SBATCH --array=
-#SBATCH --time=00:02:00
+#SBATCH --time=02:00:00
 #SBATCH --partition=broadwl
-#SBATCH --ntasks=50
-#SBATCH --mem-per-cpu=2G
+#SBATCH --ntasks=10
+#SBATCH --mem-per-cpu=2G  # NOTE DO NOT USE THE --mem= OPTION
 
-set -euo pipefail
-
-#Usage
-usage() {
-    cat <<eof >&2
-usage: $0 <number of scrambles>
-
-    description
-        Runs cross correlations with resampled eeg and audio pairings and then runs the script to shape the cross correlations
-eof
-    exit 1
-}
-
-if [[ $# -ne 1 ]]; then
-    usage
-fi
-
-
-# Bind vars
-cd tcdp
-GIT_HOME="$(git rev-parse --show-toplevel)"
-scrambles="$1"
-timestamp="$(date +%s)"
-log_file="data/logs/${SLURM_JOB_ID}_$timestamp.log"
-output_file="data/aggregate/${SLURM_JOB_ID}_$timestamp"
-
-# Load modules
-set +euo pipefail
-module load parallel
 module load matlab/2019b
-set -euo pipefail
-ulimit -u 1000
 
-# Allocate cores to each task
-srun="srun --exclusive -N4 -n1"
+set -exuo pipefail
 
-# Settings for running jobs in parallel
-parallel="parallel --delay 0.2 -j $SLURM_NTASKS --joblog runtask.log --resume"
+GIT_HOME="$(git rev-parse --show-toplevel)"
+cd "$GIT_HOME"
 
-# Run permutation test
-matlab -nodisplay -r "addpath('src'); scramble('$GIT_HOME', '$scrambles', '$output_file'); quit" 2>&1 \
+unique_id="$SLURM_JOB_ID"
+log_file="data/logs/$unique_id.log"
+
+matlab -nodisplay -r "addpath('src'); scramble('$GIT_HOME', '1', '$unique_id')" 2>&1 \
     | tee -a "$log_file"
 
 printf "\n\n Permutation tests complete \n\n"
