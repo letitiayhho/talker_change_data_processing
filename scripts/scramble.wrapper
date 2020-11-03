@@ -13,7 +13,7 @@ fi
 n_tasks="$1"
 
 for i in $(seq 1 "$n_tasks"); do
-    sbatch scripts/wrapped.sbatch
+    sbatch scripts/scramble
     sleep 0.2
 done
 
