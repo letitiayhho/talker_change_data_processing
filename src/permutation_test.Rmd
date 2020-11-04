@@ -9,8 +9,10 @@ fig_height: 1
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, fig.width=12, fig.height=2)
-library(ggplot2)
-library(ggpubr)
+library("dplyr")
+library("ggplot2")
+library("ggpubr")
+library("kableExtra")
 ```
 
 ```{r load_data, include=FALSE}
@@ -35,8 +37,8 @@ plot_permutations <- function(resamples, original, title = NULL) {
 
 plot_level <- function(resampled, original, channel_number, condition_code, title) {
   resampled_values <- subset(resampled, channel_number, condition_code)
-  original_values <- subset(original, channel_number, condition_code)
-  plot <- plot_permutations(resampled_values, original_values, title)
+  original_value <- subset(original, channel_number, condition_code)
+  plot <- plot_permutations(resampled_values, original_value, title)
 }
 
 plot_all_levels <- function(same_talker, different_talker, 
@@ -66,17 +68,79 @@ plot_channel <- function(resampled, original, channel_number) {
                   meaningful, nonsense,
                   low_constraint, high_constraint)
 }
+
+get_proportion <- function(resampled, original, channel_number, condition_code) {
+  resampled_values <- subset(resampled, channel_number, condition_code)
+  original_value <- subset(original, channel_number, condition_code)
+  if (mean(resampled_values) > original_value) {
+      proportion <- sum(resampled_values < original_value)/length(resampled_values)
+  } else {
+      proportion <- sum(resampled_values > original_value)/length(resampled_values)
+  }
+}
+
+get_channel_proportions <- function(resampled, original, channel_number) {
+  same_talker <- get_proportion(resampled, original, channel_number, "S")
+  different_talker <- get_proportion(resampled, original, channel_number, "T")
+  meaningful <- get_proportion(resampled, original, channel_number, "M")
+  nonsense <- get_proportion(resampled, original, channel_number, "N")
+  low_constraint <- get_proportion(resampled, original, channel_number, "L")
+  high_constraint <- get_proportion(resampled, original, channel_number, "H")
+  return(data.frame("same_talker" = same_talker,
+                    "different_talker" = different_talker,
+                    "meaningful" = meaningful,
+                    "nonsense" = nonsense,
+                    "low_constraint" = low_constraint,
+                    "high_constraint" = high_constraint))
+}
+  
+get_all_channel_proportions <- function(resampled, original) {
+  all_channel_proportions <- c()
+  for (i in 1:128) {
+    channel_proportions <- get_channel_proportions(resampled, original, as.character(i))
+    all_channel_proportions <- rbind(all_channel_proportions, channel_proportions)
+  }
+  class(all_channel_proportions)
+  return(all_channel_proportions)
+}
 ```
 
-### Plot graphs
+### Permutation test results for maximum cross correlation values
+
+Permutation test conducted by resampling the stimuli-eeg pairings. 208 resamplings were conducted. The average maximum cross correlation value across all participants for each condition was calculated. Some of these averages are plotted below in histograms with the observed maximum cross correlation value marked in red.
+
+**Sample graphs of the first three channels**
+
 ```{r}
 plot_channel(resampled, original, "1")
 plot_channel(resampled, original, "2")
 plot_channel(resampled, original, "3")
 ```
 
-### Calculate statistics
-```{r}
+**Sample graphs of the channel 30**
 
+```{r}
+plot_channel(resampled, original, "30")
+```
+
+### Proportions
+
+Proportions of resampled values that are more extreme than the observed value. Reflects the probability of obtaining the observed result based on chance.
+
+```{r}
+all_channel_proportions <- get_all_channel_proportions(resampled, original) %>%
+    mutate_if(is.numeric, function(x) {round(x, digits = 7)}) %>%
+    mutate_if(is.numeric, function(x) {ifelse(x > 0.1,
+                                            cell_spec(x, NULL),
+                                            cell_spec(x, background = spec_color(x,
+                                                                                 direction = 1,
+                                                                                 begin = 0.65,
+                                                                                 end = 1,
+                                                                                 option = "B",
+                                                                                 scale_from = c(0,0.1))))})
+rownames(all_channel_proportions) <- c(1:128)
+  
+kable(all_channel_proportions, escape = F, row.names = T) %>%
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
