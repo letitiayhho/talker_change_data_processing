@@ -3,10 +3,12 @@ title: "Permutation test"
 author: "Letitia Ho"
 date: "10/30/2020"
 output: html_document
+fig_width: 6
+fig_height: 1
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, fig.width=12, fig.height=2)
 library(ggplot2)
 library(ggpubr)
 ```
@@ -31,13 +33,10 @@ plot_permutations <- function(resamples, original, title = NULL) {
     ggtitle(title)
 }
 
-# plot_conditions <- function(level_1, level_2) {
-  # ggarrange(level_1, level_2, ncol = 2, nrow = 1)}
-
-plot_level <- function(resampled, original, channel_number, condition_code) {
+plot_level <- function(resampled, original, channel_number, condition_code, title) {
   resampled_values <- subset(resampled, channel_number, condition_code)
   original_values <- subset(original, channel_number, condition_code)
-  plot <- plot_permutations(resampled_values, original_values, "Channel 1: Same talker")
+  plot <- plot_permutations(resampled_values, original_values, title)
 }
 
 plot_all_levels <- function(same_talker, different_talker, 
@@ -46,16 +45,22 @@ plot_all_levels <- function(same_talker, different_talker,
   ggarrange(same_talker, different_talker, 
             meaningful, nonsense,
             low_constraint, high_constraint,
-            ncol = 2, nrow = 3)
+            ncol = 6, nrow = 1)
 }
 
 plot_channel <- function(resampled, original, channel_number) {
-  same_talker <- plot_level(resampled, original, channel_number, "S")
-  different_talker <- plot_level(resampled, original, channel_number, "S")
-  meaningful <- plot_level(resampled, original, channel_number, "M")
-  nonsense <- plot_level(resampled, original, channel_number, "N")
-  low_constraint <- plot_level(resampled, original, channel_number, "L")
-  high_constraint <- plot_level(resampled, original, channel_number, "H")
+  same_talker <- plot_level(resampled, original, channel_number, "S", 
+                            paste(channel_number, ": Same Talker", sep = ""))
+  different_talker <- plot_level(resampled, original, channel_number, "T",
+                            paste(channel_number, ": Different Talker", sep = ""))
+  meaningful <- plot_level(resampled, original, channel_number, "M",
+                            paste(channel_number, ": Meaningful", sep = ""))
+  nonsense <- plot_level(resampled, original, channel_number, "N",
+                            paste(channel_number, ": Nonsense", sep = ""))
+  low_constraint <- plot_level(resampled, original, channel_number, "L",
+                            paste(channel_number, ": Low constraint", sep = ""))
+  high_constraint <- plot_level(resampled, original, channel_number, "H",
+                            paste(channel_number, ": High constraint", sep = ""))
   
   plot_all_levels(same_talker, different_talker, 
                   meaningful, nonsense,
@@ -63,57 +68,15 @@ plot_channel <- function(resampled, original, channel_number) {
 }
 ```
 
-### Talker
+### Plot graphs
 ```{r}
 plot_channel(resampled, original, "1")
 plot_channel(resampled, original, "2")
 plot_channel(resampled, original, "3")
-
-
-
-# same_talker <- plot_channel(resampled, original, "1", "S")
-# 
-# # make array of conditions and channel numbers
-# condition_codes <- c("S", "T", "M", "N", "L", "H")
-# titles <- c("Same talker", "Different talker", "Meaningful", "Nonsense", "Low constraint", "High constraint")
-# channel_numbers <- paste("mean_", as.character(1:128), sep = "")
-
-# 
-# # Same talker
-# S <- subset(resampled, "1", "S")
-# S_original <- subset(original, "1", "S")
-# same_talker <- plot_permutations(S, S_original, "Channel 1: Same talker")
-# 
-# # Different talker
-# dT <- subset(resampled, "1", "T")
-# dT_original <- subset(original, "1", "T")
-# different_talker <- plot_permutations(dT, dT_original, "Channel 1: Different talker")
-# 
-# # Meaningful
-# M <- subset(resampled, "1", "M")
-# M_original <- subset(original, "1", "M")
-# meaningful <- plot_permutations(M, M_original, "Channel 1: Meaningful")
-# 
-# # Nonsense
-# N <- subset(resampled, "1", "N")
-# N_original <- subset(original, "1", "N")
-# nonsense <- plot_permutations(N, N_original, "Channel 1: Nonsense")
-# 
-# # Low constraint
-# L <- subset(resampled, "1", "L")
-# L_original <- subset(original, "1", "L")
-# low_constraint <- plot_permutations(L, L_original, "Channel 1: Low constraint")
-# 
-# # High constraint
-# H <- subset(resampled, "1", "H")
-# H_original <- subset(original, "1", "H")
-# high_constraint <- plot_permutations(H, H_original, "Channel 1: High constraint")
 ```
 
+### Calculate statistics
 ```{r}
-# plot_conditions(same_talker, different_talker)
-# plot_conditions(meaningful, nonsense)
-# plot_conditions(low_constraint, high_constraint)
-# plot_all_conditions(same_talker, different_talker, meaningful, nonsense, low_constraint, high_constraint)
+
 ```
 
