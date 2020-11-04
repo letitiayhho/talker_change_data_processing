@@ -52,7 +52,6 @@ end
         s = RandStream('dsfmt19937', 'Seed', str2double(unique_id));
         stim_order = epoch_order_pruned(randperm(s, size(epoch_order_pruned, 1)), :);
         stim_order
-        exit 1
     else
         stim_order = epoch_order_pruned;
     end
