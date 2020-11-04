@@ -27,7 +27,9 @@ function [resampled_averages] = get_resampled_averages(file_names)
     resampled_averages = [];
     for i = 1:length(file_names)
         averages = average_across_conditions(file_names(i));
-        averages.Properties.RowNames = string(repmat(i, 6, 1)) + averages.Properties.RowNames;
+        resample_number = repmat(i, 6, 1);
+        averages.Properties.RowNames = string(resample_number) + averages.Properties.RowNames;
+        averages = addvars(averages, resample_number, 'Before', 'condition', 'NewVariableNames', 'resample');
         resampled_averages = [resampled_averages; averages];
     end
 end
