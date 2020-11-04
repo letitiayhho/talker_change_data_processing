@@ -18,20 +18,22 @@ library("kableExtra")
 ```{r load_data, include=FALSE}
 setwd("/Users/letitiaho/src/talker_change_data_processing")
 original <- read.csv('data/aggregate/maximum.csv')
-resampled <- read.csv('data/aggregate/resampled_maximum.csv')
+shuffled <- read.csv('data/aggregate/shuffled_maximum.csv')
 ```
 
 ```{r functions, include=FALSE}
-subset <- function(data, channel, tag) {
+subset <- function(data, channel, level, shuffle_number = NULL) {
   column_heading <- paste("mean_", channel, sep = "")
-  subset <- data[[column_heading]][data$condition == tag]
-  return(subset)
+  subset <- data[[column_heading]][data$condition == level]
+  ifelse(is.null(shuffle_number), 
+         yes = data[[column_heading]][data$condition == level],
+         no = data[[column_heading]][(data$condition == level) & (data$shuffle_number == shuffle_number)])
 }
 
-plot_level <- function(resampled, original, channel_number, condition_code, title) {
-  resampled_values <- subset(resampled, channel_number, condition_code)
+plot_level <- function(shuffled, original, channel_number, condition_code, title) {
+  shuffled_values <- subset(shuffled, channel_number, condition_code)
   original_value <- subset(original, channel_number, condition_code)
-  ggplot(data.frame(resampled_values), aes(x = resampled_values)) +
+  ggplot(data.frame(shuffled_values), aes(x = shuffled_values)) +
     geom_histogram(bins = 10) +
     geom_vline(xintercept = original_value, color ='firebrick2', size = 2) +
     ggtitle(title)
@@ -46,18 +48,18 @@ plot_all_levels <- function(same_talker, different_talker,
             ncol = 6, nrow = 1)
 }
 
-plot_channel <- function(resampled, original, channel_number) {
-  same_talker <- plot_level(resampled, original, channel_number, "S", 
+plot_channel <- function(shuffled, original, channel_number) {
+  same_talker <- plot_level(shuffled, original, channel_number, "S", 
                             paste(channel_number, ": Same Talker", sep = ""))
-  different_talker <- plot_level(resampled, original, channel_number, "T",
+  different_talker <- plot_level(shuffled, original, channel_number, "T",
                             paste(channel_number, ": Different Talker", sep = ""))
-  meaningful <- plot_level(resampled, original, channel_number, "M",
+  meaningful <- plot_level(shuffled, original, channel_number, "M",
                             paste(channel_number, ": Meaningful", sep = ""))
-  nonsense <- plot_level(resampled, original, channel_number, "N",
+  nonsense <- plot_level(shuffled, original, channel_number, "N",
                             paste(channel_number, ": Nonsense", sep = ""))
-  low_constraint <- plot_level(resampled, original, channel_number, "L",
+  low_constraint <- plot_level(shuffled, original, channel_number, "L",
                             paste(channel_number, ": Low constraint", sep = ""))
-  high_constraint <- plot_level(resampled, original, channel_number, "H",
+  high_constraint <- plot_level(shuffled, original, channel_number, "H",
                             paste(channel_number, ": High constraint", sep = ""))
   
   plot_all_levels(same_talker, different_talker, 
@@ -65,23 +67,23 @@ plot_channel <- function(resampled, original, channel_number) {
                   low_constraint, high_constraint)
 }
 
-get_proportion <- function(resampled, original, channel_number, condition_code) {
-  resampled_values <- subset(resampled, channel_number, condition_code)
+get_proportion <- function(shuffled, original, channel_number, condition_code) {
+  shuffled_values <- subset(shuffled, channel_number, condition_code)
   original_value <- subset(original, channel_number, condition_code)
-  if (mean(resampled_values) > original_value) {
-      proportion <- sum(resampled_values < original_value)/length(resampled_values)
+  if (mean(shuffled_values) > original_value) {
+      proportion <- sum(shuffled_values < original_value)/length(shuffled_values)
   } else {
-      proportion <- sum(resampled_values > original_value)/length(resampled_values)
+      proportion <- sum(shuffled_values > original_value)/length(shuffled_values)
   }
 }
 
-get_channel_proportions <- function(resampled, original, channel_number) {
-  same_talker <- get_proportion(resampled, original, channel_number, "S")
-  different_talker <- get_proportion(resampled, original, channel_number, "T")
-  meaningful <- get_proportion(resampled, original, channel_number, "M")
-  nonsense <- get_proportion(resampled, original, channel_number, "N")
-  low_constraint <- get_proportion(resampled, original, channel_number, "L")
-  high_constraint <- get_proportion(resampled, original, channel_number, "H")
+get_channel_proportions <- function(shuffled, original, channel_number) {
+  same_talker <- get_proportion(shuffled, original, channel_number, "S")
+  different_talker <- get_proportion(shuffled, original, channel_number, "T")
+  meaningful <- get_proportion(shuffled, original, channel_number, "M")
+  nonsense <- get_proportion(shuffled, original, channel_number, "N")
+  low_constraint <- get_proportion(shuffled, original, channel_number, "L")
+  high_constraint <- get_proportion(shuffled, original, channel_number, "H")
   return(data.frame("same_talker" = same_talker,
                     "different_talker" = different_talker,
                     "meaningful" = meaningful,
@@ -90,10 +92,10 @@ get_channel_proportions <- function(resampled, original, channel_number) {
                     "high_constraint" = high_constraint))
 }
   
-get_all_channel_proportions <- function(resampled, original) {
+get_all_channel_proportions <- function(shuffled, original) {
   all_channel_proportions <- c()
   for (i in 1:128) {
-    channel_proportions <- get_channel_proportions(resampled, original, as.character(i))
+    channel_proportions <- get_channel_proportions(shuffled, original, as.character(i))
     all_channel_proportions <- rbind(all_channel_proportions, channel_proportions)
   }
   class(all_channel_proportions)
@@ -114,24 +116,61 @@ plot_graded_table <- function(data) {
   kable(data, escape = F, row.names = T) %>%
     kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 }
+
+get_levels <- function(condition) {
+  levels <- list(talker = c("S", "T"), meaning = c("M", "N"), constraint = c("L", "H"))
+  levels[[condition]]
+}
+
+get_difference <- function(data, channel, condition, shuffle = NULL) {
+  levels <- get_levels(condition)
+  level_1 <- subset(shuffled, as.character(channel), levels[1], shuffle) 
+  level_2 <- subset(shuffled, as.character(channel), levels[2], shuffle) 
+  difference <- level_1 - level_2
+}
+
+get_differences_for_all_shuffles <- function(data, channel, condition) {
+  differences <- c()
+  n_shuffles <- nrow(data)/6
+  for (shuffle in 1:n_shuffles) {
+    difference <- get_difference(data, channel, condition, shuffle)
+    differences <- c(differences, difference)
+  }
+  return(differences)
+}
 ```
 
-### Permutation test results for maximum cross correlation values
+## 1. Are there any channels that significantly track the stimuli?
 
-Permutation test conducted by resampling the stimuli-eeg pairings. 208 resamplings were conducted. The average maximum cross correlation value across all participants for each condition was calculated. Some of these averages are plotted below in histograms with the observed maximum cross correlation value marked in red.
+To answer this question I ran a permutation test results for maximum cross correlation values across all conditions. The test was run by resampling the stimuli-eeg pairings. 208 resamplings were conducted. The average maximum cross correlation value across all participants and all condition was calculated. Some of these averages are plotted below in histograms with the observed maximum cross correlation value marked in red.
 
-**Sample graphs of the first three channels**
+### Sample histograms of permutation test results
 
 ```{r}
-plot_channel(resampled, original, "1")
-plot_channel(resampled, original, "2")
-plot_channel(resampled, original, "3")
+# ALL I NEED TO DO RN IS AVERAGE OVER EACH SHUFFLE
 ```
 
-**Sample graphs of the channel 30**
+### Proportions
+
+
+## 2. Is there a condition-based difference in tracking?
+
+To answer this question I ran a permutation test results for maximum cross correlation values in each conditions. The test was run by resampling the stimuli-eeg pairings. 208 resamplings were conducted. The average maximum cross correlation value across all participants for each condition was calculated. Some of these averages are plotted below in histograms with the observed maximum cross correlation value marked in red.
+
+### Sample histograms of permutation test results
+
+**First three channels**
 
 ```{r}
-plot_channel(resampled, original, "30")
+plot_channel(shuffled, original, "1")
+plot_channel(shuffled, original, "2")
+plot_channel(shuffled, original, "3")
+```
+
+**Channel 30**
+
+```{r}
+plot_channel(shuffled, original, "30")
 ```
 
 ### Proportions
@@ -139,21 +178,15 @@ plot_channel(resampled, original, "30")
 Proportions of resampled values that are more extreme than the observed value. Reflects the probability of obtaining the observed result based on chance.
 
 ```{r}
-# all_channel_proportions <- get_all_channel_proportions(resampled, original) %>%
-#     mutate_if(is.numeric, function(x) {round(x, digits = 7)}) %>%
-#     mutate_if(is.numeric, function(x) {ifelse(x > 0.1,
-#                                             cell_spec(x, NULL),
-#                                             cell_spec(x, background = spec_color(x,
-#                                                                                  direction = 1,
-#                                                                                  begin = 0.65,
-#                                                                                  end = 1,
-#                                                                                  option = "B",
-#                                                                                  scale_from = c(0,0.1))))})
-# rownames(all_channel_proportions) <- c(1:128)
-#   
-# kable(all_channel_proportions, escape = F, row.names = T) %>%
-#   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
-all_channel_proportions <- get_all_channel_proportions(resampled, original)
+all_channel_proportions <- get_all_channel_proportions(shuffled, original)
 plot_graded_table(all_channel_proportions)
+```
+
+
+## 3. Which channels distinguish between levels in a condition?
+
+```{r}
+talker_original <- get_difference(original, 1, "talker")
+talker <- get_differences_for_all_shuffles(shuffled, 1, "talker")
 ```
 
