@@ -14,11 +14,11 @@ Most of the files in here are run through bash scripts in `scripts/`. These file
 
 ### Permutation test
 
-`scramble.m` - computer cross correlations between scrambled eeg-stimuli pairs
+`shuffle.m` - computer cross correlations between shuffled eeg-stimuli pairs
 
-`shape_scrambles.m` - shape the output files from `scramble.m`, concatenate all results into `.csv` files in `data/aggregate/`
+`shape_shuffles.m` - shape the output files from `shuffle.m`, concatenate all results into `.csv` files in `data/aggregate/`
 
-`plot_scrambles.Rmd` - RMarkdown notebook with the results of the permutation test
+`plot_shuffles.Rmd` - RMarkdown notebook with the results of the permutation test
 
 ### Electrode location analysis.
 

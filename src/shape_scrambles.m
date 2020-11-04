@@ -1,6 +1,6 @@
 %% Main
 % get file names
-resampled_files = get_file_names('data/aggregate/scrambles/', 'maximum');
+resampled_files = get_file_names('data/aggregate/shuffles/', 'maximum');
 original_files = get_file_names('data/aggregate/', 'maximum');
 
 % average across original data 

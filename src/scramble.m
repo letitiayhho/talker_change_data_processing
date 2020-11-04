@@ -1,7 +1,7 @@
-function [] = scramble(git_home, scrambles, unique_id)
+function [] = shuffle(git_home, shuffles, unique_id)
 arguments
     git_home string
-    scrambles string
+    shuffles string
     unique_id string
 end
 
@@ -10,8 +10,8 @@ end
     load('scripts/subject_numbers.txt')
     
     %% Iterate
-    scrambles = str2num(scrambles);
-    for i = 1:scrambles
+    shuffles = str2num(shuffles);
+    for i = 1:shuffles
         
         
         % Cross correlate each subject

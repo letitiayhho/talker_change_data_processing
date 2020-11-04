@@ -1,11 +1,11 @@
-function [stim_order] = get_stim_order(subject_number, unique_id, scramble)
+function [stim_order] = get_stim_order(subject_number, unique_id, shuffle)
 % DESCRIPTION:
 %     Get the stimuli file names 
 
 arguments
     subject_number char
     unique_id string
-    scramble logical = false
+    shuffle logical = false
 end
 
     fprintf(1, strcat('Fetching stim order for subject #', subject_number, '\n'))
@@ -48,7 +48,7 @@ end
     epoch_order_pruned = sortrows(epoch_order_pruned, 'latency');
 
     %% 3. Scramble if specified
-    if scramble
+    if shuffle
         s = RandStream('dsfmt19937', 'Seed', str2double(unique_id));
         stim_order = epoch_order_pruned(randperm(s, size(epoch_order_pruned, 1)), :);
         stim_order

@@ -1,17 +1,17 @@
-function [cross_correlations_file_name] = cross_correlate(git_home, subject_number, unique_id, scramble)
+function [cross_correlations_file_name] = cross_correlate(git_home, subject_number, unique_id, shuffle)
 % DESCRIPTION:
 %     Takes the preprocessed eeg data and convolves or cross-correlates the 
 %     waveforms with the waveform of the auditory stimuli
 %
 % OUTPUT:
 %     Writes files named cross_correlations.mat or
-%     cross_correlations_scrambled.mat
+%     cross_correlations_shuffled.mat
 
 arguments
     git_home char
     subject_number char
     unique_id char
-    scramble logical = false
+    shuffle logical = false
 end
 
     tic
@@ -28,7 +28,7 @@ end
     load('eeg_data')
 
     % Import pruned epoch order
-    stim_order = get_stim_order(subject_number, unique_id, scramble);
+    stim_order = get_stim_order(subject_number, unique_id, shuffle);
 
     %% 2. Cross correlate
     abs_average = zeros(size(eeg_data, 3), size(eeg_data, 1));
@@ -72,8 +72,8 @@ end
         'VariableNames', {'condition', 'epoch', 'word', 'abs_average', 'maximum', 'lag'});
 
     % Write data
-    if scramble
-        cross_correlations_file_name = strcat(unique_id, '_cross_correlations_scramble');
+    if shuffle
+        cross_correlations_file_name = strcat(unique_id, '_cross_correlations_shuffle');
         fp = fullfile('data', subject_number, cross_correlations_file_name);
     else
         cross_correlations_file_name = strcat(unique_id, '_cross_correlations');
