@@ -41,15 +41,6 @@ plot_level <- function(shuffled, original, channel_number, level, title) {
     ggtitle(title)
 }
 
-# plot_all_levels <- function(same_talker, different_talker, 
-#                             meaningful, nonsense,
-#                             low_constraint, high_constraint) {
-#   ggarrange(same_talker, different_talker, 
-#             meaningful, nonsense,
-#             low_constraint, high_constraint,
-#             ncol = 6, nrow = 1)
-# }
-
 plot_channel <- function(shuffled, original, channel_number) {
   same_talker <- plot_level(shuffled, original, channel_number, "S", 
                             paste(channel_number, ": Same Talker", sep = ""))
@@ -146,15 +137,15 @@ To answer this question I ran a permutation test results for maximum cross corre
 **First three channels**
 
 ```{r}
-plot_channel(shuffled, original, "1")
-plot_channel(shuffled, original, "2")
-plot_channel(shuffled, original, "3")
+plot_channel(shuffled, original, 1)
+plot_channel(shuffled, original, 2)
+plot_channel(shuffled, original, 3)
 ```
 
 **Channel 30**
 
 ```{r}
-plot_channel(shuffled, original, "30")
+plot_channel(shuffled, original, 30)
 ```
 
 ### Proportions
@@ -215,11 +206,17 @@ plot_channel_differences <- function(shuffled, original, channel_number) {
 }
 ```
 
+**First three channels**
 
 ```{r}
-# talker_original <- get_difference(original, 1, "talker")
-# talker <- get_differences_for_all_shuffles(shuffled, 1, "talker")
 plot_channel_differences(shuffled, original, 1)
-# WANT TO COMPOSE IT ALL SOMEHOW, use only one plot_level
+plot_channel_differences(shuffled, original, 2)
+plot_channel_differences(shuffled, original, 3)
+```
+
+**Channel 30**
+
+```{r}
+plot_channel_differences(shuffled, original, 30)
 ```
 
