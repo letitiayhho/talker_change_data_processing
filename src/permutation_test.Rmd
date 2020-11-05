@@ -25,9 +25,11 @@ shuffled <- read.csv('data/aggregate/shuffled_maximum.csv')
 subset <- function(data, channel, level, shuffle_number = NULL) {
   column_heading <- paste("mean_", channel, sep = "")
   subset <- data[[column_heading]][data$condition == level]
-  ifelse(is.null(shuffle_number), 
-         yes = data[[column_heading]][data$condition == level],
-         no = data[[column_heading]][(data$condition == level) & (data$shuffle_number == shuffle_number)])
+  if (is.null(shuffle_number)) {
+    return(data[[column_heading]][data$condition == level])
+  } else {
+    return(data[[column_heading]][(data$condition == level) & (data$shuffle_number == shuffle_number)])
+  }
 }
 
 plot_level <- function(shuffled, original, channel_number, condition_code, title) {
@@ -71,9 +73,9 @@ get_proportion <- function(shuffled, original, channel_number, condition_code) {
   shuffled_values <- subset(shuffled, channel_number, condition_code)
   original_value <- subset(original, channel_number, condition_code)
   if (mean(shuffled_values) > original_value) {
-      proportion <- sum(shuffled_values < original_value)/length(shuffled_values)
+      return(sum(shuffled_values < original_value)/length(shuffled_values))
   } else {
-      proportion <- sum(shuffled_values > original_value)/length(shuffled_values)
+      return(sum(shuffled_values > original_value)/length(shuffled_values))
   }
 }
 
@@ -98,7 +100,6 @@ get_all_channel_proportions <- function(shuffled, original) {
     channel_proportions <- get_channel_proportions(shuffled, original, as.character(i))
     all_channel_proportions <- rbind(all_channel_proportions, channel_proportions)
   }
-  class(all_channel_proportions)
   return(all_channel_proportions)
 }
 
@@ -119,14 +120,14 @@ plot_graded_table <- function(data) {
 
 get_levels <- function(condition) {
   levels <- list(talker = c("S", "T"), meaning = c("M", "N"), constraint = c("L", "H"))
-  levels[[condition]]
+  return(levels[[condition]])
 }
 
 get_difference <- function(data, channel, condition, shuffle = NULL) {
   levels <- get_levels(condition)
   level_1 <- subset(shuffled, as.character(channel), levels[1], shuffle) 
   level_2 <- subset(shuffled, as.character(channel), levels[2], shuffle) 
-  difference <- level_1 - level_2
+  return(level_1 - level_2)
 }
 
 get_differences_for_all_shuffles <- function(data, channel, condition) {
@@ -151,6 +152,9 @@ To answer this question I ran a permutation test results for maximum cross corre
 ```
 
 ### Proportions
+
+
+
 
 
 ## 2. Is there a condition-based difference in tracking?
@@ -181,6 +185,9 @@ Proportions of resampled values that are more extreme than the observed value. R
 all_channel_proportions <- get_all_channel_proportions(shuffled, original)
 plot_graded_table(all_channel_proportions)
 ```
+
+
+
 
 
 ## 3. Which channels distinguish between levels in a condition?
