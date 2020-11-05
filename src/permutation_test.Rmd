@@ -32,13 +32,17 @@ subset <- function(data, channel, level, shuffle_number = NULL) {
   }
 }
 
-plot_level <- function(shuffled, original, channel_number, level, title) {
-  shuffled_values <- subset(shuffled, channel_number, level)
-  original_value <- subset(original, channel_number, level)
+histogram <- function(shuffled_values, original_value, title) {
   ggplot(data.frame(shuffled_values), aes(x = shuffled_values)) +
     geom_histogram(bins = 10) +
     geom_vline(xintercept = original_value, color ='firebrick2', size = 2) +
     ggtitle(title)
+}
+
+plot_level <- function(shuffled, original, channel_number, level, title) {
+  shuffled_values <- subset(shuffled, channel_number, level)
+  original_value <- subset(original, channel_number, level)
+  histogram(shuffled_values, original_value, title)
 }
 
 plot_channel <- function(shuffled, original, channel_number) {
@@ -61,14 +65,18 @@ plot_channel <- function(shuffled, original, channel_number) {
             ncol = 6, nrow = 1)
 }
 
+proportion <- function(shuffled_values, original_value) {
+  if (mean(shuffled_values) > original_value) {
+    return(sum(shuffled_values < original_value)/length(shuffled_values))
+  } else {
+    return(sum(shuffled_values > original_value)/length(shuffled_values))
+  }
+}
+
 get_proportion <- function(shuffled, original, channel_number, level) {
   shuffled_values <- subset(shuffled, channel_number, level)
   original_value <- subset(original, channel_number, level)
-  if (mean(shuffled_values) > original_value) {
-      return(sum(shuffled_values < original_value)/length(shuffled_values))
-  } else {
-      return(sum(shuffled_values > original_value)/length(shuffled_values))
-  }
+  return(proportion(shuffled_values, original_value))
 }
 
 get_channel_proportions <- function(shuffled, original, channel_number) {
@@ -189,10 +197,7 @@ get_differences_for_all_shuffles <- function(data, channel, condition) {
 plot_level_differences <- function(shuffled, original, channel_number, condition, title) {
   original_value <- get_difference(original, channel_number, condition)
   shuffled_values <- get_differences_for_all_shuffles(shuffled, channel_number, condition)
-  ggplot(data.frame(shuffled_values), aes(x = shuffled_values)) +
-    geom_histogram(bins = 10) +
-    geom_vline(xintercept = original_value, color ='firebrick2', size = 2) +
-    ggtitle(title)
+  histogram(shuffled_values, original_value, title)
 }
 
 plot_channel_differences <- function(shuffled, original, channel_number) {
@@ -203,6 +208,30 @@ plot_channel_differences <- function(shuffled, original, channel_number) {
   constraint <- plot_level_differences(shuffled, original, channel_number, "constraint", 
                                    paste(channel_number, ": Constraint", sep = ""))
   ggarrange(talker, meaning, constraint, ncol = 3, nrow = 1)
+}
+
+get_proportion_differences <- function(shuffled, original, channel_number, condition) {
+  original_value <- get_difference(original, channel_number, condition)
+  shuffled_values <- get_differences_for_all_shuffles(shuffled, channel_number, condition)
+  return(proportion(shuffled_values, original_value))
+}
+
+get_channel_proportions_differences <- function(shuffled, original, channel_number) {
+  talker <- get_proportion_differences(shuffled, original, channel_number, "talker")
+  meaning <- get_proportion_differences(shuffled, original, channel_number,  "meaning")
+  constraint <- get_proportion_differences(shuffled, original, channel_number, "constraint")
+  return(data.frame("talker" = talker,
+                    "meaning" = meaning,
+                    "constraint" = constraint))
+}
+  
+get_all_channel_proportions_differences <- function(shuffled, original) {
+  all_channel_proportions_differences <- c()
+  for (i in 1:128) {
+    channel_proportions <- get_channel_proportions_differences(shuffled, original, as.character(i))
+    all_channel_proportions_differences <- rbind(all_channel_proportions_differences, channel_proportions)
+  }
+  return(all_channel_proportions_differences)
 }
 ```
 
@@ -218,5 +247,14 @@ plot_channel_differences(shuffled, original, 3)
 
 ```{r}
 plot_channel_differences(shuffled, original, 30)
+```
+
+### Proportions
+
+Proportions of differences from resampled data that are more extreme than the observed value. Reflects the probability of obtaining the observed result based on chance.
+
+```{r}
+all_channel_proportions_differences <- get_all_channel_proportions_differences(shuffled, original)
+plot_graded_table(all_channel_proportions_differences)
 ```
 
