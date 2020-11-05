@@ -117,20 +117,45 @@ plot_graded_table <- function(data) {
   kable(data, escape = F, row.names = T) %>%
     kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 }
-
 ```
+
+
 
 ## 1. Are there any channels that significantly track the stimuli?
 
-To answer this question I ran a permutation test results for maximum cross correlation values across all conditions. The test was run by resampling the stimuli-eeg pairings. 208 resamplings were conducted. The average maximum cross correlation value across all participants and all condition was calculated. Some of these averages are plotted below in histograms with the observed maximum cross correlation value marked in red.
+To answer this question I ran a permutation test on the maximum cross correlation values averaged across trials for all conditions. The test was run by resampling the stimuli-eeg pairings 208 times. The average maximum cross correlation value across all participants and all condition was calculated. Some of these averages are plotted below in histograms with the observed maximum cross correlation value marked in red.
 
 ### Sample histograms of permutation test results
 
 ```{r}
-# ALL I NEED TO DO RN IS AVERAGE OVER EACH SHUFFLE
+shuffled_means <- aggregate(shuffled[,4:131], by=list(Category=shuffled$shuffle_number), FUN=mean)
+original_means <- as.data.frame(t(apply(as.matrix(original[,3:130]), MARGIN = 2, mean)))
+channel_1 <- histogram(shuffled_means$mean_1, original_means$mean_1, "Channel #1")
+channel_2 <- histogram(shuffled_means$mean_2, original_means$mean_2, "Channel #2")
+channel_3 <- histogram(shuffled_means$mean_3, original_means$mean_3, "Channel #3")
+channel_40 <- histogram(shuffled_means$mean_40, original_means$mean_40, "Channel #40")
+channel_41 <- histogram(shuffled_means$mean_41, original_means$mean_41, "Channel #41")
+channel_42 <- histogram(shuffled_means$mean_42, original_means$mean_42, "Channel #42")
+
+ggarrange(channel_1, channel_2, channel_3, channel_40, channel_41, channel_42, ncol = 6, nrow = 1)
 ```
 
+
 ### Proportions
+
+```{r}
+get_proportions_overall <- function(shuffled_means, original_means) {
+  proportions <- c()
+  for (channel in 1:128) {
+    variable_name <- paste("mean_", as.character(channel), sep = "")
+    proportion <- proportion(shuffled_means[[variable_name]], original_means[[variable_name]])
+    proportions <- c(proportions, proportion)
+  }
+  return(data.frame(proportions))
+}
+overall_proportions <- get_proportions_overall(shuffled_means, original_means)
+plot_graded_table(overall_proportions)
+```
 
 
 
@@ -138,7 +163,7 @@ To answer this question I ran a permutation test results for maximum cross corre
 
 ## 2. Is there a condition-based difference in tracking?
 
-To answer this question I ran a permutation test results for maximum cross correlation values in each conditions. The test was run by resampling the stimuli-eeg pairings. 208 resamplings were conducted. The average maximum cross correlation value across all participants for each condition was calculated. Some of these averages are plotted below in histograms with the observed maximum cross correlation value marked in red.
+To answer this question I ran a permutation test results for maximum cross correlation values in each conditions. The test was run by resampling the stimuli-eeg pairings 208 times. The average maximum cross correlation value across all participants for each condition was calculated. Some of these averages are plotted below in histograms with the observed maximum cross correlation value marked in red.
 
 ### Sample histograms of permutation test results
 
