@@ -8,7 +8,7 @@ function[] = shape_shuffles(statistic)
 %     Writes files shuffed_<statistic>.csv and <statistic>.csv
 
 arguments
-    statistic char = 'maximum'
+    statistic char = 'maximum' % options are 'maximum', 'lag' and 'abs_average'
 end
 
 %% Main
@@ -53,4 +53,6 @@ writetable(shuffled_averages, strcat('data/aggregate/shuffled_', statistic, '.cs
         remove_subjects = removevars(data, 'subject');
         averages = grpstats(remove_subjects, 'condition');
     end
+
+    quit
 end
