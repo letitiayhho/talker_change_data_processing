@@ -32,9 +32,9 @@ subset <- function(data, channel, level, shuffle_number = NULL) {
   }
 }
 
-plot_level <- function(shuffled, original, channel_number, condition_code, title) {
-  shuffled_values <- subset(shuffled, channel_number, condition_code)
-  original_value <- subset(original, channel_number, condition_code)
+plot_level <- function(shuffled, original, channel_number, level, title) {
+  shuffled_values <- subset(shuffled, channel_number, level)
+  original_value <- subset(original, channel_number, level)
   ggplot(data.frame(shuffled_values), aes(x = shuffled_values)) +
     geom_histogram(bins = 10) +
     geom_vline(xintercept = original_value, color ='firebrick2', size = 2) +
@@ -69,9 +69,9 @@ plot_channel <- function(shuffled, original, channel_number) {
                   low_constraint, high_constraint)
 }
 
-get_proportion <- function(shuffled, original, channel_number, condition_code) {
-  shuffled_values <- subset(shuffled, channel_number, condition_code)
-  original_value <- subset(original, channel_number, condition_code)
+get_proportion <- function(shuffled, original, channel_number, level) {
+  shuffled_values <- subset(shuffled, channel_number, level)
+  original_value <- subset(original, channel_number, level)
   if (mean(shuffled_values) > original_value) {
       return(sum(shuffled_values < original_value)/length(shuffled_values))
   } else {
@@ -125,8 +125,8 @@ get_levels <- function(condition) {
 
 get_difference <- function(data, channel, condition, shuffle = NULL) {
   levels <- get_levels(condition)
-  level_1 <- subset(shuffled, as.character(channel), levels[1], shuffle) 
-  level_2 <- subset(shuffled, as.character(channel), levels[2], shuffle) 
+  level_1 <- subset(data, as.character(channel), levels[1], shuffle) 
+  level_2 <- subset(data, as.character(channel), levels[2], shuffle) 
   return(level_1 - level_2)
 }
 
@@ -138,6 +138,15 @@ get_differences_for_all_shuffles <- function(data, channel, condition) {
     differences <- c(differences, difference)
   }
   return(differences)
+}
+
+plot_level_differences <- function(shuffled, original, channel_number, condition, title) {
+  original_value <- get_difference(original, channel_number, condition)
+  shuffled_values <- get_differences_for_all_shuffles(shuffled, channel_number, condition)
+  ggplot(data.frame(shuffled_values), aes(x = shuffled_values)) +
+    geom_histogram(bins = 10) +
+    geom_vline(xintercept = original_value, color ='firebrick2', size = 2) +
+    ggtitle(title)
 }
 ```
 
@@ -195,5 +204,7 @@ plot_graded_table(all_channel_proportions)
 ```{r}
 talker_original <- get_difference(original, 1, "talker")
 talker <- get_differences_for_all_shuffles(shuffled, 1, "talker")
+plot_level_differences(shuffled, original, 1, "talker", "Talker")
+# WANT TO COMPOSE IT ALL SOMEHOW, use only one plot_level function
 ```
 
