@@ -41,14 +41,14 @@ plot_level <- function(shuffled, original, channel_number, level, title) {
     ggtitle(title)
 }
 
-plot_all_levels <- function(same_talker, different_talker, 
-                                meaningful, nonsense,
-                                low_constraint, high_constraint) {
-  ggarrange(same_talker, different_talker, 
-            meaningful, nonsense,
-            low_constraint, high_constraint,
-            ncol = 6, nrow = 1)
-}
+# plot_all_levels <- function(same_talker, different_talker, 
+#                             meaningful, nonsense,
+#                             low_constraint, high_constraint) {
+#   ggarrange(same_talker, different_talker, 
+#             meaningful, nonsense,
+#             low_constraint, high_constraint,
+#             ncol = 6, nrow = 1)
+# }
 
 plot_channel <- function(shuffled, original, channel_number) {
   same_talker <- plot_level(shuffled, original, channel_number, "S", 
@@ -64,9 +64,10 @@ plot_channel <- function(shuffled, original, channel_number) {
   high_constraint <- plot_level(shuffled, original, channel_number, "H",
                             paste(channel_number, ": High constraint", sep = ""))
   
-  plot_all_levels(same_talker, different_talker, 
-                  meaningful, nonsense,
-                  low_constraint, high_constraint)
+  ggarrange(same_talker, different_talker, 
+            meaningful, nonsense,
+            low_constraint, high_constraint,
+            ncol = 6, nrow = 1)
 }
 
 get_proportion <- function(shuffled, original, channel_number, level) {
@@ -118,36 +119,6 @@ plot_graded_table <- function(data) {
     kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 }
 
-get_levels <- function(condition) {
-  levels <- list(talker = c("S", "T"), meaning = c("M", "N"), constraint = c("L", "H"))
-  return(levels[[condition]])
-}
-
-get_difference <- function(data, channel, condition, shuffle = NULL) {
-  levels <- get_levels(condition)
-  level_1 <- subset(data, as.character(channel), levels[1], shuffle) 
-  level_2 <- subset(data, as.character(channel), levels[2], shuffle) 
-  return(level_1 - level_2)
-}
-
-get_differences_for_all_shuffles <- function(data, channel, condition) {
-  differences <- c()
-  n_shuffles <- nrow(data)/6
-  for (shuffle in 1:n_shuffles) {
-    difference <- get_difference(data, channel, condition, shuffle)
-    differences <- c(differences, difference)
-  }
-  return(differences)
-}
-
-plot_level_differences <- function(shuffled, original, channel_number, condition, title) {
-  original_value <- get_difference(original, channel_number, condition)
-  shuffled_values <- get_differences_for_all_shuffles(shuffled, channel_number, condition)
-  ggplot(data.frame(shuffled_values), aes(x = shuffled_values)) +
-    geom_histogram(bins = 10) +
-    geom_vline(xintercept = original_value, color ='firebrick2', size = 2) +
-    ggtitle(title)
-}
 ```
 
 ## 1. Are there any channels that significantly track the stimuli?
@@ -202,9 +173,53 @@ plot_graded_table(all_channel_proportions)
 ## 3. Which channels distinguish between levels in a condition?
 
 ```{r}
-talker_original <- get_difference(original, 1, "talker")
-talker <- get_differences_for_all_shuffles(shuffled, 1, "talker")
-plot_level_differences(shuffled, original, 1, "talker", "Talker")
-# WANT TO COMPOSE IT ALL SOMEHOW, use only one plot_level function
+get_levels <- function(condition) {
+  levels <- list(talker = c("S", "T"), meaning = c("M", "N"), constraint = c("L", "H"))
+  return(levels[[condition]])
+}
+
+get_difference <- function(data, channel, condition, shuffle = NULL) {
+  levels <- get_levels(condition)
+  level_1 <- subset(data, as.character(channel), levels[1], shuffle) 
+  level_2 <- subset(data, as.character(channel), levels[2], shuffle) 
+  return(level_1 - level_2)
+}
+
+get_differences_for_all_shuffles <- function(data, channel, condition) {
+  differences <- c()
+  n_shuffles <- nrow(data)/6
+  for (shuffle in 1:n_shuffles) {
+    difference <- get_difference(data, channel, condition, shuffle)
+    differences <- c(differences, difference)
+  }
+  return(differences)
+}
+
+plot_level_differences <- function(shuffled, original, channel_number, condition, title) {
+  original_value <- get_difference(original, channel_number, condition)
+  shuffled_values <- get_differences_for_all_shuffles(shuffled, channel_number, condition)
+  ggplot(data.frame(shuffled_values), aes(x = shuffled_values)) +
+    geom_histogram(bins = 10) +
+    geom_vline(xintercept = original_value, color ='firebrick2', size = 2) +
+    ggtitle(title)
+}
+
+plot_channel_differences <- function(shuffled, original, channel_number) {
+  talker <- plot_level_differences(shuffled, original, channel_number, "talker", 
+                                   paste(channel_number, ": Talker", sep = ""))
+  meaning <- plot_level_differences(shuffled, original, channel_number, "meaning", 
+                                   paste(channel_number, ": Meaning", sep = ""))
+  constraint <- plot_level_differences(shuffled, original, channel_number, "constraint", 
+                                   paste(channel_number, ": Constraint", sep = ""))
+  ggarrange(talker, meaning, constraint, ncol = 3, nrow = 1)
+}
+```
+
+
+```{r}
+# talker_original <- get_difference(original, 1, "talker")
+# talker <- get_differences_for_all_shuffles(shuffled, 1, "talker")
+plot_channel_differences(shuffled, original, 1)
+# WANT TO COMPOSE IT ALL SOMEHOW, use only one plot_level
 ```
 
