@@ -127,6 +127,8 @@ To answer this question I ran a permutation test on the maximum cross correlatio
 
 ### Sample histograms of permutation test results
 
+**Figure 1**
+
 ```{r}
 shuffled_means <- aggregate(shuffled[,4:131], by=list(Category=shuffled$shuffle_number), FUN=mean)
 original_means <- as.data.frame(t(apply(as.matrix(original[,3:130]), MARGIN = 2, mean)))
@@ -142,6 +144,8 @@ ggarrange(channel_1, channel_2, channel_3, channel_40, channel_41, channel_42, n
 
 
 ### Proportions
+
+**Table 1**
 
 ```{r}
 get_proportions_overall <- function(shuffled_means, original_means) {
@@ -167,7 +171,7 @@ To answer this question I ran a permutation test results for maximum cross corre
 
 ### Sample histograms of permutation test results
 
-**First three channels**
+**Figure 3: First three channels**
 
 ```{r}
 plot_channel(shuffled, original, 1)
@@ -175,7 +179,7 @@ plot_channel(shuffled, original, 2)
 plot_channel(shuffled, original, 3)
 ```
 
-**Channel 30**
+**Figure 4: Channel 30**
 
 ```{r}
 plot_channel(shuffled, original, 30)
@@ -184,6 +188,8 @@ plot_channel(shuffled, original, 30)
 ### Proportions
 
 Proportions of resampled values that are more extreme than the observed value. Reflects the probability of obtaining the observed result based on chance.
+
+**Table 2**
 
 ```{r}
 all_channel_proportions <- get_all_channel_proportions(shuffled, original)
@@ -260,7 +266,7 @@ get_all_channel_proportions_differences <- function(shuffled, original) {
 }
 ```
 
-**First three channels**
+**Figure 5: First three channels**
 
 ```{r}
 plot_channel_differences(shuffled, original, 1)
@@ -268,7 +274,7 @@ plot_channel_differences(shuffled, original, 2)
 plot_channel_differences(shuffled, original, 3)
 ```
 
-**Channel 30**
+**Figure 6: Channel 30**
 
 ```{r}
 plot_channel_differences(shuffled, original, 30)
@@ -277,6 +283,8 @@ plot_channel_differences(shuffled, original, 30)
 ### Proportions
 
 Proportions of differences from resampled data that are more extreme than the observed value. Reflects the probability of obtaining the observed result based on chance.
+
+**Table 3**
 
 ```{r}
 all_channel_proportions_differences <- get_all_channel_proportions_differences(shuffled, original)
