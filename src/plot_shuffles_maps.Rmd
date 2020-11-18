@@ -14,7 +14,7 @@ library("kableExtra")
 
 ```{r load_data, include=FALSE}
 setwd("/Users/letitiaho/src/talker_change_data_processing")
-source("src/analysis_functions.R")
+source("src/plot_shuffles_functions.R")
 original <- read.csv('data/aggregate/maximum.csv')
 shuffled <- read.csv('data/aggregate/shuffled_maximum.csv')
 ```
