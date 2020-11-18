@@ -143,4 +143,3 @@ R -e "rmarkdown::render('src/plot_shuffles_maximum.Rmd')"
 R -e "rmarkdown::render('src/plot_shuffles_lag.Rmd')"
 R -e "rmarkdown::render('src/plot_shuffles_maps.Rmd')"
 ```
-![talker](<blockquote class="imgur-embed-pub" lang="en" data-id="a/R0AZhmN" data-context="false" ><a href="//imgur.com/a/R0AZhmN"></a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>)
