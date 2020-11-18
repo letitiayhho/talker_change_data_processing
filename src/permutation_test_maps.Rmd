@@ -1,0 +1,140 @@
+---
+title: "Maps"
+author: "Letitia Ho"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+library("dplyr")
+library("ggplot2")
+library("ggpubr")
+library("kableExtra")
+```
+
+```{r load_data, include=FALSE}
+setwd("/Users/letitiaho/src/talker_change_data_processing")
+source("src/analysis_functions.R")
+original <- read.csv('data/aggregate/maximum.csv')
+shuffled <- read.csv('data/aggregate/shuffled_maximum.csv')
+```
+
+```{r plot map}
+get_sig_channels <- function(data, variable) {
+  sig_channels <- which(data[[variable]] < 0.05)
+}
+
+get_ps <- function(data, channels, condition) {
+  level <- data[[condition]]
+  p_values <- c()
+  for (i in 1:128) {
+    # Exit early if not in list of significant channels
+    if (!(i %in% channels)) {p_values[i] = NaN}
+    
+    # Recoding values if too small or too large
+    else {
+      if (level[i] > 0.05) {p_values[i] <- NaN}
+      else if (level[i] == 0) {p_values[i] <- 1/210}
+      else {p_values[i] <- level[i]}
+    }
+  }
+  return(p_values)
+}
+
+get_map <- function(df, levels) {
+  ggplot() +
+    geom_point(data = df, aes(x = x, y = y, 
+                              size = 1/group1, 
+                              colour = "#B8DE29FF",
+                              alpha = 0.5,
+                              stroke = 0)) +
+    geom_point(data = df, aes(x = x, y = y, 
+                              size = 1/group2,
+                              colour = "#287D8EFF",
+                              alpha = 0.5,
+                              stroke = 0)) +
+    geom_point(data = df, aes(x = x, y = y, 
+                              size = 1,
+                              alpha = 0.5,
+                              stroke = 0)) + 
+    scale_color_discrete(name = "Level", labels = levels) + 
+    guides(size = FALSE, alpha = FALSE) +
+    ylim(0, 900) +
+    xlim(0, 900) +
+    annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+    annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+    theme(axis.line=element_blank(),axis.text.x=element_blank(),
+          axis.text.y=element_blank(),axis.ticks=element_blank(),
+          axis.title.x=element_blank(),
+          axis.title.y=element_blank(),
+          panel.background=element_blank(),
+          panel.border=element_blank(),
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
+          plot.background=element_blank())
+}
+```
+
+```{r}
+# Get coordinates for electrodes on map
+coordinates <- get_layout()
+
+# Compute significance of tracking each level for each channel
+levels <- get_all_channel_proportions(shuffled, original)
+
+# Compute significance of difference between levels in each condition for each channel
+level_differences <- get_all_channel_proportions_differences(shuffled, original)
+```
+
+These maps depict the channels that show significantly different tracking between the two levels of each condition. The color of the point indicates the level that the channel shows significant tracking for, some channels significantly track both levels, some channels only track one. The size of the point is proportional to `1/p` and indicates how significant the tracking is. The larger the point, the more significant tracking in the channel. `p` was calculated as the proportion of resampled data with an average maximum cross-correlation more extreme than the observed average maximum cross-correlation value averaged across all participants for each condition level. (The smallest p-value was mapped from `0` to `1/210`, since there were only `208` resamplings Laplace's rule of succession was used to estimate the conservative probability of a more extreme value.)
+
+**Talker**
+
+```{r}
+# Identify channels that differentiate between same and different talker
+talker_channels <- get_sig_channels(level_differences, "talker")
+
+# Get p-values for tracking within each level
+same_talker <- get_ps(levels, talker_channels, "same_talker")
+different_talker <- get_ps(levels, talker_channels, "different_talker")
+
+# Create data frame for plotting
+talker_df <- data.frame(group1 = same_talker, group2 = different_talker, coordinates)
+
+# Plot
+get_map(talker_df, c("Same talker", "Different talker"))
+```
+
+**Meaning**
+
+```{r}
+# Identify channels that differentiate between meaningful and nonsense
+meaning_channels <- get_sig_channels(level_differences, "meaning")
+
+# Get p-values for tracking within each level
+meaningful <- get_ps(levels, meaning_channels, "meaningful")
+nonsense <- get_ps(levels, meaning_channels, "nonsense")
+
+# Create data frame for plotting
+meaning_df <- data.frame(group1 = meaningful, group2 = nonsense, coordinates)
+
+# Plot
+get_map(meaning_df, c("Meaningful", "Nonsense"))
+```
+
+**Constraint**
+
+```{r}
+# Identify channels that differentiate between low and high constraint
+constraint_channels <- get_sig_channels(level_differences, "constraint")
+
+# Get p-values for tracking within each level
+low_constraint <- get_ps(levels, constraint_channels, "low_constraint")
+high_constraint <- get_ps(levels, constraint_channels, "high_constraint")
+
+# Create data frame for plotting
+constraint_df <- data.frame(group1 = low_constraint, group2 = high_constraint, coordinates)
+
+# Plot
+get_map(constraint_df, c("Low constraint", "High constraint"))
+```
