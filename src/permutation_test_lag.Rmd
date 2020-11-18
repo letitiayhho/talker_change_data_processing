@@ -3,8 +3,6 @@ title: "Lag of maximum cross-correlation values"
 author: "Letitia Ho"
 date: "10/30/2020"
 output: html_document
-fig_width: 6
-fig_height: 1
 ---
 
 ```{r setup, include=FALSE}
@@ -127,7 +125,6 @@ convert_to_ms <- function(data, sample_rate = 44100) {
 
 ### Average lag of each channel for each condition
 
-
 ```{r}
 get_levels <- function(condition) {
   levels <- list(talker = c("S", "T"), meaning = c("M", "N"), constraint = c("L", "H"))
@@ -149,12 +146,15 @@ combine_data <- function(original, condition) {
   return(data)
 }
 
-double_histogram <- function(data, condition) {
-  ggplot(data, aes(x=value, fill=type)) +
-    geom_histogram(alpha=0.8, position = 'identity', bins = 20) +
+double_histogram <- function(data, condition, shuffle = F) {
+  p <- ggplot(data, aes(x=value, fill=type)) +
+    geom_histogram(alpha=0.8, position = 'identity', bins = 40) +
+    geom_vline(xintercept = 0, color = "#868686", size = 0.5) +
     labs(fill="") +
     xlab("ms") +
     ggtitle(str_to_title(condition))
+  if (shuffle) {p + ggtitle(paste("Resampled", condition))}
+  else {p + ggtitle(str_to_title(condition))}
 }
 
 plot_double_histogram <- function(original, condition) {
@@ -167,28 +167,57 @@ plot_double_histogram <- function(original, condition) {
 
 ```{r}
 # Convert to miliseconds
-shuffled <- convert_to_ms(shuffled)
-original <- convert_to_ms(original)
+shuffled_ms <- convert_to_ms(shuffled)
+original_ms <- convert_to_ms(original)
 
 # Create plot for each condition
-talker <- plot_double_histogram(original, "talker")
-meaning <- plot_double_histogram(original, "meaning")
-constraint <- plot_double_histogram(original, "constraint")
-
-# Combine plots into one figure
-ggarrange(talker, meaning, constraint, nrow = 1, ncol = 3)
+talker <- plot_double_histogram(original_ms, "talker")
+meaning <- plot_double_histogram(original_ms, "meaning")
+constraint <- plot_double_histogram(original_ms, "constraint")
 ```
 
+```{r}
+select_data_shuffles <- function(shuffled, level) {
+  return(filter(shuffled, condition == level) %>%
+           select(-c("condition", "GroupCount", "shuffle_number")) %>%
+           as.matrix() %>%
+           as.vector())
+  }
+
+combine_data_shuffles <- function(shuffled, condition) {
+  levels <- get_levels(condition)
+  data <- data.frame(
+    type = c(rep(levels[1], 128), rep(levels[2], 128) ),
+    value = c(select_data_shuffles(shuffled, levels[1]), select_data_shuffles(shuffled, levels[2]))
+  )
+  return(data)
+}
+
+plot_double_histogram_shuffles <- function(shuffled, condition, shuffle) {
+  data <- combine_data_shuffles(shuffled, condition)
+  double_histogram(data, condition, shuffle)
+}
+```
+
+```{r}
+talker_shuffled <- plot_double_histogram_shuffles(shuffled_ms, "talker", shuffle = T)
+meaning_shuffled <- plot_double_histogram_shuffles(shuffled_ms, "meaning", shuffle = T)
+constraint_shuffled <- plot_double_histogram_shuffles(shuffled_ms, "constraint", shuffle = T)
+
+ggarrange(talker, talker_shuffled, ncol = 2, nrow = 1)
+ggarrange(meaning, meaning_shuffled, ncol = 2, nrow = 1)
+ggarrange(constraint, constraint_shuffled, ncol = 2, nrow = 1)
+```
 
 ### Average lag in observed data in each channel compared to resamplings
 
 **Figure 2**
 
 ```{r}
-plot_channel(shuffled, original, 1)
-plot_channel(shuffled, original, 2)
-plot_channel(shuffled, original, 3)
-plot_channel(shuffled, original, 30)
+plot_channel(shuffled_ms, original_ms, 1)
+plot_channel(shuffled_ms, original_ms, 2)
+plot_channel(shuffled_ms, original_ms, 3)
+plot_channel(shuffled_ms, original_ms, 30)
 ```
 
 ### Probability of the observed lag 
@@ -196,8 +225,11 @@ plot_channel(shuffled, original, 30)
 **Figure 3**
 
 ```{r}
-all_channel_proportions <- get_all_channel_proportions(shuffled, original)
+all_channel_proportions <- get_all_channel_proportions(shuffled_ms, original_ms)
 plot_graded_table(all_channel_proportions)
 ```
+
+
+
 
 
