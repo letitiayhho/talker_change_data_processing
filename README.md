@@ -9,11 +9,13 @@ This is basically an exploratory data analysis using data from a previous [study
     * Statistics toolbox
     * Optimization toolbox
     * Image processing toolbox
-* R version 3.6.1 with following packages (\* only needed for certain analyses)
+* R version 3.6.1 with following packages
     * R.matlab
     * tools
     * dplyr
-    * label4mri\*
+    * ggplot2
+    * ggpubr
+    * kableExtra
 
 ## File management
 
@@ -24,7 +26,7 @@ The files in this repo are divided into three folders- `scripts`, `src`, and `da
 
 **Download raw data from lab server**
 
-For this you will need a CNET log in with access to the server. Check the APEX lab wiki to see how to get access approval. To download the eeg data and stimuli files use the following code to run the bash scripts.
+For this you will need a CNET log in with access to the server. Check the APEX lab wiki to see how to get access approval. Use the following code to run the bash scripts that will download the eeg data and stimuli files from the server.
 
 ```
 ./scripts/download-eeg-data
@@ -117,7 +119,7 @@ mv data/aggregate/<first few common numbers of your job ids>*.mat data/aggregate
 
 **Preprocess permutation test**
 
-To aggregate each resampling into averages and save all of the averages into a `.csv` file for further analysis, run
+To aggregate each resampling into averages and save all of the averages into a `.csv` file for further analysis in `R`, run
 
 ```
 matlab -r -nosplash -nodisplay "addpath('src'); shape_shuffles('maximum')"
