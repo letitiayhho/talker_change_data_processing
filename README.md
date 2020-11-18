@@ -129,11 +129,17 @@ matlab -r -nosplash -nodisplay "addpath('src'); shape_shuffles('abs_average')"
 
 **Analyze permutation test**
 
-Better than running these `RMarkdown` files on command line I suggest openning each of them and running or knitting them. To run the last one you are going to have to get the file `2d_coordinates` from me.
+Better than running these `RMarkdown` files on command line I suggest opening each of them and running or knitting them. To run the last one you are going to have to get the file `2d_coordinates` from me.
 
 ```
 src/plot_shuffles_maximum.Rmd
 src/plot_shuffles_lag.Rmd
 src/plot_shuffles_maps.Rmd
 ```
+You could theoretically just knit the analysis files and plots into pretty `html` documents with the following.
 
+```
+R -e "rmarkdown::render('src/plot_shuffles_maximum.Rmd')"
+R -e "rmarkdown::render('src/plot_shuffles_lag.Rmd')"
+R -e "rmarkdown::render('src/plot_shuffles_maps.Rmd')"
+```
