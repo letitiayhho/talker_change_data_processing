@@ -33,4 +33,5 @@ function [] = get_joined_shuffles(git_home, subject_number)
             error('Only 1 file to concatenate, try changing get_file_names')
         end
     end
+quit
 end
