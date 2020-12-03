@@ -1,0 +1,99 @@
+---
+title: "Multilevel model"
+author: "Letitia Ho"
+date: "10/30/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.width=12, fig.height=23)
+knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing")
+library("dplyr")
+library("ggplot2")
+library("ggpubr")
+library("kableExtra")
+```
+
+```{r load_data}
+subject_number <- 301
+source("src/functions.R")
+original <- read.csv('data/301/maximum.csv', header = FALSE)
+shuffled <- read.csv('data/301/sample_shuffles.csv', header = FALSE)
+condition <- read.csv('data/301/condition.csv')
+```
+
+**Calculate basic stats**
+```{r basic stats}
+n_trials = nrow(original)
+n_channels = ncol(original)
+n_subjects = 11
+```
+
+**Identify neighbors**
+```{r identify neighbors}
+# Get the x y z coordinates of each channel
+channel_coordinates <- get_channel_coordinates()
+
+# Get their pairwise distances
+distances <- get_pairwise_distances(channel_coordinates)
+
+# Identify the channels that are less than 5 cm away from each channel
+# List includes self
+neighbors <- ifelse(distances < 50, TRUE, FALSE) %>%
+  apply(MARGIN = 2, FUN = function(x) which(x))
+```
+
+**Identify significant channels for each trial**
+```{r identify significant channels}
+# Identifies significant trials for each channel, easier doing it this way
+# since you can index the original data and resampled data using the same 
+# index. Basically recodes every value in the original data with a bool.
+sig_channels <- original*0
+for (i in 1:128) {
+  p <- sapply(original[[i]], FUN = function(x) proportion(shuffled[[i]], x))
+  sig <- sapply(p, FUN = function(x) is_sig(x))
+  sig_channels[[i]] <- sig
+}
+sig_channels_list <- apply(sig_channels, MARGIN = 1, FUN = function(x) which(x))
+```
+
+**Identify active neighbors**
+```{r}
+active <- get_list_item(sig_channels_list, 6)
+active_neighbors <- get_active_neighbors(neighbors, active)
+clusters <- get_clusters(active_neighbors)
+get_largest_cluster(clusters)
+```
+
+```{r}
+
+
+# 
+#       # Remove all clusters smaller than min_cluster_size, remove 0s
+#       # keep = vector(mode = "list")
+#       # for (i in 1:length(clusters)) {
+#       #   cluster = clusters[[i]]
+#       #   if (length(cluster) >= min_cluster_size) {
+#       #     keep <- c(keep, list(cluster))
+#       #   }
+#       # }
+```
+
+
+
+$cluster size \sim Binomial(1, p_i)$
+
+$logit(p_i) = \alpha_{subject[i]} + \beta_{talker[i]} + \gamma_{meaning[i]} + \delta_{constraint[i]}$
+
+$\beta_i \sim Normal(0, 0.1)$ for $i = 1, 2$
+
+$\gamma_i \sim Normal(0, 0.1)$ for $i = 1, 2$
+
+$\delta_i \sim Normal(0, 0.1)$ for $i = 1, 2$
+
+$\alpha_i \sim Normal(\bar{\alpha}, \sigma_\alpha)$ for $i = 1, 2,...11$
+
+$\bar{\alpha} \sim Normal(0, 0.1)$
+
+$\sigma_{\alpha} \sim Normal(0, 0.1)$
+

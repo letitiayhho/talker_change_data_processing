@@ -44,11 +44,16 @@ plot_channel <- function(shuffled, original, channel_number) {
 }
 
 proportion <- function(shuffled_values, original_value) {
-  if (mean(shuffled_values) > original_value) {
+  # Changed to median
+  if (median(shuffled_values) > original_value) {
     return(sum(shuffled_values < original_value)/length(shuffled_values))
   } else {
     return(sum(shuffled_values > original_value)/length(shuffled_values))
   }
+}
+
+is_sig <- function(proportion) {
+  ifelse(proportion < 0.05, return(TRUE), return(FALSE))
 }
 
 get_proportion <- function(shuffled, original, channel_number, level) {
@@ -181,3 +186,86 @@ get_layout <- function() {
   y <- -coordinates[[2]]+ 2*mean(coordinates[[2]]) # flip y coords and return to original center
   return(list(x = x, y = y))
 }
+
+
+## CLUSTERS
+
+get_channel_coordinates <- function() {
+  channels_fp <- "/Users/letitiaho/src/talker_change_data_processing/data/aggregate/mni_coordinates.txt"
+  channels <- read.delim(channels_fp, header = FALSE) %>%
+    filter(grepl('E', V2))
+  channel_coordinates <- data.frame(x = channels$V3,
+                                    y = channels$V4,
+                                    z = channels$V5)
+  return(channel_coordinates) }
+
+get_pairwise_distances <- function(channel_coordinates) {
+  distances <- as.matrix(dist(channel_coordinates)) # calculate pairwise distances
+  return(distances) }
+
+# Neighbors and active channels for each trial are all
+# stored as nested lists. Use this function to unpack them
+get_list_item <- function(list, channel) {
+  unname(list[[channel]])
+}
+
+# For each channel identify all its neighbors that are active in a given trial
+get_active_neighbors <- function(neighbors, active) {
+  active_neighbors <- list()
+  for (i in 1:length(active)) {
+    # Get array of neighbors of each active channel
+    channel <- active[i]
+    channel_neighbors <- get_list_item(neighbors, channel)
+    
+    # Compare active channels to neighbors to identify active neighbors.
+    # If there any of a channel's neighbors are active they should
+    # be contained in the intersect of the two lists.
+    active_neighbors[i] <- list(intersect(active, channel_neighbors))
+  }
+  return(active_neighbors)
+}
+
+# Get all clusters by iterating through the list of active
+# neighbors and comparing the clusters pairwise. Combine
+# all overlapping clusters, leave non-intersecting
+# clusters alone. Apply recursively.
+get_clusters <- function(clusters) {
+  for (i in 1:length(clusters)) {
+    cluster_a <- clusters[[i]]
+    # Loop through every cluster
+    for (j in 1:length(clusters)) {
+      cluster_b <- clusters[[j]]
+      # Compare the two clusters...
+      combined <- c(cluster_a, cluster_b)
+      # If there are duplicates...
+      if (TRUE %in% duplicated(combined) & (j > i)) {
+        # Set the first cluster into the merged cluster
+        clusters[[i]] <- unique(combined)
+        # Set the second cluster to null
+        clusters[[j]] <- NA
+      }
+    }
+  }
+  # Clean up clusters, remove clusters that are too small
+  # prune away empty list positions
+  keep <- list()
+  for (i in 1:length(clusters)) {
+    cluster = clusters[[i]]
+    if (length(cluster) > 1) {
+      keep <- c(keep, list(cluster))
+    }
+  }
+  clusters <- keep
+  
+  # Return if all possible clusters are created
+  if (!(TRUE %in% duplicated(na.omit(unlist(clusters)))))
+    return(clusters)
+  
+  # Recursively apply function
+  return(get_clusters(clusters))
+}
+
+get_largest_cluster <- function(clusters) {
+  return(clusters[[which.max(lapply(clusters, function(x) sum(lengths(x))))]])
+}
+
