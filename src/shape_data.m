@@ -4,7 +4,7 @@ function [] = shape_data(git_home, unique_id, cross_correlations_file_name)
 %   stimuli across all subjects, channels and trials for each condition
 
 arguments
-    git_home string
+    git_home string = '/Users/letitiaho/src/talker_change_data_processing'
     unique_id string
     cross_correlations_file_name string = 'cross_correlations'
 end

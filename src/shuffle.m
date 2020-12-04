@@ -1,6 +1,6 @@
 function [] = shuffle(git_home, shuffles, unique_id)
 arguments
-    git_home string
+    git_home string = '/Users/letitiaho/src/talker_change_data_processing'
     shuffles string
     unique_id string
 end

@@ -8,6 +8,7 @@ function[] = shape_shuffles(statistic)
 %     Writes files shuffed_<statistic>.csv and <statistic>.csv
 
 arguments
+    git_home string = '/Users/letitiaho/src/talker_change_data_processing'
     statistic char = 'maximum' % options are 'maximum', 'lag' and 'abs_average'
 end
 

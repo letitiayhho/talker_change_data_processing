@@ -8,7 +8,7 @@ function [cross_correlations_file_name] = cross_correlate(git_home, subject_numb
 %     cross_correlations_shuffled.mat
 
 arguments
-    git_home char
+    git_home string = '/Users/letitiaho/src/talker_change_data_processing'
     subject_number char
     unique_id char
     shuffle logical = false

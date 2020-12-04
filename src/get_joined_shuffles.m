@@ -3,7 +3,10 @@ function [] = get_joined_shuffles(git_home, subject_number)
 % To save computing power and storage space, I'm only going to be
 % concatenating ~ 1000 trials. This function opens up the files containing
 % the shuffled cross-correlation values and concatenates them to one list
-
+arguments
+    git_home string = '/Users/letitiaho/src/talker_change_data_processing'
+end
+    
     % Get file names
     subject_dir = fullfile(git_home, 'data', subject_number);
     file_names = get_file_names(subject_dir, 'scramble');
