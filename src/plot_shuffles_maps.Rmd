@@ -6,6 +6,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing")
 library("dplyr")
 library("ggplot2")
 library("ggpubr")

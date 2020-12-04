@@ -15,11 +15,11 @@ library("kableExtra")
 ```
 
 ```{r load_data}
-subject_number <- 301
+subject_number <- 302
 source("src/functions.R")
-original <- read.csv('data/301/maximum.csv', header = FALSE)
-shuffled <- read.csv('data/301/sample_shuffles.csv', header = FALSE)
-condition <- read.csv('data/301/condition.csv')
+original <- read.csv('data/302/maximum.csv', header = FALSE)
+shuffled <- read.csv('data/302/sample_shuffles.csv', header = FALSE)
+condition <- read.csv('data/302/condition.csv')
 ```
 
 **Calculate basic stats**
@@ -57,26 +57,32 @@ for (i in 1:128) {
 sig_channels_list <- apply(sig_channels, MARGIN = 1, FUN = function(x) which(x))
 ```
 
-**Identify active neighbors**
+**Identify largest clusters**
 ```{r}
-active <- get_list_item(sig_channels_list, 6)
-active_neighbors <- get_active_neighbors(neighbors, active)
-clusters <- get_clusters(active_neighbors)
-get_largest_cluster(clusters)
+largest_clusters <- list()
+for (i in 1:n_trials) {
+  active <- get_list_item(sig_channels_list, i)
+  
+  # Skip trial if number of active channels is less than or equal to 1
+  # print(active)
+  if (length(active) <= 1) {
+    largest_clusters[i] <- NA
+    next
+  }
+  active_neighbors <- get_active_neighbors(neighbors, active)
+  clusters <- get_clusters(active_neighbors)
+  
+  # Skip trial number of clusters is 0
+  if (length(clusters) == 0) {
+    largest_clusters[i] <- NA
+    next
+  }
+  largest_clusters[i] <- list(get_largest_cluster(clusters))
+}
 ```
 
 ```{r}
 
-
-# 
-#       # Remove all clusters smaller than min_cluster_size, remove 0s
-#       # keep = vector(mode = "list")
-#       # for (i in 1:length(clusters)) {
-#       #   cluster = clusters[[i]]
-#       #   if (length(cluster) >= min_cluster_size) {
-#       #     keep <- c(keep, list(cluster))
-#       #   }
-#       # }
 ```
 
 
