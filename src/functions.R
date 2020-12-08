@@ -229,7 +229,7 @@ get_active_neighbors <- function(neighbors, active) {
 # neighbors and comparing the clusters pairwise. Combine
 # all overlapping clusters, leave non-intersecting
 # clusters alone. Apply recursively.
-get_clusters <- function(clusters) {
+cluster <- function(clusters) {
   for (i in 1:length(clusters)) {
     cluster_a <- clusters[[i]]
     # Loop through every cluster
@@ -262,10 +262,23 @@ get_clusters <- function(clusters) {
     return(clusters)
   
   # Recursively apply function
-  return(get_clusters(clusters))
+  return(cluster(clusters))
 }
 
 get_largest_cluster <- function(clusters) {
   return(clusters[[which.max(lapply(clusters, function(x) sum(lengths(x))))]])
+}
+
+get_neighbors <- function() {
+  # Get the x y z coordinates of each channel
+  coordinates <- get_channel_coordinates()
+  
+  # Get their pairwise distances
+  distances <- get_pairwise_distances(coordinates)
+  
+  # Identify the channels that are less than 5 cm away including self
+  neighbors <- ifelse(distances < 50, TRUE, FALSE) %>%
+    apply(MARGIN = 2, FUN = function(x) which(x))
+  return(neighbors)
 }
 
