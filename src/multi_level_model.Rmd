@@ -15,74 +15,7 @@ library("kableExtra")
 ```
 
 ```{r load_data}
-subject_number <- 302
-source("src/functions.R")
-original <- read.csv('data/302/maximum.csv', header = FALSE)
-shuffled <- read.csv('data/302/sample_shuffles.csv', header = FALSE)
-condition <- read.csv('data/302/condition.csv')
-```
-
-**Calculate basic stats**
-```{r basic stats}
-n_trials = nrow(original)
-n_channels = ncol(original)
-n_subjects = 11
-```
-
-**Identify neighbors**
-```{r identify neighbors}
-# Get the x y z coordinates of each channel
-channel_coordinates <- get_channel_coordinates()
-
-# Get their pairwise distances
-distances <- get_pairwise_distances(channel_coordinates)
-
-# Identify the channels that are less than 5 cm away from each channel
-# List includes self
-neighbors <- ifelse(distances < 50, TRUE, FALSE) %>%
-  apply(MARGIN = 2, FUN = function(x) which(x))
-```
-
-**Identify significant channels for each trial**
-```{r identify significant channels}
-# Identifies significant trials for each channel, easier doing it this way
-# since you can index the original data and resampled data using the same 
-# index. Basically recodes every value in the original data with a bool.
-sig_channels <- original*0
-for (i in 1:128) {
-  p <- sapply(original[[i]], FUN = function(x) proportion(shuffled[[i]], x))
-  sig <- sapply(p, FUN = function(x) is_sig(x))
-  sig_channels[[i]] <- sig
-}
-sig_channels_list <- apply(sig_channels, MARGIN = 1, FUN = function(x) which(x))
-```
-
-**Identify largest clusters**
-```{r}
-largest_clusters <- list()
-for (i in 1:n_trials) {
-  active <- get_list_item(sig_channels_list, i)
-  
-  # Skip trial if number of active channels is less than or equal to 1
-  # print(active)
-  if (length(active) <= 1) {
-    largest_clusters[i] <- NA
-    next
-  }
-  active_neighbors <- get_active_neighbors(neighbors, active)
-  clusters <- get_clusters(active_neighbors)
-  
-  # Skip trial number of clusters is 0
-  if (length(clusters) == 0) {
-    largest_clusters[i] <- NA
-    next
-  }
-  largest_clusters[i] <- list(get_largest_cluster(clusters))
-}
-```
-
-```{r}
-
+clusters <- read.csv('data/aggregate/clusters')
 ```
 
 
