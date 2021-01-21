@@ -10,6 +10,12 @@ Most of the files in here are run through bash scripts in `scripts/`. These file
 
 `shape_data.m` - Shapes the convolution and cross-correlation values for each subject and collects them into a data frame
 
+### Channel locations
+
+`get_mni_coordinates.R` - Get MNI coordinates of the average channel locations using the transformation matrix given by DIPFIT in EEGLAB
+
+`get_nearest_cortical areas.R` - Apply a modified version get mni_cortical_areas to output a list of cortical areas closest to the surrounding coordinates
+
 ### Permutation test
 
 `shuffle.m` - compute cross correlations between shuffled eeg-stimuli pairs
@@ -22,11 +28,7 @@ Most of the files in here are run through bash scripts in `scripts/`. These file
 
 `plot_shuffles_maps.Rmd` - Generates maps of channels showing significant cross correlations with stimuli under different conditions
 
-### Channel locations
-
-`get_mni_coordinates.R` - Get MNI coordinates of the average channel locations using the transformation matrix given by DIPFIT in EEGLAB
-
-`get_nearest_cortical areas.R` - Apply a modified version get mni_cortical_areas to output a list of cortical areas closest to the surrounding coordinates
+### RMS
 
 
 
