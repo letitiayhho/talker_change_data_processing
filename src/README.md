@@ -16,15 +16,13 @@ Most of the files in here are run through bash scripts in `scripts/`. These file
 
 `shape_shuffles.m` - shape the output files from `shuffle.m`, concatenate all results into `.csv` files in `data/aggregate/`
 
-**Plot**
-
 `plot_shuffles_maximum.Rmd` - Generates various plots of the computed maximums of the permutation test
 
 `plot_shuffles_lag.Rmd` - Generates various plots of the computed lags of the permutation test
 
 `plot_shuffles_maps.Rmd` - Generates maps of channels showing significant cross correlations with stimuli under different conditions
 
-### Electrode location analysis.
+### Channel locations
 
 `get_mni_coordinates.R` - Get MNI coordinates of the average channel locations using the transformation matrix given by DIPFIT in EEGLAB
 
