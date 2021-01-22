@@ -14,8 +14,6 @@ arguments
     shuffle logical = false
 end
 
-    tic
-
     fprintf(1, strcat('Analyzing data from subject #', subject_number, '\n'))
 
     %% 1. Import data
@@ -81,6 +79,4 @@ end
     end
     fprintf(1, strcat('\nWriting data to /', fp, '\n'))
     save(fp, 'cross_correlations');
-
-    toc
 end

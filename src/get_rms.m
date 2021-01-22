@@ -1,5 +1,10 @@
 function[] = get_rms(git_home, subject_number)
-    fprintf(1, strcat('Analyzing data from subject #', subject_number, '\n'))
+arguments
+    git_home string = '/Users/letitiaho/src/talker_change_data_processing'
+    subject_number char
+end
+
+    fprintf(1, strcat('Computing RMS from subject #', subject_number, '\n'))
 
     %% 1. Import data
     cd(git_home)
