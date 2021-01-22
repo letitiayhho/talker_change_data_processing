@@ -4,7 +4,7 @@ function [stim_order] = get_stim_order(subject_number, unique_id, shuffle)
 
 arguments
     subject_number char
-    unique_id string
+    unique_id string = ''
     shuffle logical = false
 end
 
