@@ -8,9 +8,9 @@ function [cross_correlations_file_name] = cross_correlate(git_home, subject_numb
 %     cross_correlations_shuffled.mat
 
 arguments
-    git_home string = '/Users/letitiaho/src/talker_change_data_processing'
+    git_home string
     subject_number char
-    unique_id char
+    unique_id char = ""
     shuffle logical = false
 end
 
@@ -61,22 +61,22 @@ end
 
     %% 3. Write data files
     % Add relevant info to data tables
-    cross_correlations = table([stim_order.type],...
+    cross_correlations = table(repmat(subject_number, height(stim_order), 1),...
+        [stim_order.type],...
         [stim_order.epoch],...
         [stim_order.word],...
         [abs_average],...
         [maximum],...
         [lag],...
-        'VariableNames', {'condition', 'epoch', 'word', 'abs_average', 'maximum', 'lag'});
+        'VariableNames', {'subject_number', 'condition', 'epoch', 'word', 'abs_average', 'maximum', 'lag'});
 
     % Write data
     if shuffle
         cross_correlations_file_name = strcat(unique_id, '_cross_correlations_shuffle');
-        fp = fullfile('data', subject_number, cross_correlations_file_name);
     else
-        cross_correlations_file_name = strcat(unique_id, '_cross_correlations');
-        fp = fullfile('data', subject_number, cross_correlations_file_name);
+        cross_correlations_file_name = 'cross_correlations';
     end
+    fp = fullfile('data', subject_number, cross_correlations_file_name);
     fprintf(1, strcat('\nWriting data to /', fp, '\n'))
     save(fp, 'cross_correlations');
 end
