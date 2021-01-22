@@ -4,7 +4,6 @@ function[] = get_rms(git_home, subject_number)
     %% 1. Import data
     cd(git_home)
     addpath(fullfile('data', subject_number)) % add subject data to path
-    addpath(fullfile('data/stim')) % add audio stimuli directory to path
     
     % Import EEG data
     eeg_data = load('eeg_data');
@@ -54,7 +53,7 @@ function[] = get_rms(git_home, subject_number)
 
     %% 3. Compute RMS
     % Initialize data table
-    rms = zeros(size(eeg_data, 3), size(eeg_data, 1));
+    epoch_rms = zeros(size(eeg_data, 3), size(eeg_data, 1));
 
     % Loop over channels
     for i = 1:size(eeg_data, 1)
@@ -65,20 +64,20 @@ function[] = get_rms(git_home, subject_number)
              
              % Compute RMS
              epoch = eeg_data(i, :, j);
-             rms(j, i) = rms(epoch);
+             epoch_rms(j, i) = rms(epoch);
          end
     end
 
     %% 4. Write data
-    rms = array2table(rms);
+    epoch_rms = array2table(epoch_rms);
     rms_data_table = table([epoch_order_pruned.type],...
         [epoch_order_pruned.epoch],...
         [epoch_order_pruned.word],...
-        [rms],...
+        [epoch_rms],...
         'VariableNames', {'condition', 'epoch', 'word', 'rms'});
     
     % Write data
-    save(fullfile('data', subject_number, 'rms_data_table'), 'rms_data_table')
+    save(fullfile('data', subject_number, 'rms'), 'rms_data_table')
     
     %% Quit
     quit
