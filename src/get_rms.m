@@ -1,6 +1,6 @@
 function[] = get_rms(git_home, subject_number)
 arguments
-    git_home string = '/Users/letitiaho/src/talker_change_data_processing'
+    git_home string
     subject_number char
 end
 
@@ -32,14 +32,16 @@ end
              epoch_rms(j, i) = rms(epoch);
          end
     end
+    
 
-    %% 4. Write data
+    %% 4. Write data    
     epoch_rms = array2table(epoch_rms);
-    rms_data_table = table([stim_order.type],...
+    rms_data_table = table(repmat(subject_number, height(epoch_rms), 1),...
+        [stim_order.type],...
         [stim_order.epoch],...
         [stim_order.word],...
         [epoch_rms],...
-        'VariableNames', {'condition', 'epoch', 'word', 'rms'});
+        'VariableNames', {'subject_number', 'condition', 'epoch', 'word', 'rms'});
     
     % Write data
     save(fullfile('data', subject_number, 'rms'), 'rms_data_table')
