@@ -6,50 +6,10 @@ function[] = get_rms(git_home, subject_number)
     addpath(fullfile('data', subject_number)) % add subject data to path
     
     % Import EEG data
-    eeg_data = load('eeg_data');
-    eeg_data = eeg_data.('eeg_data');
-
-    % Import original epoch order
-    epoch_order_original = load('epoch_order_original');
-    epoch_order_original = epoch_order_original.('epoch_order_original');
-
+    load('eeg_data');
+    
     % Import pruned epoch order
-    epoch_order_pruned = load('epoch_order_pruned');
-    epoch_order_pruned = epoch_order_pruned.('epoch_order_pruned');
-
-    % Import stimuli order
-    stim_order = readtable('stim_order.txt');
-
-    %% 2. Match EEG epochs with words
-    % Sort original epoch order by condition
-    epoch_order_original = struct2table(epoch_order_original);
-    epoch_order_original = sortrows(epoch_order_original, 'type');
-    epoch_order_original = epoch_order_original(endsWith(epoch_order_original.type, 'E'),:);
-
-    % Sort pruned epoch order by condition
-    epoch_order_pruned = struct2table(epoch_order_pruned);
-    epoch_order_pruned = sortrows(epoch_order_pruned, 'type');
-
-    % Match pruned epochs with corresponding epochs
-    j = 1;
-    for i = 1:height(epoch_order_original)
-        % Match original epochs with corresponding stim 
-        epoch_order_original.word(i) = stim_order.ending(i);
-        
-        % Break at the end of pruned epochs to avoid exceeding array length
-        if j > height(epoch_order_pruned)
-            break
-        end
-        
-        % Match pruned epochs with corresponding stim
-        if epoch_order_original.urevent(i) == epoch_order_pruned.urevent(j)
-            epoch_order_pruned.word(j) = stim_order.ending(i);
-            j = j+1;
-        end
-    end
-
-    % Sort pruned epoch order by latency
-    epoch_order_pruned = sortrows(epoch_order_pruned, 'latency');
+    stim_order = get_stim_order(subject_number);
 
     %% 3. Compute RMS
     % Initialize data table
@@ -70,9 +30,9 @@ function[] = get_rms(git_home, subject_number)
 
     %% 4. Write data
     epoch_rms = array2table(epoch_rms);
-    rms_data_table = table([epoch_order_pruned.type],...
-        [epoch_order_pruned.epoch],...
-        [epoch_order_pruned.word],...
+    rms_data_table = table([stim_order.type],...
+        [stim_order.epoch],...
+        [stim_order.word],...
         [epoch_rms],...
         'VariableNames', {'condition', 'epoch', 'word', 'rms'});
     
