@@ -4,8 +4,8 @@ function [] = shape_data(git_home, unique_id, cross_correlations_file_name)
 %   stimuli across all subjects, channels and trials for each condition
 
 arguments
-    git_home string = '/Users/letitiaho/src/talker_change_data_processing'
-    unique_id string
+    git_home char
+    unique_id char = 'cross_correlations'
     cross_correlations_file_name string = 'cross_correlations'
 end
 
@@ -41,43 +41,26 @@ end
 
         % Iterate over subjects
         for i = 1:number_of_subjects
-            [subject_number, conditions, cross_correlations] = load_single_subject_data(cross_correlations_file_name, statistic, i);
+            [cross_correlations] = load_single_subject_data(cross_correlations_file_name, statistic, i);
 
-            % Split conditions up
-            split_conditions = get_split_conditions(conditions);
-
-            % Add condition codes to data table
-            cross_correlations = [split_conditions, cross_correlations];
-
-            % Add subject number to data table
-            cross_correlations.subject(:) = subject_number;
-            cross_correlations = movevars(cross_correlations, 'subject', 'Before', 'constraint');
-            
             % Calculate means for each channel for each condition
-            talker = grpstats(removevars(cross_correlations, {'meaning', 'constraint'}), {'subject', 'talker'});
-            meaning = grpstats(removevars(cross_correlations, {'talker', 'constraint'}), {'subject', 'meaning'});
-            constraint = grpstats(removevars(cross_correlations, {'talker', 'meaning'}), {'subject', 'constraint'});
+            talker = grpstats(removevars(cross_correlations, {'meaning', 'constraint'}), {'subject_number', 'talker'});
+            meaning = grpstats(removevars(cross_correlations, {'talker', 'constraint'}), {'subject_number', 'meaning'});
+            constraint = grpstats(removevars(cross_correlations, {'talker', 'meaning'}), {'subject_number', 'constraint'});
             
-            % Clean up the data table, add labels
-            talker = removevars(talker, {'GroupCount'}); 
-            meaning = removevars(meaning, {'GroupCount'});
-            constraint = removevars(constraint, {'GroupCount'}); 
-            
-            % Change variable names
-            talker.Properties.VariableNames = ['subject', 'condition', string(1:128)];
-            talker.Properties.RowNames = {};
-            meaning.Properties.VariableNames = ['subject', 'condition', string(1:128)];
-            meaning.Properties.RowNames = {};
-            constraint.Properties.VariableNames = ['subject', 'condition', string(1:128)];
-            constraint.Properties.RowNames = {};
+            % Make all variable names the same to combine them into a table
+            talker.Properties.VariableNames = ['subject_number', 'condition', 'count', string(1:128)];
+            meaning.Properties.VariableNames = ['subject_number', 'condition', 'count', string(1:128)];
+            constraint.Properties.VariableNames = ['subject_number', 'condition', 'count', string(1:128)];
 
-            % Combine all subjects into one tabled
+            % Combine all subjects into one table
             data = [data; talker; meaning; constraint];
+            data.Properties.RowNames = {};
         end
     end
 
     %% Load data of a single subject
-    function [subject_number, conditions, cross_correlations] = load_single_subject_data(cross_correlations_file_name, statistic, i)
+    function [cross_correlations] = load_single_subject_data(cross_correlations_file_name, statistic, i)
 
         % Get name of the data files and their directory
         file_names = strcat(cross_correlations_file_name, '.mat');
@@ -87,10 +70,11 @@ end
         % Load data
         load(data_file_full_path);
 
-        % Bind to variables for returning
-        subject_number = string(extractAfter(data_files(i).folder, 'data/'));
-        conditions = cross_correlations.condition;
-        cross_correlations = cell2table(num2cell(cross_correlations.(statistic)));
+        % Clean up data and split up conditions
+        subject_number = cross_correlations.subject_number;
+        conditions = get_split_conditions(cross_correlations.condition);
+        stat = cell2table(num2cell(cross_correlations.(statistic)));
+        cross_correlations = [table(subject_number), conditions, stat];
     end
 
 end
