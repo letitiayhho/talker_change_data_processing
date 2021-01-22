@@ -1,6 +1,6 @@
 function[] = get_rms(git_home, subject_number)
 arguments
-    git_home string
+    git_home char
     subject_number char
 end
 
@@ -32,7 +32,6 @@ end
              epoch_rms(j, i) = rms(epoch);
          end
     end
-    
 
     %% 4. Write data    
     epoch_rms = array2table(epoch_rms);
