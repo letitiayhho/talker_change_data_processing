@@ -8,7 +8,9 @@ Most of the files in here are run through bash scripts in `scripts/`. These file
 
 `cross_correlate.m` - Takes the preprocessed eeg data and cross-correlates the waveforms with the waveform of the auditory stimuli
 
-`shape_data.m` - Shapes the convolution and cross-correlation values for each subject and collects them into a data frame
+`average_and_concat_cross_correlations.m` - Shapes the cross-correlation values for each subject and collects them into a data frame
+
+`concat_cross_correlations.m` - Combines all cross correlation values for each subject into one file
 
 ### Channel locations
 
@@ -29,6 +31,10 @@ Most of the files in here are run through bash scripts in `scripts/`. These file
 `plot_shuffles_maps.Rmd` - Generates maps of channels showing significant cross correlations with stimuli under different conditions
 
 ### RMS
+
+`get_rms.m` - computes RMS, a measure of overall power, for each trial
+
+`concat_rms.m` - combines all RMS values for each subject into one file
 
 
 
