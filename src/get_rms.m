@@ -1,5 +1,4 @@
 function[] = get_rms(git_home, subject_number)
-%% get_rms
 % DESCRIPTION:
 %     Computes RMS, a measure of overall power, for each trial
 %
