@@ -1,60 +1,27 @@
-function[] = shape_rms(git_home)
-%% Shape_rms
+function[] = concat_rms(git_home)
 % DESCRIPTION:
-%     Takes rms values for each subject and concat into one file
+%     Concatenates rms values from all subjects into a file
 %
 % OUTPUT:
-%     Writes files shuffed_<statistic>.csv and <statistic>.csv
+%     Writes files rms.csv
 
 arguments
-    git_home string = '/Users/letitiaho/src/talker_change_data_processing'
+    git_home char
 end
 
-%% Main
-% get file names
+    %% Main
+    file_struct = dir(fullfile('data/*/rms.mat'));
+    data = combine_rms(file_struct);
+    writetable(data, 'data/aggregate/rms.csv')
+    quit
 
-file_struct = dir(fullfile('data/*/rms.mat'));
-
-% average across original data
-
-% average across all shuffled data and combine into one table
-
-% write to spreadsheet
-% writetable(original_averages, strcat('data/aggregate/rms.csv'))
-
-%% Functions
-    function [combined] = combine_rms(file_struct)
+    %% Functions
+    function [data] = combine_rms(file_struct)
+        data = table();
         for i = 1:length(file_struct)
             path = fullfile(file_struct(i).folder, 'rms.mat');
-            load(path)
-            
-%             subject_number = string(extractAfter(data_files(i).folder, 'data/'));
-%             cross_correlations.subject(:) = subject_number;
+            rms_data = load(path).rms_data;
+            data = [data; rms_data];
         end
-% 
-% % function to get all shuffled data file_names
-%     function [full_file_names] = get_file_names(path, statistic)
-%         file_struct = dir(fullfile('data/*/rms'));
-%     end
-% 
-% % function to load data
-%     function [shuffled_averages] = get_shuffled_averages(file_names)
-%         shuffled_averages = [];
-%         for i = 1:length(file_names)
-%             averages = average_across_conditions(file_names(i));
-%             shuffle_number = repmat(i, 6, 1);
-%             averages.Properties.RowNames = string(shuffle_number) + averages.Properties.RowNames;
-%             averages = addvars(averages, shuffle_number, 'Before', 'condition', 'NewVariableNames', 'shuffle_number');
-%             shuffled_averages = [shuffled_averages; averages];
-%         end
-%     end
-% 
-% % function to average across subjects by condition
-%     function [averages] = average_across_conditions(file_name)
-%         data = load(file_name{:}).data;
-%         remove_subjects = removevars(data, 'subject');
-%         averages = grpstats(remove_subjects, 'condition');
-%     end
-
-    quit
+    end
 end

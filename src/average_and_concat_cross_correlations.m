@@ -1,4 +1,4 @@
-function [] = shape_data(git_home, unique_id, cross_correlations_file_name)
+function [] = average_and_concat_cross_correlations(git_home, unique_id, cross_correlations_file_name)
 % DESCRIPTION:
 %   Computes cross-correlations or convolutions between eeg signal and audio
 %   stimuli across all subjects, channels and trials for each condition
