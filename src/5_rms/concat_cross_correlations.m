@@ -9,9 +9,10 @@ end
 
     %% Main
     cd(git_home)    
-    file_struct = dir(fullfile('data/*/cross_correlations.mat'));
+    addpath('src/tools/')
+    file_struct = dir(fullfile('data/2_cross_correlations/*/cross_correlations.mat'));
     data = combine_cross_correlations(file_struct);
-    writetable(data, 'data/aggregate/raw_max.csv')
+    writetable(data, 'data/5_rms/maximum.csv')
 %     quit
         
     %% Combine data file from each subject

@@ -13,7 +13,8 @@ end
 
     %% 1. Import data
     cd(git_home)
-    addpath(fullfile('data', subject_number)) % add subject data to path
+    addpath('src/tools/')
+    addpath(fullfile('data/1_preprocessing', subject_number)) % add subject data to path
     load('eeg_data');
     
     %% 2. Epoch order
@@ -47,7 +48,7 @@ end
         array2table(epoch_rms)];
     
     % Write data
-    save(fullfile('data', subject_number, 'rms'), 'rms_data')
+    save(fullfile('data/5_rms', subject_number, 'rms'), 'rms_data')
     
     %% Quit
     quit

@@ -10,9 +10,9 @@ arguments
 end
 
     %% Main
-    file_struct = dir(fullfile('data/*/rms.mat'));
+    file_struct = dir(fullfile('data/5_rms/*/rms.mat'));
     data = combine_rms(file_struct);
-    writetable(data, 'data/aggregate/rms.csv')
+    writetable(data, 'data/5_rms/rms.csv')
     quit
 
     %% Functions

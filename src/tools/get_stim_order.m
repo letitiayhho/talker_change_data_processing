@@ -11,10 +11,11 @@ end
     fprintf(1, strcat('Fetching stim order for subject #', subject_number, '\n'))
 
     %% 1. Import data
-    addpath(fullfile('data', subject_number)) % add subject data to path
+    addpath(fullfile('data/1_preprocessing', subject_number)) % add subject data to path
     load('eeg_data');
     load('epoch_order_original');
     load('epoch_order_pruned');
+    addpath(fullfile('data/0_raw_data', subject_number))
     stim_order_original = readtable('stim_order.txt');
 
     %% 2. Match EEG epochs with words
