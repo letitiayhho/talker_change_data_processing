@@ -1,0 +1,22 @@
+---
+title: "RMS models"
+author: "Letitia Ho"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# knitr::opts_chunk$set(echo = FALSE, fig.width=12, fig.height=2)
+knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing")
+library("dplyr")
+library("ggplot2")
+library("ggpubr")
+library("kableExtra")
+```
+
+```{r load_data, include=FALSE}
+source("src/tools/functions.R")
+xcorr <- read.csv('data/5_rms/maximum.csv')
+rms <- read.csv('data/5_rms/rms.csv')
+```
+
