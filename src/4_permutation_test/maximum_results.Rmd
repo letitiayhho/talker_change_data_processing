@@ -1,7 +1,7 @@
 ---
 title: "Maximum cross-correlation values"
 author: "Letitia Ho"
-date: "10/30/2020"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: html_document
 ---
 
@@ -15,10 +15,9 @@ library("kableExtra")
 ```
 
 ```{r load_data, include=FALSE}
-setwd("/Users/letitiaho/src/talker_change_data_processing")
-source("src/plot_shuffles_functions.R")
-original <- read.csv('data/aggregate/maximum.csv')
-shuffled <- read.csv('data/aggregate/shuffled_maximum.csv')
+source("src/tools/functions.R")
+original <- read.csv('data/4_permutation_test/maximum.csv')
+shuffled <- read.csv('data/4_permutation_test/shuffled_maximum.csv')
 ```
 
 

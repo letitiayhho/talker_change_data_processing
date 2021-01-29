@@ -1,7 +1,7 @@
 ---
 title: "Lag of maximum cross-correlation values"
 author: "Letitia Ho"
-date: "10/30/2020"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: html_document
 ---
 
@@ -16,10 +16,9 @@ library("stringr")
 ```
 
 ```{r load_data, include=FALSE}
-setwd("/Users/letitiaho/src/talker_change_data_processing")
-source("src/plot_shuffles_functions.R")
-original <- read.csv('data/aggregate/lag.csv')
-shuffled <- read.csv('data/aggregate/shuffled_lag.csv')
+source("src/tools/functions.R")
+original <- read.csv('data/4_permutation_test/lag.csv')
+shuffled <- read.csv('data/4_permutation_test/shuffled_lag.csv')
 ```
 
 ```{r}
