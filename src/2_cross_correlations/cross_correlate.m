@@ -18,9 +18,9 @@ end
 
     %% 1. Import data
     cd(git_home)
-    addpath(fullfile('data', subject_number)) % add subject data to path
-    addpath(fullfile('data/stim/original')) % add audio stimuli directory to path
-    addpath('src/')
+    addpath(fullfile('data/1_preprocessing/', subject_number)) % add subject data to path
+    addpath(fullfile('data/0_raw_data/stim/original')) % add audio stimuli directory to path
+    addpath('src/tools')
     
     % Import EEG data
     load('eeg_data')
@@ -59,16 +59,17 @@ end
          end
     end
 
-    %% 3. Write data files
+    %% 3. Split condition codes up
+    condition = get_split_conditions(stim_order.type);
+    
+    %% 4. Write data files
     % Add relevant info to data tables
-    cross_correlations = table(repmat(subject_number, height(stim_order), 1),...
-        [stim_order.type],...
-        [stim_order.epoch],...
-        [stim_order.word],...
-        [abs_average],...
-        [maximum],...
-        [lag],...
-        'VariableNames', {'subject_number', 'condition', 'epoch', 'word', 'abs_average', 'maximum', 'lag'});
+    cross_correlations = [table(repmat(subject_number, size(stim_order, 1), 1), 'VariableNames', {'subject_number'}),...
+        condition,...
+        table(stim_order.epoch, 'VariableNames', {'epoch'}),...
+        table(stim_order.word, 'VariableNames', {'word'}),...
+        array2table(maximum),...
+        array2table(lag)];
 
     % Write data
     if shuffle
@@ -76,7 +77,7 @@ end
     else
         cross_correlations_file_name = 'cross_correlations';
     end
-    fp = fullfile('data', subject_number, cross_correlations_file_name);
+    fp = fullfile('data/2_cross_correlations', subject_number, cross_correlations_file_name);
     fprintf(1, strcat('\nWriting data to /', fp, '\n'))
     save(fp, 'cross_correlations');
 end

@@ -24,6 +24,6 @@ cd "$GIT_HOME"
 log_file="data/logs/$(date +%s).log"
 
 while read -r subject_number; do
-    matlab -nodisplay -r "addpath('src'); cross_correlate('$GIT_HOME', '$subject_number'); quit" 2>&1 \
+    matlab -nodisplay -r "addpath('src/2_cross_correlations'); cross_correlate('$GIT_HOME', '$subject_number'); quit" 2>&1 \
         | tee -a "$log_file"
 done < ./scripts/subject_numbers.txt
