@@ -1,0 +1,22 @@
+#!/bin/bash
+set -euo pipefail
+
+usage() {
+    cat <<eof >&2
+usage: $0
+
+    description
+        wrapper script for combining rms values from all 
+        subjects into one file
+eof
+    exit 1
+}
+
+if [[ $# -ne 0 ]]; then
+    usage
+fi
+
+GIT_HOME="$(git rev-parse --show-toplevel)"
+cd "$GIT_HOME"
+
+matlab -nodisplay -r "addpath('src/5_rms'); get_rms_for_all_subjects('$GIT_HOME')"

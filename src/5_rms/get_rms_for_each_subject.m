@@ -1,19 +1,16 @@
-function[] = get_rms(git_home, subject_number)
+function[rms_data] = get_rms_for_each_subject(subject_number)
 % DESCRIPTION:
 %     Computes RMS, a measure of overall power, for each trial
 %
 % OUTPUT:
 %     Writes rms.mat for each subject
 arguments
-    git_home char
     subject_number char
 end
 
     fprintf(1, strcat('Computing RMS from subject #', subject_number, '\n'))
 
     %% 1. Import data
-    cd(git_home)
-    addpath('src/tools/')
     addpath(fullfile('data/1_preprocessing', subject_number)) % add subject data to path
     load('eeg_data');
     
@@ -46,10 +43,5 @@ end
         table(stim_order.epoch, 'VariableNames', {'epoch'}),...
         table(stim_order.word, 'VariableNames', {'word'}),...
         array2table(epoch_rms)];
-    
-    % Write data
-    save(fullfile('data/5_rms', subject_number, 'rms'), 'rms_data')
-    
-    %% Quit
-    quit
+    save(fullfile('data/5_rms/tmp', subject_number, 'rms'), 'rms_data')
 end

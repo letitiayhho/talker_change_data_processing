@@ -16,7 +16,8 @@ library("kableExtra")
 
 ```{r load_data, include=FALSE}
 source("src/tools/functions.R")
+old_xcorr <- read.csv('data/5_rms/maximumcopy.csv')
 xcorr <- read.csv('data/5_rms/maximum.csv')
-rms <- read.csv('data/5_rms/rms.csv')
+# rms <- read.csv('data/5_rms/rms.csv')
 ```
 
