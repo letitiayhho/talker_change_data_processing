@@ -62,36 +62,16 @@ channel$log_xcorr <- log(channel$xcorr)
 channel <- channel[complete.cases(channel),]
 ```
 
-**Cross correlations by RMS value**
-```{r, warning=FALSE}
-ggplot(channel, aes(x = log_rms, y = log_xcorr)) + 
-  geom_point(aes(color = factor(talker)))
-```
-
-**Model**
+**Model with mixed effects for talker**
 ```{r}
-# Regular model
-# x_bar <- mean(channel$log_rms, na.rm = TRUE)
-# model <- quap(
-#     alist(
-#         log_xcorr ~ dnorm(mu ,sigma) ,
-#         mu <- a + b*(log_rms - x_bar) ,
-#         a ~ dnorm(0, 10) ,
-#         b ~ dnorm(0, 10),
-#         sigma ~ dexp(10)
-#     ) , data = channel)
-# precis(mod)
-```
-
-```{r}
-# Model with mixed effects for talker
+# Create data frame for model 
 df.ulam <- list(log_rms = channel$log_rms,
                 log_xcorr = channel$log_xcorr)
 
-# Recode talker to 1s and 2s to try and get link() to work
+# Recode talker to 1s and 2s to get link() to work
 df.ulam$talker <- ifelse(channel$talker == "S", 1, 2)
 
-# Model
+# Fit model
 talker_model <- ulam(
   alist(
     log_xcorr ~ dnorm(mu, sigma),
@@ -104,49 +84,24 @@ talker_model <- ulam(
     Rho ~ lkj_corr(2)
   ), data = df.ulam, chains = 4, cores = 4)
 
+# Model summary
 precis(talker_model, depth = 2)
 ```
 
-**Plot posterior parameter distributions**
-
+**Plot posterior parameter predictions**
 ```{r}
-# Same talker
 rms_seq <- seq(from = 0, to = 3, by = 0.1)
 
-# Get raw data
-same_talker_rms <- df.ulam$log_rms[df.ulam$talker == 1]
-same_talker_xcorr <- df.ulam$log_xcorr[df.ulam$talker == 1]
-
-# Get posterior
+# Extract posterior for same talker
 s_mu <- link(talker_model, data = data.frame(talker = 1, log_rms = rms_seq))
 s_mu_mean <- apply(s_mu, 2, mean)
 s_mu_ci <- apply(s_mu, 2, PI, prob = 0.95)
 
-# Plot
-plot(same_talker_rms, same_talker_xcorr, pch = 16, col = rangi2, xlim = c(0, 3), ylim = c(0, 8))
-lines(rms_seq, s_mu_mean, lwd = 2)
-shade(s_mu_ci, rms_seq, col = col.alpha(rangi2, 0.3))
-```
-
-```{r}
-# Different talker
-# Get raw data
-different_talker_rms <- df.ulam$log_rms[df.ulam$talker == 2]
-different_talker_xcorr <- df.ulam$log_xcorr[df.ulam$talker == 2]
-
-# Get posterior
+# Extract posterior for different talker
 t_mu <- link(talker_model, data = data.frame(talker = 2, log_rms = rms_seq))
 t_mu_mean <- apply(t_mu, 2, mean)
 t_mu_ci <- apply(t_mu, 2, PI, prob = 0.95)
 
-# Plot
-plot(different_talker_rms, different_talker_xcorr, pch = 16, col = rangi2, xlim = c(0, 3), ylim = c(0, 8))
-lines(rms_seq, t_mu_mean, lwd = 2)
-shade(t_mu_ci, rms_seq, col = col.alpha(rangi2, 0.3))
-```
-
-
-```{r}
 # Generate a data frame for plotting
 plot_df <- data.frame(seq = rms_seq,
                 t_mu_mean = t_mu_mean,
@@ -156,81 +111,19 @@ plot_df <- data.frame(seq = rms_seq,
                 s_ci_min = s_mu_ci[1,],
                 s_ci_max = s_mu_ci[2,])
 
+# Plot
 ggplot(NULL) +
-  geom_point(data = channel, aes(x = log_rms, y = log_xcorr, color = factor(talker))) +
-  scale_color_manual(values = c("#2D708EFF", "#29AF7FFF")) +
-  geom_line(data = plot_df, color = '#20A387FF', aes(x = seq, y = t_mu_mean)) +
-  geom_line(data = plot_df, color = '#33638DFF', aes(x = seq, y = s_mu_mean)) +
-  geom_ribbon(data = plot_df, aes(x = rms_seq, ymin = t_ci_min, ymax = t_ci_max), fill = "grey70", alpha = 0.2) +
-  geom_ribbon(data = plot_df, aes(x = rms_seq, ymin = s_ci_min, ymax = s_ci_max), fill = "grey70", alpha = 0.2) +
   ylim(0, 8) + 
-  xlim(0, 3)
+  xlim(0, 3) +
+  
+  # Plot raw data
+  geom_point(data = channel, alpha = 0.5, stroke = 0, size = 2, aes(x = log_rms, y = log_xcorr, color = factor(talker))) +
+  scale_color_manual(values = c("#2D708EFF", "#29AF7FFF")) +
+  
+  # Plot lines with 95% CI
+  geom_line(data = plot_df, size = 0.8, color = '#20A387FF', aes(x = seq, y = t_mu_mean)) +
+  geom_line(data = plot_df, size = 0.8, color = '#33638DFF', aes(x = seq, y = s_mu_mean)) +
+  geom_ribbon(data = plot_df, aes(x = rms_seq, ymin = t_ci_min, ymax = t_ci_max), fill = "#29AF7FFF", alpha = 0.2) +
+  geom_ribbon(data = plot_df, aes(x = rms_seq, ymin = s_ci_min, ymax = s_ci_max), fill = "#2D708EFF", alpha = 0.2) 
+
 ```
-
-
-```{r}
-# use link? gets a sample of values from the posterior distribution for each parameter (so 1000 alphas and 1000 betas... is that what we want? I guess I can plot the distribution of b for different talker vs b for same talker)
-
-
-# and plot the averages?
-```
-
-
-```{r}
-# Reparameterized model
-# reparam_model <- ulam(
-#   alist(
-#     log_xcorr ~ normal(mu, sigma),
-#     mu <- a[talker] + b[talker]*log_rms,
-#     
-#     # adaptive priors- non-centered
-#     transpars > matrix[talker, 2]:b <- compose_noncentered(sigma_talker, Rho, z_talker),
-#     matrix[2, talker]:z_talker ~ normal(0, 10),
-#     
-#     # fixed priors
-#     a[talker] ~ normal(0, 10),
-#     vector[2]:sigma_talker ~ dexp(1),
-#     cholesky_factor_corr[2]:Rho ~ lkj_corr_cholesky(2),
-#     
-#     # compute ordinary correlation matrixes from Cholesky factors
-#     gq> matrix[2, 2]:Rho <<- Chol_to_Corr(Rho)
-#   ), data = ulam_df, chains = 4, cores = 4)
-```
-
-
-```{r}
-# 
-# 
-# model <- lm(model_df$xcorr ~ model_df$rms)
-# summary(model)
-
-# x_bar <- mean(left_superior_parietal)
-# med <- median(xcorr$maximum40)
-
-
-# model_df <- list(subject_number = factor(rms$subject_number),
-#                  rms = left_superior_parietal,
-#                  xcorr = xcorr$maximum40)
-
-# model_chan_40 <- quap(
-#     alist(
-#         xcorr ~ dstudent(mu ,sigma) ,
-#         mu <- a + b*(rms - x_bar) ,
-#         a ~ dnorm(-70, 10) ,
-#         b ~ dnorm(80, 5),
-#         sigma ~ dexp(10)
-#     ) , data = model_df)
-
-# Fit model
-# cluster_m1 <- ulam(
-#   alist(
-#     cluster_sizes ~ dbinom(128, p),
-#     logit(p) <- a[subject_number] + bT*talker + bM*meaning + bC*constraint,
-#       c(bT, bM, bC) ~ dnorm(0, 0.5),
-#       a[subject_number] ~ dnorm(a_bar, sigma),
-#         a_bar ~ dnorm(0, 1.5),
-#         sigma ~ dexp(1)
-#   ), data = clusters_df, chains = 4, cores = 4, log_lik = TRUE)
-# save(cluster_m1, file = "cluster_m1.Rda")
-```
-
