@@ -1,0 +1,44 @@
+---
+title: "Compile model stats"
+author: "Letitia Ho"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing")
+library(dplyr)
+library(readr)
+theme_set(theme_minimal())  
+```
+
+```{r}
+# Get list of models
+models <- dir(path = "data/5_rms/models")
+channel_numbers <- as.numeric(parse_number(models))
+```
+
+
+```{r}
+means <- c()
+sds <- c()
+for (i in 1:128) {
+  
+  # Load the model
+  load(file = file.path("data/5_rms/models", models[i]))
+  
+  # Compile stats into a data frame
+  params <- precis(model, depth = 2)
+  means <- rbind(means, params$mean)
+  sds <- rbind(sds, params$sd)
+}
+
+colnames(means) <- rownames(params)
+colnames(sds) <- rownames(params)
+means$channel <- channel_numbers
+sds$channel <- channel_numbers
+  
+# z-test on distributions for b_same and b_different
+  
+```
+
