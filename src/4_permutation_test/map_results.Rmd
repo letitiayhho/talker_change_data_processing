@@ -20,62 +20,6 @@ original <- read.csv('data/4_permutation_test/maximum.csv')
 shuffled <- read.csv('data/4_permutation_test/shuffled_maximum.csv')
 ```
 
-```{r plot map}
-get_sig_channels <- function(data, variable) {
-  sig_channels <- which(data[[variable]] < 0.05)
-}
-
-get_ps <- function(data, channels, condition) {
-  level <- data[[condition]]
-  p_values <- c()
-  for (i in 1:128) {
-    # Exit early if not in list of significant channels
-    if (!(i %in% channels)) {p_values[i] = NaN}
-    
-    # Recoding values if too small or too large
-    else {
-      if (level[i] > 0.05) {p_values[i] <- NaN}
-      else if (level[i] == 0) {p_values[i] <- 1/210}
-      else {p_values[i] <- level[i]}
-    }
-  }
-  return(p_values)
-}
-
-get_map <- function(df, levels) {
-  ggplot() +
-    geom_point(data = df, aes(x = x, y = y, 
-                              size = 1/group1, 
-                              colour = "#B8DE29FF",
-                              alpha = 0.5,
-                              stroke = 0)) +
-    geom_point(data = df, aes(x = x, y = y, 
-                              size = 1/group2,
-                              colour = "#287D8EFF",
-                              alpha = 0.5,
-                              stroke = 0)) +
-    geom_point(data = df, aes(x = x, y = y, 
-                              size = 1,
-                              alpha = 0.5,
-                              stroke = 0)) + 
-    scale_color_discrete(name = "Level", labels = levels) + 
-    guides(size = FALSE, alpha = FALSE) +
-    ylim(0, 900) +
-    xlim(0, 900) +
-    annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
-    annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
-    theme(axis.line=element_blank(),axis.text.x=element_blank(),
-          axis.text.y=element_blank(),axis.ticks=element_blank(),
-          axis.title.x=element_blank(),
-          axis.title.y=element_blank(),
-          panel.background=element_blank(),
-          panel.border=element_blank(),
-          panel.grid.major=element_blank(),
-          panel.grid.minor=element_blank(),
-          plot.background=element_blank())
-}
-```
-
 ```{r}
 # Get coordinates for electrodes on map
 coordinates <- get_layout()
