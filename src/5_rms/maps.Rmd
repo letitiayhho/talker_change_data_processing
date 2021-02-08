@@ -1,0 +1,230 @@
+---
+title: "Maps RMS and cross correlation relationships "
+author: "Letitia Ho"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/")
+setwd("/Users/letitiaho/src/talker_change_data_processing/")
+library("dplyr")
+library("ggplot2")
+library("ggpubr")
+library("kableExtra")
+source("src/tools/functions.R")
+source("src/5_rms/functions.R")
+```
+
+```{r include=FALSE}
+# Identify the channels that track same and different talker stimuli significantly differently
+
+# Get coordinates for electrodes on map
+coordinates <- get_layout()
+
+# Compute significance of tracking each level for each channel
+original <- read.csv('data/4_permutation_test/maximum.csv')
+shuffled <- read.csv('data/4_permutation_test/shuffled_maximum.csv')
+levels <- get_all_channel_proportions(shuffled, original)
+
+# Compute significance of difference between levels in each condition for each channel
+level_differences <- get_all_channel_proportions_differences(shuffled, original)
+
+# Identify channels that differentiate between same and different talker
+talker_channels <- get_sig_channels(level_differences, "talker")
+```
+
+```{r}
+load("data/5_rms/model_means.RDa")
+load("data/5_rms/model_sds.RDa")
+```
+
+```{r}
+# Gets the means and sd of the betas for both channels that 
+# significantly differentiated between the condition levels
+# (based on the permutation test) and channels that did not
+get_betas <- function(sig_channels, means, sds, beta) {
+  mean_sig <- rep(NA, 1, 128)
+  sd_sig <- rep(NA, 1, 128)
+  mean_unsig <- rep(NA, 1, 128)
+  sd_unsig <- rep(NA, 1, 128)
+  for (i in 1:128) {
+    if (i %in% talker_channels) {
+      mean_sig[i] <- means[[beta]][i]
+      sd_sig[i] <- sds[[beta]][i]
+    } else {
+      mean_unsig[i] <- means[[beta]][i]
+      sd_unsig[i] <- sds[[beta]][i]
+    }
+  }
+  return(data.frame(mean_sig, sd_sig, mean_unsig, sd_unsig))
+}
+
+same_talker_df <- get_betas(talker_channels, means, sds, 'b[1]') %>%
+  cbind(coordinates)
+different_talker_df <- get_betas(talker_channels, means, sds, 'b[2]') %>%
+  cbind(coordinates)
+```
+
+So I first identified the channels that tracked the same talker vs different talker significantly differently based on the earlier permutation test. The left plots in each figure hightlight the channels that track the levels differently, the plots on the right hightlight the channels that don't differentiate between levels. In each figure, the size of the circle indicates a stronger relationship (slope) between attention (averaged left superior parietal RMS) and tracking (maximum cross correlation value) of the stimuli. The opacity of the circle is the inverse of the standard deviation of the posterior distribution of the slope parameter. Larger and more prominent channels indicate a stronger relationship between attention and tracking.
+
+**Figure 1**
+This figure shows the relationship between attention and tracking in **same**-talker stimuli for channels that differentiate between same- and different-talker stimuli (left) and those that don't (right). This figure was basically plotted to see whether the relationship between attention and tracking when processing same-talker stimuli is different between channels that role a role in talker normalization vs. channels that don't.  
+```{r fig.width=16, fig.height=8}
+ggplot() +
+  geom_point(data = same_talker_df, 
+             colour = "#ff5733",
+             aes(x = x, 
+                 y = y,
+                 size = mean_sig,
+                 alpha = 1/sd_sig,
+                 stroke = 0)) +
+  geom_point(data = same_talker_df, 
+             aes(x = x, 
+                 y = y,
+                 size = 0.1,
+                 alpha = 0.5,
+                 stroke = 0)) +
+  geom_point(data = same_talker_df, 
+             colour = "#ff5733",
+             aes(x = 1000+x, 
+                 y = y,
+                 size = mean_unsig,
+                 alpha = 1/sd_unsig,
+                 stroke = 0)) +
+  geom_point(data = same_talker_df,
+             aes(x = 1000+x,
+                 y = y,
+                 size = 0.1,
+                 alpha = 0.5,
+                 stroke = 0)) +
+  annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+  annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.background=element_blank())
+```
+
+**Figure 2**
+This figure shows the relationship between attention and tracking in **different**-talker stimuli for channels that differentiate between same- and different-talker stimuli (left) and those that don't (right). This figure was basically plotted to see whether the relationship between attention and tracking when processing different-talker stimuli is different between channels that role a role in talker normalization vs. channels that don't.  
+```{r fig.width=16, fig.height=8}
+ggplot() +
+  geom_point(data = different_talker_df, 
+             colour = "#287D8EFF",
+             aes(x = x, 
+                 y = y,
+                 size = mean_sig,
+                 alpha = 1/sd_sig,
+                 stroke = 0)) +
+  geom_point(data = different_talker_df,
+             aes(x = x,
+                 y = y,
+                 size = 0.1,
+                 alpha = 0.5,
+                 stroke = 0)) +
+  geom_point(data = different_talker_df, 
+             colour = "#287D8EFF",
+             aes(x = 1000+x, 
+                 y = y,
+                 size = mean_unsig,
+                 alpha = 1/sd_unsig,
+                 stroke = 0)) +
+  geom_point(data = different_talker_df,
+             aes(x = 1000+x,
+                 y = y,
+                 size = 0.1,
+                 alpha = 0.5,
+                 stroke = 0)) +
+  annotate("text", x=100, y=5, label= "L", alpha = 0.8) +
+  annotate("text", x=800, y=5, label= "R", alpha = 0.8) +
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.background=element_blank())
+```
+
+```{r}
+get_z <- function(mu_1, mu_2, sd_1, sd_2) {
+  z <- (mu_1 - mu_2)/(sqrt(sd_1^2 + sd_2^2))
+  p <- pnorm(z, lower.tail = FALSE)
+  return(list(z = z,
+              p = p))
+}
+
+# Z-scores between beta for same talker and different talker of each channel
+# Splits into list of z-scores for channels that significantly discriminate 
+# between condition levels, and channels that don't
+z_sig <- rep(NA, 1, 128)
+p_sig <- rep(NA, 1, 128)
+z_unsig <- rep(NA, 1, 128)
+p_unsig <- rep(NA, 1, 128)
+for (i in 1:128) {
+  if (i %in% talker_channels) {
+    z_results <- get_z(means$`b[1]`[i], means$`b[2]`[i], sds$`b[1]`[i], sds$`b[2]`[i])
+    z_sig[i] <- z_results$z
+    p_sig[i] <- z_results$p
+  } else {
+    z_results <- get_z(means$`b[1]`[i], means$`b[2]`[i], sds$`b[1]`[i], sds$`b[2]`[i])
+    z_unsig[i] <- z_results$z
+    p_unsig[i] <- z_results$p
+  }
+}
+
+# Bind into data frame
+diff_df <- data.frame(z_sig, p_sig, z_unsig, p_unsig, coordinates)
+```
+
+**Figure 3**
+This figure takes a two-sample z-score between 1. the posterior distribution of the slope parameter for same-talker and 2. the same distribution for different-talker. The z-score is supposed to be an indicator of how much the relationship between attention (RMS) and talker (maximum cross-correlation) changes between same- and different-talker trials. The plot on the left shows that channels that respond differently to same- vs different-talker stimuli. As in the previous figures, the figure on the right is meant to be a control condition. The question being asked here is "do the channels that are involved in talker normalization show a greater relationship between attention and tracking". Or "is attention invovled in tracking in channels involved in talker normalization" (something like that). If the answer is yes, channels that are involved in talker normalization control tracking via attention, then you would expect the plot on the left to be darker than the one on the right.
+```{r fig.width=16, fig.height=8}
+ggplot() +
+  geom_point(data = diff_df, 
+             colour = "#3356ba",
+             aes(x = x, 
+                 y = y,
+                 size = z_sig*100,
+                 alpha = log(1/p_sig),
+                 stroke = 0)) +
+  geom_point(data = diff_df,
+             aes(x = x,
+                 y = y,
+                 size = 0.01,
+                 alpha = 0.5,
+                 stroke = 0)) +
+  geom_point(data = diff_df, 
+             colour = "#3356ba",
+             aes(x = 1000+x, 
+                 y = y,
+                 size = z_unsig*100,
+                 alpha = log(1/p_unsig),
+                 stroke = 0)) +
+  geom_point(data = diff_df,
+             aes(x = 1000+x,
+                 y = y,
+                 size = 0.01,
+                 alpha = 0.5,
+                 stroke = 0)) +
+  annotate("text", x=100, y=5, label= "L", alpha = 0.8) +
+  annotate("text", x=800, y=5, label= "R", alpha = 0.8) +
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.background=element_blank())
+```
