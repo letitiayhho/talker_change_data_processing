@@ -31,6 +31,42 @@ levels <- get_all_channel_proportions(shuffled, original)
 level_differences <- get_all_channel_proportions_differences(shuffled, original)
 ```
 
+```{r}
+get_map <- function(df, levels_label) {
+  ggplot() +
+    geom_point(data = df, aes(x = x, y = y, 
+                              size = 1/group1, 
+                              colour = "#B8DE29FF",
+                              alpha = 0.5,
+                              stroke = 0)) +
+    geom_point(data = df, aes(x = x, y = y, 
+                              size = 1/group2,
+                              colour = "#287D8EFF",
+                              alpha = 0.5,
+                              stroke = 0)) +
+    geom_point(data = df, aes(x = x, y = y, 
+                              size = 1,
+                              alpha = 0.5,
+                              stroke = 0)) + 
+    scale_color_discrete(name = "Level", labels = levels_label) + 
+    guides(size = FALSE, alpha = FALSE) +
+    ylim(0, 900) +
+    xlim(0, 900) +
+    annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+    annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+    theme(axis.line=element_blank(),axis.text.x=element_blank(),
+          axis.text.y=element_blank(),axis.ticks=element_blank(),
+          axis.title.x=element_blank(),
+          axis.title.y=element_blank(),
+          panel.background=element_blank(),
+          panel.border=element_blank(),
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
+          plot.background=element_blank())
+}
+```
+
+
 These maps depict the channels that show significantly different tracking between the two levels of each condition. The color of the point indicates the level that the channel shows significant tracking for, some channels significantly track both levels, some channels only track one. The size of the point is proportional to `1/p` and indicates how significant the tracking is. The larger the point, the more significant tracking in the channel. `p` was calculated as the proportion of resampled data with an average maximum cross-correlation more extreme than the observed average maximum cross-correlation value averaged across all participants for each condition level. (The smallest p-value was mapped from `0` to `1/210`, since there were only `208` resamplings Laplace's rule of succession was used to estimate the conservative probability of a more extreme value.)
 
 **Talker**
