@@ -180,7 +180,7 @@ get_all_channel_proportions_differences <- function(shuffled, original) {
 ## MAPS
 
 get_layout <- function() { 
-  fp <- "/Users/letitiaho/src/talker_change_data_processing/data/aggregate/2d_coordinates"
+  fp <- "/Users/letitiaho/src/talker_change_data_processing/data/3_channel_locations/2d_coordinates"
   coordinates <- read.delim(fp, header = FALSE)
   x <- coordinates[[1]]
   y <- -coordinates[[2]]+ 2*mean(coordinates[[2]]) # flip y coords and return to original center
@@ -206,39 +206,6 @@ get_ps <- function(data, channels, condition) {
     }
   }
   return(p_values)
-}
-
-get_map <- function(df, levels) {
-  ggplot() +
-    geom_point(data = df, aes(x = x, y = y, 
-                              size = 1/group1, 
-                              colour = "#B8DE29FF",
-                              alpha = 0.5,
-                              stroke = 0)) +
-    geom_point(data = df, aes(x = x, y = y, 
-                              size = 1/group2,
-                              colour = "#287D8EFF",
-                              alpha = 0.5,
-                              stroke = 0)) +
-    geom_point(data = df, aes(x = x, y = y, 
-                              size = 1,
-                              alpha = 0.5,
-                              stroke = 0)) + 
-    scale_color_discrete(name = "Level", labels = levels) + 
-    guides(size = FALSE, alpha = FALSE) +
-    ylim(0, 900) +
-    xlim(0, 900) +
-    annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
-    annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
-    theme(axis.line=element_blank(),axis.text.x=element_blank(),
-          axis.text.y=element_blank(),axis.ticks=element_blank(),
-          axis.title.x=element_blank(),
-          axis.title.y=element_blank(),
-          panel.background=element_blank(),
-          panel.border=element_blank(),
-          panel.grid.major=element_blank(),
-          panel.grid.minor=element_blank(),
-          plot.background=element_blank())
 }
 
 ## CLUSTERS
