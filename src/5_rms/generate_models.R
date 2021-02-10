@@ -2,12 +2,13 @@
 args <- commandArgs(trailingOnly = TRUE)
 start_channel <- as.character(args[1])
 end_channel <- as.character(args[2])
+model_type <- as.character(args[3]) # either simple_linear or multilevel
 
 # Load libraries
 library(dplyr)
 library(ggplot2)
 library(rethinking)
-source("src/5_rms/functions.R")
+source(paste("src/5_rms/", model_type, "_models_functions.R", sep = ""))
 
 # Load data
 xcorr <- read.csv('data/5_rms/maximum.csv')

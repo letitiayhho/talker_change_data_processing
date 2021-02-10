@@ -2,7 +2,16 @@
 
 set -euo pipefail
 
+if [[ $# -ne 3 ]]; then
+    echo "usage: $0 <start_channel> <end_channel> <multilevel/simple_linear>" >&2
+    exit 1
+fi
+
 cd "$(git rev-parse --show-toplevel)"
 
-Rscript --verbose src/5_rms/generate_models.R 1 2
+start_channel="$1"
+end_channel="$2"
+model_type="$3"
+
+Rscript --verbose src/5_rms/generate_models.R $start_channel $end_channel $model_type
 

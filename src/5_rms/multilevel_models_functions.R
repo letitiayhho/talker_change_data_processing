@@ -30,7 +30,7 @@ clean_data <- function(rms, xcorr, channel_number) {
   return(clean_df)
 }
 
-get_model <- function(df) {
+get_multilevel_model <- function(df) {
   # Create data frame for model 
   ulam_df <- list(log_rms = df$log_rms,
                   log_xcorr = df$log_xcorr,
@@ -112,12 +112,12 @@ get_model_for_one_channel <- function(rms, xcorr, channel_number) {
   clean_df <- clean_data(rms, xcorr, channel_number)
   
   # Run and save model
-  model <- get_model(clean_df)
-  model_path <- paste('data/5_rms/models/channel_', as.character(channel_number), '.RDa', sep = "")
+  model <- get_multilevel_model(clean_df)
+  model_path <- paste('data/5_rms/models/multilevel_models/channel_', as.character(channel_number), '.RDa', sep = "")
   save(model, file = model_path)
   
   # Plot and save figure
-  figure_path <- paste("data/5_rms/figures/channel_", as.character(channel_number), '.png', sep = "")
+  figure_path <- paste("data/5_rms/figures/multilevel_models/channel_", as.character(channel_number), '.png', sep = "")
   figure <- get_figure(model, clean_df)
   ggsave(figure_path, plot = figure)
 
