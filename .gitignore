@@ -12,5 +12,8 @@
 # machine-specific installation files
 installer_input.txt
 
-# data files
-data/
+# archive
+archive/
+
+# ignore all data folders
+*/data/*
