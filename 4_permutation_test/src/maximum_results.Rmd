@@ -15,9 +15,9 @@ library("kableExtra")
 ```
 
 ```{r load_data, include=FALSE}
-source("src/tools/functions.R")
-original <- read.csv('data/4_permutation_test/maximum.csv')
-shuffled <- read.csv('data/4_permutation_test/shuffled_maximum.csv')
+source("tools/functions.R")
+original <- read.csv('4_permutation_test/data/original_maximum.csv')
+shuffled <- read.csv('4_permutation_test/data/shuffled_maximum.csv')
 ```
 
 
@@ -32,7 +32,7 @@ To answer this question I ran a permutation test on the maximum cross correlatio
 ```{r}
 # Summarize the data
 shuffled_means <- aggregate(shuffled[,4:131], by=list(Category=shuffled$shuffle_number), FUN=mean)
-original_means <- as.data.frame(t(apply(as.matrix(original[,3:130]), MARGIN = 2, mean)))
+original_means <- as.data.frame(t(apply(as.matrix(original[,3:131]), MARGIN = 2, mean)))
 
 # Plot histograms for each channel
 channel_1 <- histogram(shuffled_means$mean_1, original_means$mean_1, "Channel #1")
