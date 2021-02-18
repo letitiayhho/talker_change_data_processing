@@ -8,14 +8,13 @@ function[] = shape_shuffles(statistic)
 %     Writes files shuffed_<statistic>.csv and <statistic>.csv
 
 arguments
-    git_home string = '/Users/letitiaho/src/talker_change_data_processing'
     statistic char = 'maximum' % options are 'maximum', 'lag' and 'abs_average'
 end
 
 %% Main
 % get file names
-shuffled_files = get_file_names('data/aggregate/shuffles/', statistic);
-original_files = get_file_names('data/aggregate/', statistic);
+shuffled_files = get_file_names('4_permutation_test/data/shuffles/', statistic);
+original_files = get_file_names('2_cross_correlations/data/', statistic);
 
 % average across original data
 original_averages = average_across_conditions(original_files);
@@ -24,8 +23,8 @@ original_averages = average_across_conditions(original_files);
 shuffled_averages = get_shuffled_averages(shuffled_files);
 
 % write to spreadsheet
-writetable(original_averages, strcat('data/aggregate/', statistic, '.csv'))
-writetable(shuffled_averages, strcat('data/aggregate/shuffled_', statistic, '.csv'))
+writetable(original_averages, strcat('4_permutation_test/data/original_', statistic, '.csv'))
+writetable(shuffled_averages, strcat('4_permutation_test/data/shuffled_', statistic, '.csv'))
 
 %% Functions
 % function to get all shuffled data file_names
