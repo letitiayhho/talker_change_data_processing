@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -exuo pipefail
+set -euo pipefail
 
 GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME"
@@ -8,3 +8,4 @@ statistic="$1"
 
 matlab -nodisplay -r "addpath('4_permutation_test/src'); shape_shuffles('$statistic')"
 
+echo Donedidit

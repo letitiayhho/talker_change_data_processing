@@ -17,4 +17,3 @@ for i in $(seq 1 "$n_tasks"); do
     sleep 0.2
 done
 
-#tar cJvf output.tar.xz data/aggregate/*.mat data/logs

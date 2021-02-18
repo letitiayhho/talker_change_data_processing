@@ -9,14 +9,15 @@ REMOTE_EEG_DATA_PATH="/mnt/compellent/labs/hcnlab/Soph/Talker Change followup/Ta
 cd "$(git rev-parse --show-toplevel)"
 
 # Copy the *.sfp and *.raw files for all subjects that we have a "stim_order.txt" file for
-for subject_dir in data/*; do
-
-    if [ ! -d "$subject_dir" ] ; then
-        continue
-    fi
+while read -r subject_number; do
 
     # Extract subject number from filename
-    subject_number="$(echo "$subject_dir" | sed -E 's,data/(...),\1,')"
+    subject_dir="0_set_up_and_raw_data/data/$subject_number"
+
+    if [ ! -d "$subject_dir" ] ; then
+        echo subject "$subject_dir" does not exist >&2
+        exit 1
+    fi
 
     if ! scp uchicago:"'$REMOTE_SFP_DATA_PATH/${subject_number}_${subject_number}_${subject_number}.sfp'" "$subject_dir/channel_locations.sfp"; then
         echo "Couldn't find channel_locations.sfp for subject $subject_number, skipping ..." >&2
@@ -29,4 +30,4 @@ for subject_dir in data/*; do
         mv "$subject_dir" "/tmp/$subject_dir-$(uuidgen)"
     fi
 
-done
+done < 0_set_up_and_raw_data/data/subject_numbers.txt

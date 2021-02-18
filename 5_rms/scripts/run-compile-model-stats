@@ -11,5 +11,5 @@ cd "$(git rev-parse --show-toplevel)"
 
 model_type="$1"
 
-Rscript --verbose src/5_rms/compile_model_stats.R $model_type
+Rscript --verbose 5_rms/src/compile_model_stats.R $model_type
 

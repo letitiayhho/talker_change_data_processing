@@ -26,11 +26,11 @@ for downloaded_file in "$LOCAL_STIM_DATA_PATH"/talkerchng_subj*.txt; do
     SUBJECT_NUMBER="$(echo "$downloaded_file" | sed -E 's/^.*subj(...)\.txt$/\1/')"
 
     # Create a dir for each subject if it doesn't exist
-    SUBJECT_DIR="./data/$SUBJECT_NUMBER"
+    SUBJECT_DIR="0_set_up_and_raw_data/data/$SUBJECT_NUMBER"
     mkdir -p "$SUBJECT_DIR"
 
     # Move the file we just downloaded to the expected location
-    mv "$downloaded_file" "$SUBJECT_DIR/stim_order.txt"
+    mv "$downloaded_file" "0_set_up_and_raw_data/data/$SUBJECT_DIR/stim_order.txt"
 
 done
 

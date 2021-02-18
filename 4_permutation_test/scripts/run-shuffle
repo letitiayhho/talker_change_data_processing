@@ -12,9 +12,9 @@ GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME"
 
 unique_id="$SLURM_JOB_ID"
-log_file="data/logs/$unique_id.log"
+log_file="4_permutation_test/data/logs/$unique_id.log"
 
-matlab -nodisplay -r "addpath('src'); shuffle('$GIT_HOME', '1', '$unique_id')" 2>&1 \
+matlab -nodisplay -r "addpath('4_permutation_test/src'); shuffle('$GIT_HOME', '1', '$unique_id')" 2>&1 \
     | tee -a "$log_file"
 
 printf "\n\n Permutation tests complete \n\n"

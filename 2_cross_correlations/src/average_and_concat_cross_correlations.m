@@ -5,21 +5,22 @@ function [] = average_and_concat_cross_correlations(git_home, unique_id)
 
 arguments
     git_home char
+    unique_id char
 end
 
     %% Main
     cd(git_home)
-    file_struct = dir(fullfile('data/*/cross_correlations.mat'));
+    file_struct = dir(fullfile('2_cross_correlations/data/*/cross_correlations.mat'));
     statistics = {'maximum', 'lag'};
     shape_all(file_struct, statistics)
-        
+
     %% Call shape data on each statistic and append to file
     function shape_all(file_struct, statistics)
         for i = 1:length(statistics)
             statistic = statistics{i};
             data = shape(file_struct, statistic);
-            fileID = strcat('data/aggregate/cross_correlations_', statistic, '.mat');
-            
+            fileID = strcat('2_cross_correlations/data/cross_correlations_', statistic, '.mat');
+
             % Append if file exists, save if not
             if isfile(fileID)
                 previous_data = load(fileID).data;
@@ -47,7 +48,7 @@ end
             talker = grpstats(removevars(cross_correlations, {'meaning', 'constraint'}), {'subject_number', 'talker'});
             meaning = grpstats(removevars(cross_correlations, {'talker', 'constraint'}), {'subject_number', 'meaning'});
             constraint = grpstats(removevars(cross_correlations, {'talker', 'meaning'}), {'subject_number', 'constraint'});
-            
+
             % Make all variable names the same to combine them into a table
             talker.Properties.VariableNames = ['subject_number', 'condition', 'count', string(1:128)];
             meaning.Properties.VariableNames = ['subject_number', 'condition', 'count', string(1:128)];
@@ -61,7 +62,7 @@ end
 
     %% Load data of a single subject
     function [cross_correlations] = load_single_subject_data(path, statistic)
-        
+
         % Load data
         load(path);
 

@@ -16,9 +16,9 @@ library("stringr")
 ```
 
 ```{r load_data, include=FALSE}
-source("src/tools/functions.R")
-original <- read.csv('data/4_permutation_test/lag.csv')
-shuffled <- read.csv('data/4_permutation_test/shuffled_lag.csv')
+source("tools/functions.R")
+original <- read.csv('4_permutation_test/data/lag.csv')
+shuffled <- read.csv('4_permutation_test/data/shuffled_lag.csv')
 ```
 
 ```{r}

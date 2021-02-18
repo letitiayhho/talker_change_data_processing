@@ -14,7 +14,7 @@ library("ggplot2")
 library("ggpubr")
 library("rethinking")
 theme_set(theme_minimal())  
-source("src/tools/functions.R")
+source("tools/functions.R")
 ```
 
 ```{r include=FALSE}
@@ -24,8 +24,8 @@ source("src/tools/functions.R")
 coordinates <- get_layout()
 
 # Compute significance of tracking each level for each channel
-original <- read.csv('data/4_permutation_test/maximum.csv')
-shuffled <- read.csv('data/4_permutation_test/shuffled_maximum.csv')
+original <- read.csv('4_permutation_test/data/original_maximum.csv')
+shuffled <- read.csv('4_permutation_test/data/shuffled_maximum.csv')
 levels <- get_all_channel_proportions(shuffled, original)
 
 # Compute significance of difference between levels in each condition for each channel
@@ -40,8 +40,8 @@ So I first identified the channels that tracked the same talker vs different tal
 ### Simple linear model
 
 ```{r}
-load("data/5_rms/simple_linear_models_means.RDa")
-load("data/5_rms/simple_linear_models_sds.RDa")
+load("5_rms/data/simple_linear_models_means.RDa")
+load("5_rms/data/simple_linear_models_sds.RDa")
 
 b_sig <- rep(NA, 1, 128)
 sigma_sig <- rep(NA, 1, 128)
@@ -109,8 +109,8 @@ ggplot() +
 ###Multilevel Model
 
 ```{r}
-load("data/5_rms/multilevel_models_means.RDa")
-load("data/5_rms/multilevel_models_sds.RDa")
+load("5_rms/data/multilevel_models_means.RDa")
+load("5_rms/data/multilevel_models_sds.RDa")
 ```
 
 ```{r}

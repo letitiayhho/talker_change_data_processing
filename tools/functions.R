@@ -180,7 +180,7 @@ get_all_channel_proportions_differences <- function(shuffled, original) {
 ## MAPS
 
 get_layout <- function() { 
-  fp <- "/Users/letitiaho/src/talker_change_data_processing/data/3_channel_locations/2d_coordinates"
+  fp <- "/Users/letitiaho/src/talker_change_data_processing/3_channel_locations/data/2d_coordinates"
   coordinates <- read.delim(fp, header = FALSE)
   x <- coordinates[[1]]
   y <- -coordinates[[2]]+ 2*mean(coordinates[[2]]) # flip y coords and return to original center
@@ -211,7 +211,7 @@ get_ps <- function(data, channels, condition) {
 ## CLUSTERS
 
 get_channel_coordinates <- function() {
-  channels_fp <- "/Users/letitiaho/src/talker_change_data_processing/data/aggregate/mni_coordinates.txt"
+  channels_fp <- "/Users/letitiaho/src/talker_change_data_processing/3_channel_locations/data/mni_coordinates.txt"
   channels <- read.delim(channels_fp, header = FALSE) %>%
     filter(grepl('E', V2))
   channel_coordinates <- data.frame(x = channels$V3,

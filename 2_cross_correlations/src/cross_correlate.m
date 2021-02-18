@@ -18,10 +18,10 @@ end
 
     %% 1. Import data
     cd(git_home)
-    addpath(fullfile('data/1_preprocessing/', subject_number)) % add subject data to path
-    addpath(fullfile('data/0_raw_data/stim/original')) % add audio stimuli directory to path
-    addpath('src/tools')
-    
+    addpath(fullfile('1_preprocessing/data', subject_number)) % add subject data to path
+    addpath(fullfile('0_raw_data/data/stim/original')) % add audio stimuli directory to path
+    addpath('tools')
+
     % Import EEG data
     load('eeg_data')
 
@@ -40,18 +40,18 @@ end
 
         % Loop over epochs
          for j = 1:size(eeg_data, 3)
-             
+
              % Extract eeg epoch and interpolate
              epoch = double(eeg_data(i, :, j));
              resampled_epoch = resample(epoch, 44100, 1000);
-             
+
              % Load stimuli .wav file for epoch
              word = char(stim_order.word(j));
              auditory_stimuli = audioread(word);
 
              % Compute convolution and cross correlation
              [cross_correlations, lags] = xcorr(auditory_stimuli, resampled_epoch);
-             
+
              % Write statistics to data arrays
              abs_average(j, i) = mean(abs(cross_correlations));
              [maximum(j, i), I] = max(abs(cross_correlations));
@@ -61,7 +61,7 @@ end
 
     %% 3. Split condition codes up
     condition = get_split_conditions(stim_order.type);
-    
+
     %% 4. Write data files
     % Add relevant info to data tables
     cross_correlations = [table(repmat(subject_number, size(stim_order, 1), 1), 'VariableNames', {'subject_number'}),...
@@ -77,7 +77,7 @@ end
     else
         cross_correlations_file_name = 'cross_correlations';
     end
-    fp = fullfile('data/2_cross_correlations', subject_number, cross_correlations_file_name);
+    fp = fullfile('2_cross_correlations/data', subject_number, cross_correlations_file_name);
     fprintf(1, strcat('\nWriting data to /', fp, '\n'))
     save(fp, 'cross_correlations');
 end

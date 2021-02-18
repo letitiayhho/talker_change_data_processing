@@ -15,9 +15,9 @@ library("kableExtra")
 ```
 
 ```{r load_data, include=FALSE}
-source("src/tools/functions.R")
-original <- read.csv('data/4_permutation_test/maximum.csv')
-shuffled <- read.csv('data/4_permutation_test/shuffled_maximum.csv')
+source("tools/functions.R")
+original <- read.csv('4_permutation_test/data/original_maximum.csv')
+shuffled <- read.csv('4_permutation_test/data/shuffled_maximum.csv')
 ```
 
 ```{r}

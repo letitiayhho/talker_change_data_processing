@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 # loop over each files that we're passed
-for f in data/*/stim_order.txt; do
+for f in 0_set_up_and_raw_data/data/*/stim_order.txt; do
     tmp_f="$f.tmp"
     head -1 "$f" \
         | cut -f3,6 \

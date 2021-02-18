@@ -8,12 +8,12 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/")
-setwd("/Users/letitiaho/src/talker_change_data_processing/")
+#setwd("/Users/letitiaho/src/talker_change_data_processing/")
 library("dplyr")
 library("ggplot2")
 library("kableExtra")
 theme_set(theme_minimal())  
-source("src/tools/functions.R")
+source("tools/functions.R")
 ```
 
 #####Question

@@ -10,10 +10,10 @@ end
 
     %% 1. Import data
     cd(git_home)
-    addpath('src/tools')
-    addpath('src/5_rms')
-    subject_numbers = readmatrix('data/subject_numbers.txt');
-    
+    addpath('tools')
+    addpath('5_rms/src')
+    subject_numbers = readmatrix('0_set_up_and_raw_data/data/subject_numbers.txt');
+
     %% 2. Run get_rms over each subject
     data = table();
     for i = 1:length(subject_numbers)
@@ -21,10 +21,10 @@ end
         rms_data = get_rms_for_each_subject(subject_number);
         data = [data; rms_data];
     end
-    
+
     %% 3. Write data
-    writetable(data, 'data/5_rms/rms.csv')
-    
+    writetable(data, '5_rms/data/rms.csv')
+
     %% Quit
     quit
 end

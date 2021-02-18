@@ -13,5 +13,5 @@ start_channel="$1"
 end_channel="$2"
 model_type="$3"
 
-Rscript --verbose src/5_rms/generate_models.R $start_channel $end_channel $model_type
+Rscript --verbose 5_rms/src/generate_models.R $start_channel $end_channel $model_type
 
