@@ -17,6 +17,7 @@ archive/
 
 # ignore all data folders
 */data/*
+<<<<<<< HEAD
 
 # ignore markdown output
 *.html
