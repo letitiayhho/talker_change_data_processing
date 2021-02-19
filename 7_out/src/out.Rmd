@@ -18,13 +18,17 @@ source("tools/functions.R")
 
 #####Question
 
-**How do changes in sentence meaning and talker affect cortical tracking of speech?**
+How do changes in sentence meaning and talker affect cortical tracking of speech?
+
+**How do the psychological processes involved in speech processing change with stimulus demands on comprehension or perception?**
 
 ####Aim 1
 
-**Establish whether the cross-correlation is a reliable measure of the cortical tracking of speech signal**?
+**Establish whether the cross-correlation is a reliable measure of the cortical tracking of speech signal?**
 
 **Establish that the cortical tracking of speech signals varies with psychological processing**
+
+howard 2: **how does attention vary with a change in talker**
 
 In signal processing, the cross-correlation is a measure of similarity between two signals. Computing a cross correlation between stimuli and EEG signal may yield an indication of the extent to which cortical areas are tracking stimuli features. Three tests will be used to verify the cross-correlation as a measure of tracking. First, a permutation test randomizing stimuli-EEG pairings will indicate if the observed cross-correlation is greater than the cross-correlation between EEG signal and a randomize stimuli and due to chance. However, some channels may not significantly track the stimuli across all conditions. Channels that only track the stimuli under a single condition will not be revealed by this test. To identify channels that track only certain speech stimuli, the second permutation test will compare tracking of each condition to the tracking of randomized stimuli-EEG pairs. Evidence of condition-based tracking will also support cross correlation as a measure of meaningful stimuli processing, rather than the tracking of random noise. Lastly, to further demonstrate that channels are tracking stimuli features, the observed difference in tracking between the two levels in each condition will be compared to the difference computed between randomized EEG-stimuli pairings.
 
