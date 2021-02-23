@@ -21,6 +21,9 @@ shuffled <- read.csv('4_permutation_test/data/shuffled_maximum.csv')
 ```
 
 ```{r}
+# Number of permutations 
+permutations <- 500
+
 # Get coordinates for electrodes on map
 coordinates <- get_layout()
 
@@ -49,7 +52,8 @@ get_map <- function(df, levels_label) {
                               alpha = 0.5,
                               stroke = 0)) + 
     scale_color_discrete(name = "Level", labels = levels_label) + 
-    guides(size = FALSE, alpha = FALSE) +
+    scale_size_continuous(name = "p", breaks = c(20, 100, 200), labels = c("0.05", "0.01", "0.005")) +
+    guides(alpha = FALSE) +
     ylim(0, 900) +
     xlim(0, 900) +
     annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
@@ -67,7 +71,7 @@ get_map <- function(df, levels_label) {
 ```
 
 
-These maps depict the channels that show significantly different tracking between the two levels of each condition. The color of the point indicates the level that the channel shows significant tracking for, some channels significantly track both levels, some channels only track one. The size of the point is proportional to `1/p` and indicates how significant the tracking is. The larger the point, the more significant tracking in the channel. `p` was calculated as the proportion of resampled data with an average maximum cross-correlation more extreme than the observed average maximum cross-correlation value averaged across all participants for each condition level. (The smallest p-value was mapped from `0` to `1/210`, since there were only `208` resamplings Laplace's rule of succession was used to estimate the conservative probability of a more extreme value.)
+These maps depict the channels that show significantly different tracking between the two levels of each condition. The color of the point indicates the level that the channel shows significant tracking for, some channels significantly track both levels, some channels only track one. The size of the point is proportional to `1/p` and indicates how significant the tracking is. The larger the point, the more significant tracking in the channel. `p` was calculated as the proportion of resampled data with an average maximum cross-correlation more extreme than the observed average maximum cross-correlation value averaged across all participants for each condition level. (The smallest p-value was mapped from `0` to `1/502`, since there were only `502` resamplings Laplace's rule of succession was used to estimate the conservative probability of a more extreme value.)
 
 **Talker**
 
@@ -76,8 +80,8 @@ These maps depict the channels that show significantly different tracking betwee
 talker_channels <- get_sig_channels(level_differences, "talker")
 
 # Get p-values for tracking within each level
-same_talker <- get_ps(levels, talker_channels, "same_talker")
-different_talker <- get_ps(levels, talker_channels, "different_talker")
+same_talker <- get_ps(levels, talker_channels, "same_talker", 500)
+different_talker <- get_ps(levels, talker_channels, "different_talker", 500)
 
 # Create data frame for plotting
 talker_df <- data.frame(group1 = same_talker, group2 = different_talker, coordinates)
@@ -93,8 +97,8 @@ get_map(talker_df, c("Same talker", "Different talker"))
 meaning_channels <- get_sig_channels(level_differences, "meaning")
 
 # Get p-values for tracking within each level
-meaningful <- get_ps(levels, meaning_channels, "meaningful")
-nonsense <- get_ps(levels, meaning_channels, "nonsense")
+meaningful <- get_ps(levels, meaning_channels, "meaningful", 500)
+nonsense <- get_ps(levels, meaning_channels, "nonsense", 500)
 
 # Create data frame for plotting
 meaning_df <- data.frame(group1 = meaningful, group2 = nonsense, coordinates)
@@ -110,8 +114,8 @@ get_map(meaning_df, c("Meaningful", "Nonsense"))
 constraint_channels <- get_sig_channels(level_differences, "constraint")
 
 # Get p-values for tracking within each level
-low_constraint <- get_ps(levels, constraint_channels, "low_constraint")
-high_constraint <- get_ps(levels, constraint_channels, "high_constraint")
+low_constraint <- get_ps(levels, constraint_channels, "low_constraint", 500)
+high_constraint <- get_ps(levels, constraint_channels, "high_constraint", 500)
 
 # Create data frame for plotting
 constraint_df <- data.frame(group1 = low_constraint, group2 = high_constraint, coordinates)
