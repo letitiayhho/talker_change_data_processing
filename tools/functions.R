@@ -191,7 +191,7 @@ get_sig_channels <- function(data, variable) {
   sig_channels <- which(data[[variable]] < 0.05)
 }
 
-get_ps <- function(data, channels, condition) {
+get_ps <- function(data, channels, condition, permutations) {
   level <- data[[condition]]
   p_values <- c()
   for (i in 1:128) {
@@ -201,7 +201,7 @@ get_ps <- function(data, channels, condition) {
     # Recoding values if too small or too large
     else {
       if (level[i] > 0.05) {p_values[i] <- NaN}
-      else if (level[i] == 0) {p_values[i] <- 1/210}
+      else if (level[i] == 0) {p_values[i] <- 1/(permutations+2)}
       else {p_values[i] <- level[i]}
     }
   }
