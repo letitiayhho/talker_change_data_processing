@@ -192,20 +192,22 @@ get_sig_channels <- function(data, variable) {
 }
 
 get_ps <- function(data, channels, condition, permutations) {
-  level <- data[[condition]]
-  p_values <- c()
+  recoded_ps <- c()
   for (i in 1:128) {
+    # Get p-value for channel i
+    p <- data[[condition]][i]
+
     # Exit early if not in list of significant channels
-    if (!(i %in% channels)) {p_values[i] = NaN}
+    if (!(i %in% channels)) {recoded_ps[i] = NaN}
     
     # Recoding values if too small or too large
     else {
-      if (level[i] > 0.05) {p_values[i] <- NaN}
-      else if (level[i] == 0) {p_values[i] <- 1/(permutations+2)}
-      else {p_values[i] <- level[i]}
+      if (p > 0.05) {recoded_ps[i] <- NaN}
+      else if (p == 0) {recoded_ps[i] <- 1/(permutations+2)}
+      else {recoded_ps[i] <- p}
     }
   }
-  return(p_values)
+  return(recoded_ps)
 }
 
 ## CLUSTERS
