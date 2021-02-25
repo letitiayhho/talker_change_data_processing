@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, fig.width=12, fig.height=2)
-knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing")
+knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/4_permutation_test/")
 library("dplyr")
 library("ggplot2")
 library("ggpubr")
@@ -15,9 +15,10 @@ library("kableExtra")
 ```
 
 ```{r load_data, include=FALSE}
-source("tools/functions.R")
-original <- read.csv('4_permutation_test/data/original_maximum.csv')
-shuffled <- read.csv('4_permutation_test/data/shuffled_maximum.csv')
+# Load data
+source("../tools/functions.R")
+original <- read.csv('data/original_maximum.csv')
+shuffled <- read.csv('data/shuffled_maximum.csv')
 ```
 
 
@@ -27,21 +28,25 @@ To answer this question I ran a permutation test on the maximum cross correlatio
 
 ### Sample histograms of permutation test results
 
-**Figure 1**
+**Figure 1: Sample data from channels 1, 2, 3, and 40, 41, 42**
 
 ```{r}
 # Summarize the data
 shuffled_means <- aggregate(shuffled[,4:131], by=list(Category=shuffled$shuffle_number), FUN=mean)
 original_means <- as.data.frame(t(apply(as.matrix(original[,3:131]), MARGIN = 2, mean)))
 
-# Plot histograms for each channel
+# Create histograms for each channel
 channel_1 <- histogram(shuffled_means$mean_1, original_means$mean_1, "Channel #1")
 channel_2 <- histogram(shuffled_means$mean_2, original_means$mean_2, "Channel #2")
 channel_3 <- histogram(shuffled_means$mean_3, original_means$mean_3, "Channel #3")
 channel_40 <- histogram(shuffled_means$mean_40, original_means$mean_40, "Channel #40")
 channel_41 <- histogram(shuffled_means$mean_41, original_means$mean_41, "Channel #41")
 channel_42 <- histogram(shuffled_means$mean_42, original_means$mean_42, "Channel #42")
-ggarrange(channel_1, channel_2, channel_3, channel_40, channel_41, channel_42, ncol = 6, nrow = 1)
+
+# Plot and save
+plot <- ggarrange(channel_1, channel_2, channel_3, channel_40, channel_41, channel_42, ncol = 3, nrow = 2)
+plot
+#ggsave(plot, filename = 'figs/overall_samples.png', width = 12, height = 4)
 ```
 
 
@@ -64,18 +69,14 @@ To answer this question I ran a permutation test results for maximum cross corre
 
 ### Sample histograms of permutation test results
 
-**Figure 3: First three channels**
+**Figure 3: Sample data from channels 1 and 40**
 
 ```{r}
-plot_channel(shuffled, original, 1)
-plot_channel(shuffled, original, 2)
-plot_channel(shuffled, original, 3)
-```
-
-**Figure 4: Channel 30**
-
-```{r}
-plot_channel(shuffled, original, 30)
+channel_1 <- plot_channel(shuffled, original, 1)
+channel_40 <- plot_channel(shuffled, original, 40)
+plot <- ggarrange(channel_1, channel_40, ncol = 1, nrow = 2)
+plot
+#ggsave(plot, filename = 'figs/conditions.png', width = 12, height = 4)
 ```
 
 ### Proportions
@@ -95,19 +96,16 @@ plot_graded_table(all_channel_proportions)
 
 ## 3. Which channels distinguish between levels in a condition?
 
-**Figure 5: First three channels**
+**Figure 5: Sample data from channels**
 
 ```{r}
-plot_channel_differences(shuffled, original, 1)
-plot_channel_differences(shuffled, original, 2)
-plot_channel_differences(shuffled, original, 3)
+channel_1 <- plot_channel_differences(shuffled, original, 1)
+channel_40 <- plot_channel_differences(shuffled, original, 40)
+plot <- ggarrange(channel_1, channel_40, ncol = 1, nrow = 2)
+plot
+#ggsave(plot, filename = 'figs/condition_differences.png', width = 12, height = 4)
 ```
 
-**Figure 6: Channel 30**
-
-```{r}
-plot_channel_differences(shuffled, original, 30)
-```
 
 ### Proportions
 
