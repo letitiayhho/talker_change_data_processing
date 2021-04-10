@@ -17,7 +17,7 @@ library("stringr")
 
 ```{r load_data, include=FALSE}
 source("tools/functions.R")
-original <- read.csv('4_permutation_test/data/lag.csv')
+original <- read.csv('4_permutation_test/data/original_lag.csv')
 shuffled <- read.csv('4_permutation_test/data/shuffled_lag.csv')
 ```
 
@@ -134,14 +134,14 @@ get_levels <- function(condition) {
 
 select_data <- function(original, level) {
   return(filter(original, condition == level) %>%
-           select(-c("condition", "GroupCount")) %>%
+           select(-c("condition", "GroupCount", "mean_count")) %>%
            as.numeric())
   }
 
 combine_data <- function(original, condition) {
   levels <- get_levels(condition)
   data <- data.frame(
-    type = c( rep(levels[1], 128), rep(levels[2], 128) ),
+    type = c( rep(levels[1], 128), rep(levels[2], 128) ), #arguments implying differing number of rows
     value = c(select_data(original, levels[1]), select_data(original, levels[2]))
   )
   return(data)
