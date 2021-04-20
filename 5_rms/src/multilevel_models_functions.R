@@ -113,11 +113,11 @@ get_model_for_one_channel <- function(rms, xcorr, channel_number) {
   
   # Run and save model
   model <- get_multilevel_model(clean_df)
-  model_path <- paste('data/5_rms/models/multilevel_models/channel_', as.character(channel_number), '.RDa', sep = "")
+  model_path <- paste('5_rms/data/models/multilevel_models/channel_', as.character(channel_number), '.RDa', sep = "")
   save(model, file = model_path)
   
   # Plot and save figure
-  figure_path <- paste("data/5_rms/figures/multilevel_models/channel_", as.character(channel_number), '.png', sep = "")
+  figure_path <- paste("5_rms/figs/multilevel_models/channel_", as.character(channel_number), '.png', sep = "")
   figure <- get_figure(model, clean_df)
   ggsave(figure_path, plot = figure)
 

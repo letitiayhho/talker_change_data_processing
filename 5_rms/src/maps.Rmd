@@ -64,7 +64,7 @@ simple_df <- data.frame(b_sig, sigma_sig, b_unsig, sigma_unsig, coordinates)
 **Figure 1.**
 I fitted a simple linear model between tracking (measured by maximum cross-correlation values) and attention (average left parietal RMS) for each channel over all trials. I plotted the slopes of the fitted model in the figure below, where size of each point represents the magnitude of the slope, and the opacity represents the standard deviation of the estimated parameter. The question being asked here is whether channels that respond differently to same- and different-talker stimuli, the ones likely invovlved in talker normalization, show a relationship between stimuli processing and attention. The similar sizes of the points in the left and right plots below suggest that channels that are involved in talker normalization (left) do not recruit attention for tracking more than channels that are not (right).
 
-```{r fig.width=12, fig.width=6}
+```{r fig.width=12, fig.height=5}
 plot <- ggplot() +
   geom_point(data = simple_df, 
              colour = "#339966",
@@ -106,7 +106,7 @@ plot <- ggplot() +
         panel.grid.minor=element_blank(),
         plot.background=element_blank())
 plot
-#ggsave(plot, filename = "5_rms/figs/1_overall_attention.png", width = 12, height = 6)
+ggsave(plot, filename = "5_rms/figs/1_overall_attention.png", width = 12, height = 5)
 ```
 
 ###Multilevel Model
@@ -144,8 +144,10 @@ different_talker_df <- get_betas(talker_normalization_channels, means, sds, 'b[2
 ```
 
 **Figure 2.**
+
 This figure shows the relationship between attention and tracking in **same**-talker stimuli for channels that differentiate between same- and different-talker stimuli (left) and those that don't (right). This figure was basically plotted to see whether the relationship between attention and tracking when processing same-talker stimuli is different between channels that role a role in talker normalization vs. channels that don't. In other words, whether talker normalization channels recruit more attention for processing same-talker stimuli than non-talker normalization channels.
-```{r fig.width=12, fig.width=6}
+
+```{r fig.width=12, fig.height=5}
 plot <- ggplot() +
   geom_point(data = same_talker_df, 
              colour = "#ff5733",
@@ -174,8 +176,8 @@ plot <- ggplot() +
                  alpha = 0.3,
                  stroke = 0)) +
   labs(size="Estimated slope", alpha="1/SD") +
-  annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
-  annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+  annotate("text", x=100, y=5, label= "L", alpha = 0.8) +
+  annotate("text", x=800, y=5, label= "R", alpha = 0.8) +
   guides(size = guide_legend(order = 1), col = guide_legend(order = 2)) +
   theme(axis.line=element_blank(),axis.text.x=element_blank(),
         axis.text.y=element_blank(),axis.ticks=element_blank(),
@@ -187,12 +189,14 @@ plot <- ggplot() +
         panel.grid.minor=element_blank(),
         plot.background=element_blank())
 plot
-#ggsave(plot, filename = "5_rms/figs/2_same_talker.png", width = 12, height = 6)
+ggsave(plot, filename = "5_rms/figs/2_same_talker.png", width = 12, height = 5)
 ```
 
 **Figure 3.**
+
 This figure shows the relationship between attention and tracking in **different**-talker stimuli for channels that differentiate between same- and different-talker stimuli (left) and those that don't (right). This figure was basically plotted to see whether the relationship between attention and tracking when processing different-talker stimuli is different between channels that play a role in talker normalization vs. channels that don't.  
-```{r fig.width=12, fig.width=6}
+
+```{r fig.width=12, fig.height=5}
 plot <- ggplot() +
   geom_point(data = different_talker_df, 
              colour = "#287D8EFF",
@@ -234,7 +238,7 @@ plot <- ggplot() +
         panel.grid.minor=element_blank(),
         plot.background=element_blank())
 plot
-#ggsave(plot, filename = "5_rms/figs/3_different_talker.png", width = 12, height = 6)
+ggsave(plot, filename = "5_rms/figs/3_different_talker.png", width = 12, height = 5)
 ```
 
 ```{r}
@@ -280,7 +284,7 @@ for (i in 1:128) {
 
 **Figure 4.**
 This figure takes a two-sample z-score between 1. the posterior distribution of the slope parameter for same-talker and 2. the same distribution for different-talker. The z-score is supposed to be an indicator of how much the relationship between attention (RMS) and talker (maximum cross-correlation) changes between same- and different-talker trials. The plot on the left shows that channels that respond differently to same- vs different-talker stimuli. As in the previous figures, the figure on the right is meant to be a control condition. The question being asked here is "do the channels that are involved in talker normalization show a difference in the use of attention to track same- versus different-talker stimuli". Worded similarly "is attention recruited to track same- versus different-talker stimuli differently in channels that play a role in talker normalization". If the answer is yes, that channels that are involved in talker normalization recruit attentional resources to different degrees when tracking same- versus different-talker stimuli, compared to channels not involved in talker normalization, then you would expect the plot on the left to be darker than the one on the right.
-```{r fig.width=12, fig.width=6}
+```{r fig.width=12, fig.height=5}
 plot <- ggplot() +
   geom_point(data = diff_df,
              colour = "#3356ba",
@@ -337,7 +341,7 @@ plot <- ggplot() +
         panel.grid.minor=element_blank(),
         plot.background=element_blank())
 plot
-#ggave(plot, filename = "5_rms/figs/4_difference.png", width = 12, height = 6)
+ggsave(plot, filename = "5_rms/figs/4_difference.png", width = 12, height = 5)
 ```
 **Figure 5.**
 Comparing the distributions of sampled z-scores for talker normalization vs non-talker normalization channels. Used a Bayesian model with channel type (norm or non-norm) coded as an index variable. Extracted 10000 estimates of z-scores for each channel type and plotted them below.
@@ -376,7 +380,7 @@ post <- data.frame(z_score = c(samples$a[,1], non_norm = samples$a[,2]),
 plot <- ggplot(data = post, aes(z_score, colour = type)) +
   geom_freqpoly()
 plot
-#ggsave(plot, filename = "5_rms/figs/difference_histogram.png", width = 6, height = 4)
+# ggsave(plot, filename = "5_rms/figs/5_difference_histogram.png", width = 6, height = 4)
 ```
 
 

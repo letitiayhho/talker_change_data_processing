@@ -8,11 +8,12 @@ model_type <- as.character(args[3]) # either simple_linear or multilevel
 library(dplyr)
 library(ggplot2)
 library(rethinking)
-source(paste("src/5_rms/", model_type, "_models_functions.R", sep = ""))
+theme_set(theme_minimal())  
+source(paste("5_rms/src/", model_type, "_models_functions.R", sep = ""))
 
 # Load data
-xcorr <- read.csv('data/5_rms/maximum.csv')
-rms <- read.csv('data/5_rms/rms.csv')
+xcorr <- read.csv('5_rms/data/maximum.csv')
+rms <- read.csv('5_rms/data/rms.csv')
 
 # Average over rms for left and right superior parietal**
 left_superior_parietal <- data.frame(rms$epoch_rms53, rms$epoch_rms54, rms$epoch_rms60, rms$epoch_rms61, rms$epoch_rms67) %>%
