@@ -20,19 +20,21 @@ source("tools/functions.R")
 ```{r include=FALSE}
 # Identify the channels that track same and different talker stimuli significantly differently
 
-# Get coordinates for electrodes on map
-coordinates <- get_layout()
-
 # Compute significance of tracking each level for each channel
 original <- read.csv('4_permutation_test/data/original_maximum.csv')
 shuffled <- read.csv('4_permutation_test/data/shuffled_maximum.csv')
-levels <- get_all_channel_proportions(shuffled, original)
+levels <- get_all_channel_proportions(shuffled, original) 
 
 # Compute significance of difference between levels in each condition for each channel
 level_differences <- get_all_channel_proportions_differences(shuffled, original)
 
 # Identify channels that differentiate between same and different talker
 talker_normalization_channels <- get_sig_channels(level_differences, "talker")
+
+# Get coordinates for electrodes on map
+coordinates <- get_layout()
+load("4_permutation_test/data/norm_coords.RDa")
+load("4_permutation_test/data/non_norm_coords.RDa")
 ```
 
 So I first identified the channels that tracked the same talker vs different talker significantly differently based on the earlier permutation test. The left plots in each figure hightlight the channels that track the levels differently, the plots on the right hightlight the channels that don't differentiate between levels. In each figure, the size of the circle indicates a stronger relationship (slope) between attention (averaged left superior parietal RMS) and tracking (maximum cross correlation value) of the stimuli. The opacity of the circle is the inverse of the standard deviation of the posterior distribution of the slope parameter. Larger and more prominent channels indicate a stronger relationship between attention and tracking.
@@ -73,7 +75,7 @@ plot <- ggplot() +
                  size = b_sig,
                  alpha = 1/sigma_sig,
                  stroke = 0)) +
-  geom_point(data = simple_df,
+  geom_point(data = norm_coords,
              aes(x = x,
                  y = y,
                  size = 0.05,
@@ -86,7 +88,7 @@ plot <- ggplot() +
                  size = b_unsig,
                  alpha = 1/sigma_unsig,
                  stroke = 0)) +
-  geom_point(data = simple_df,
+  geom_point(data = non_norm_coords,
              aes(x = 1000+x,
                  y = y,
                  size = 0.05,
@@ -156,7 +158,7 @@ plot <- ggplot() +
                  size = mean_sig,
                  alpha = 1/sd_sig,
                  stroke = 0)) +
-  geom_point(data = same_talker_df, 
+  geom_point(data = norm_coords, 
              aes(x = x, 
                  y = y,
                  size = 0.1,
@@ -169,7 +171,7 @@ plot <- ggplot() +
                  size = mean_unsig,
                  alpha = 1/sd_unsig,
                  stroke = 0)) +
-  geom_point(data = same_talker_df,
+  geom_point(data = non_norm_coords,
              aes(x = 1000+x,
                  y = y,
                  size = 0.1,
@@ -205,7 +207,7 @@ plot <- ggplot() +
                  size = mean_sig,
                  alpha = 1/sd_sig,
                  stroke = 0)) +
-  geom_point(data = different_talker_df,
+  geom_point(data = norm_coords,
              aes(x = x,
                  y = y,
                  size = 0.1,
@@ -218,7 +220,7 @@ plot <- ggplot() +
                  size = mean_unsig,
                  alpha = 1/sd_unsig,
                  stroke = 0)) +
-  geom_point(data = different_talker_df,
+  geom_point(data = non_norm_coords,
              aes(x = 1000+x,
                  y = y,
                  size = 0.1,
@@ -300,7 +302,7 @@ plot <- ggplot() +
                  size = z_sig_neg,
                  alpha = 1/p_sig_neg,
                  stroke = 0)) +
-  geom_point(data = diff_df,
+  geom_point(data = norm_coords,
              aes(x = x,
                  y = y,
                  size = 0.01,
@@ -320,7 +322,7 @@ plot <- ggplot() +
                  size = z_unsig_neg,
                  alpha = 1/p_unsig_neg,
                  stroke = 0)) +
-  geom_point(data = diff_df,
+  geom_point(data = non_norm_coords,
              aes(x = 1000+x,
                  y = y,
                  size = 0.01,
@@ -343,6 +345,71 @@ plot <- ggplot() +
 plot
 ggsave(plot, filename = "5_rms/figs/4_difference.png", width = 12, height = 5)
 ```
+
+```{r}
+# Figure 4b with bayesian analysis
+# load("5_rms/data/multilevel_beta_comparison.RDa")
+# diff_b_df <- cbind(df, coordinates)
+# 
+# plot <- ggplot() +
+#   geom_point(data = diff_b_df,
+#              colour = "#3356ba",
+#              aes(x = x,
+#                  y = y,
+#                  size =  difference,
+#                  alpha = p,
+#                  stroke = 0)) +
+  # geom_point(data = diff_b_df, 
+  #            colour = "#FFA07A",
+  #            aes(x = x, 
+  #                y = y,
+  #                size = z_sig_neg,
+  #                alpha = 1/p_sig_neg,
+  #                stroke = 0)) +
+  # geom_point(data = diff_df,
+  #            aes(x = x,
+  #                y = y,
+  #                size = 0.01,
+  #                alpha = 0.3,
+  #                stroke = 0)) +
+  # geom_point(data = diff_df,
+  #            colour = "#3356ba",
+  #            aes(x = 1000+x,
+  #                y = y,
+  #                size = z_unsig,
+  #                alpha = 1/p_unsig,
+  #                stroke = 0)) +
+  # geom_point(data = diff_df, 
+  #            colour = "#FFA07A",
+  #            aes(x = x, 
+  #                y = y,
+  #                size = z_unsig_neg,
+  #                alpha = 1/p_unsig_neg,
+  #                stroke = 0)) +
+  # geom_point(data = diff_df,
+  #            aes(x = 1000+x,
+  #                y = y,
+  #                size = 0.01,
+  #                alpha = 0.3,
+  #                stroke = 0)) +
+#   scale_size_continuous(name = "z-score") +
+#   scale_alpha_continuous(name = "p", breaks = c(20, 100, 1000), labels = c("0.05", "0.01", "0.001")) +
+#   annotate("text", x=100, y=5, label= "L", alpha = 0.8) +
+#   # annotate("text", x=800, y=5, label= "R", alpha = 0.8) +
+#   guides(size = guide_legend(order = 1), alpha = guide_legend(order = 2)) +
+#   theme(axis.line=element_blank(),axis.text.x=element_blank(),
+#         axis.text.y=element_blank(),axis.ticks=element_blank(),
+#         axis.title.x=element_blank(),
+#         axis.title.y=element_blank(),
+#         panel.background=element_blank(),
+#         panel.border=element_blank(),
+#         panel.grid.major=element_blank(),
+#         panel.grid.minor=element_blank(),
+#         plot.background=element_blank())
+# plot
+# ggsave(plot, filename = "5_rms/figs/4b_difference.png", width = 12, height = 5)
+```
+
 **Figure 5.**
 Comparing the distributions of sampled z-scores for talker normalization vs non-talker normalization channels. Used a Bayesian model with channel type (norm or non-norm) coded as an index variable. Extracted 10000 estimates of z-scores for each channel type and plotted them below.
 
