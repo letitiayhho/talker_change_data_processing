@@ -1,36 +1,40 @@
+# Pass in arguments
+args <- commandArgs(trailingOnly = TRUE)
+model_type <- as.character(args[1]) # either simple_linear or multilevel
+
 # Load libraries
 library(dplyr)
 library(readr)
 library(rethinking)
 
 # Get list of models
-models <- dir(path = paste("5_rms/data/models/multilevel_models", sep = ""))
+models <- dir(path = paste("data/5_rms/models/", model_type, "_models", sep = ""))
 channel_numbers <- as.numeric(parse_number(models))
 
 # Create data frames containing params of all models
-p <- c()
-difference <- c()
+means <- data.frame()
+sds <- data.frame()
 
 # Loop over and load each model and add params to a data frame
 for (i in 1:128) {
   
   # Load the model
-  load(file = paste("5_rms/data/models/multilevel_models/", models[i], sep = ""))
+  load(file = paste("data/5_rms/models/", model_type, "_models/", models[i], sep = ""))
   
-  # Sample betas from the posterior to calculate the probability
-  # of beta from one fit overlapping with the other
-  posterior <- extract.samples(model, n = 1e4)
-  b_same_talker <- posterior$b[,1]
-  b_different_talker <- posterior$b[,2]
-  p <- c(p, mean(b_same_talker > b_different_talker))
-  
-  # Calculate the difference between betas
+  # Horizontally concat into a data frame
   params <- precis(model, depth = 2)
-  b_bar_same_talker <- params$mean[1]
-  b_bar_different_talker <- params$mean[2]
-  difference <- c(difference, b_bar_same_talker - b_bar_different_talker)
+  means <- rbind(means, params$mean)
+  sds <- rbind(sds, params$sd)
 }
 
+# Clean up data frame
+colnames(means) <- rownames(params)
+colnames(sds) <- rownames(params)
+means$channel_number <- channel_numbers
+means <- arrange(means, channel_number)
+sds$channel_number <- channel_numbers
+sds <- arrange(sds, channel_number)
+
 # Save
-df <- data.frame(p = p, difference = difference)
-save(df, file = paste("5_rms/data/multilevel_beta_comparison.RDa", sep = ""))
+save(means, file = paste("data/5_rms/", model_type, "_models_means.RDa", sep = ""))
+save(sds, file = paste("data/5_rms/", model_type, "_models_sds.RDa", sep = ""))
