@@ -19,7 +19,7 @@ end
     %% 1. Import data
     cd(git_home)
     addpath(fullfile('1_preprocessing/data', subject_number)) % add subject data to path
-    addpath(fullfile('0_raw_data/data/stim/original')) % add audio stimuli directory to path
+    addpath(fullfile('0_set_up_and_raw_data/data/stim/original')) % add audio stimuli directory to path
     addpath('tools')
 
     % Import EEG data
@@ -47,10 +47,14 @@ end
 
              % Load stimuli .wav file for epoch
              word = char(stim_order.word(j));
-             auditory_stimuli = audioread(word);
+             stim = audioread(word);
+             
+             % Pad the stimuli signal to make it the same length as the eeg
+             pad = zeros(length(resampled_epoch) - length(stim), 1);
+             stim = [stim; pad];
 
              % Compute convolution and cross correlation
-             [cross_correlations, lags] = xcorr(auditory_stimuli, resampled_epoch, 'normalize');
+             [cross_correlations, lags] = xcorr(stim, resampled_epoch, 'normalize');
 
              % Write statistics to data arrays
              abs_average(j, i) = mean(abs(cross_correlations));
