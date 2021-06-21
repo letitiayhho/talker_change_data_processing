@@ -8,12 +8,13 @@ library(dplyr)
 library(ggplot2)
 library(rethinking)
 theme_set(theme_minimal())  
-source(paste("5_rms/src/multilevel_models_functions.R", sep = ""))
+source("5_rms/src/multilevel_models_functions.R")
 
 # Load data
-# xcorr <- read.csv('5_rms/data/maximum.csv')
+xcorr <- read.csv('5_rms/data/maximum.csv')
 xcorr <- xcorr[xcorr$talker == "S",]
 rms <- read.csv('5_rms/data/rms.csv')
+rms <- rms[rms$talker == "S",]
 
 # Average over rms for left and right superior parietal**
 left_superior_parietal <- data.frame(rms$epoch_rms53, rms$epoch_rms54, rms$epoch_rms60, rms$epoch_rms61, rms$epoch_rms67) %>%

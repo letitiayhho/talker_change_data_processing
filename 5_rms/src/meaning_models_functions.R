@@ -20,7 +20,6 @@ clean_data <- function(rms, xcorr, channel_number) {
   xcorr <- remove_outliers(raw_df$xcorr, 3)
   
   # Change rms and xcorr to log scale
-  dim(rms)
   raw_df$log_rms <- log(rms)
   raw_df$log_xcorr <- log(xcorr)
   
