@@ -8,89 +8,123 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/")
-#setwd("/Users/letitiaho/src/talker_change_data_processing/")
 library("dplyr")
 library("ggplot2")
 library("kableExtra")
+library("tuneR")
+library("signal")
 theme_set(theme_minimal())  
-source("tools/functions.R")
 ```
 
-#####Question
+******
 
-**How do the psychological processes involved in speech processing vary with stimulus demands on comprehension or perception?**
+#####Fig 1. Overall tracking
 
-####Aim 1
-How does attention vary with a change in talker?
-What kind of information is being tracked?*
-**How does tracking vary with stimulus demands on comprehension or perception?**
-**How does attention vary with the different kinds of information being tracked?**
-**How does the time course of tracking vary with stimulus demands on comprehension and perception**
-**How does network topology of tracking vary with stimulus demands on comprehension and perception**
-does tracking change depending on condition 
-i.e. do cortical areas track acoustic features 
-presumably would only find tracking of acoustic features of stimuli
-what is the question here
+**a. Sample waveform of auditory stimuli and corresponding ERP signal from channel #40 of one subject**
 
+```{r fig.width = 6, fig.height = 3}
+# Read audio file
+wav_file <- readWave("~/src/talker_change_data_processing/0_set_up_and_raw_data/data/stim/original/word_saxophone.wav")
 
-Establish whether the cross-correlation is a reliable measure of the cortical tracking of speech signal?
-Establish that the cortical tracking of speech signals varies with psychological processing
-howard 2: **how does attention vary with a change in talker**
+# Extract signal
+signal <- wav_file@left
 
-In signal processing, the cross-correlation is a measure of similarity between two signals. Computing a cross correlation between stimuli and EEG signal may yield an indication of the extent to which cortical areas are tracking stimuli features. Three tests will be used to verify the cross-correlation as a measure of tracking. First, a permutation test randomizing stimuli-EEG pairings will indicate if the observed cross-correlation is greater than the cross-correlation between EEG signal and a randomize stimuli and due to chance. However, some channels may not significantly track the stimuli across all conditions. Channels that only track the stimuli under a single condition will not be revealed by this test. To identify channels that track only certain speech stimuli, the second permutation test will compare tracking of each condition to the tracking of randomized stimuli-EEG pairs. Evidence of condition-based tracking will also support cross correlation as a measure of meaningful stimuli processing, rather than the tracking of random noise. Lastly, to further demonstrate that channels are tracking stimuli features, the observed difference in tracking between the two levels in each condition will be compared to the difference computed between randomized EEG-stimuli pairings.
+# Determine duration
+dur <- length(signal)/wav_file@samp.rate
 
- 
+# Determine sample rate
+fs <- wav_file@samp.rate
 
-####Aim 2
+# Demean to remove DC offset
+signal <- signal - mean(signal)
 
-**Establish that the psychological processing involved in tracking changes depending on 
+# Downsample signal to 1000 Hz
+signal <- resample(signal, q = 44100, p = 1000)
 
-**Examine whether the psychological processing of speech signal changes in response to stimuli demands on comprehension or perception, changing the features that are tracked**
+# Plot waveform
+plot(signal, type = 'l', xlab = 'msec', ylab = 'Amplitude', xlim = c(-99, 1500))
+```
 
-**Examine whether changes in stimuli demands on on comprehension and perception recruit different cognitive processes, changinge the features that are tracked**
+```{r fig.width = 6, fig.height = 3} 
+# Read ERP
+erp <- t(read.table(file = "~/src/talker_change_data_processing/7_out/data/sample_erp.txt", 
+                  header = FALSE, sep = ",", dec = "."))
 
-
-When psychological processing of the speech signal changes in response to demands on comprehension or recognition, do the features that are tracked change?
-
-**Establish that different stimuli features recruit
-
-**Examine whether changes in stimuli demands on on comprehension and perception recruit different cognitive processes, changinge the features that are tracked**
-
-Investigate whether tracking depends on the cognitive demands of stimuli on comprehension and perception which recruit different cognitive processes and 
+plot(erp, x = c(-99:1500), type = 'l', xlab = 'msec', ylab = 'Amplitude', xlim = c(-100, 1500))
+```
 
 
-**Establish that the cortical tracking of speech signal depends on the underlying cognitive process occurring**
+**b**
 
+![](/Users/letitiaho/src/talker_change_data_processing/4_permutation_test/figs/overall_samples.png){width=500px}
 
-**Investigate whether the features being tracked depends on the cognitive demands of comprehension and perception**
-this is a question of whether the cognitive demands of the stimuli change which  features are being tracked
-but my original aim is more about different stimuli recruiting different cognitive processes
+**c**
 
+![](/Users/letitiaho/src/talker_change_data_processing/4_permutation_test/figs/overall.png){width=300px}
 
-The analyses used to identify channels that track certain stimuli features are the same as the last two tests mentioned in Aim 1. The reason for this is that demonstrating that tracking is condition-dependent indicates that this tracking is responding to different features within the stimuli signal, represents certain cognitive processes, and is not indiscriminate stimuli following. The second permutation test described above will not only tell us that there are condition-based difference in tracking, but which stimuli are being preferentially tracked. Under an expectation-based hypothesis of speech processing it is expected that words in the different-talker condition will be less expected and therefore processed more actively by speech processing networks. Anticipated same-talker stimuli should fit the hypotheses generated by descending networks and require less processing. Under more bottom-up driven accounts of speech processing, however, the different-talker stimuli might simply be more difficult to process and tracked with less fidelity than same-talker stimuli. Since meaning and constraint aren’t differentiated on the level of the acoustic signal, it is predicted that stimuli in these conditions will not be significantly tracked compared to randomized stimuli-EEG pairings. Constraint has the additional limitation of not being a feature that unfolds in the final word, so it is unlikely that tracking will vary with degrees of sentential meaning constraint.
+******
 
-The third described analysis identifies channels that track the two levels of each condition differently. For example, it will reveal that channels that track same-talker stimuli more than different-talker stimuli, whereas analysis two looked simply for channels that tracked same-talker or different-talker stimuli independently. As in the second analysis, because talker differences arise at the level of the acoustic signal, it is predicted that manipulations of speaker identity will evoke different levels of tracking compared to manipulations of meaning or constraint. Additionally, the channels that show different tracking same- and different-talker stimuli may indicate the cortical networks that are responsible for responding to changes in talker and normalizing across talkers.
+#####Fig 2. Condition-based differences in tracking
 
- 
+**a**
 
-####Aim 3
+![](/Users/letitiaho/src/talker_change_data_processing/4_permutation_test/figs/conditions.png){width=500px}
 
-**Examine whether the underlying cognitive process 
+**b**
 
-time course of tracking depends on the 
+![](/Users/letitiaho/src/talker_change_data_processing/4_permutation_test/figs/condition_differences.png){width=500px}
 
-**Are there time-dependent changes in the cortical tracking of speech signal that depend on changes in cognitive processing**
+**c**
 
+  ![](/Users/letitiaho/src/talker_change_data_processing/4_permutation_test/figs/talker.png){width=500px}
 
+**d**
 
-**What is the time course of this tracking? [[Linking this to a psychological question as an aim is important which you suggest in the first sentence below.  Do time-dependent changes in cognitive processing of speech affect the cortical tracking of the speech signal]]**
+![](/Users/letitiaho/src/talker_change_data_processing/4_permutation_test/figs/meaning.png){width=500px}
 
-Examining the time course of tracking will tell us whether different cognitive processes are involved in the tracking of each stimuli type. The time course of tracking will be examined by looking at the time point at which maximum cross-correlation occurs. Since a cross-correlation can be conceptualized as a measure of the overlap between two waveforms as you drag one across the other, the time at which the maximum cross-correlation occurs should indicate the time lag between stimulus presentation and its processing in the cortices. According to a motor or expectation based theory of speech processing, the unexpected stimuli should recruit more brain networks in its processing, but should not be processed at a different time to the anticipated stimuli. More bottom-up accounts, however, may predict that the additional difficulty of processing different-talker stimuli may cause a delay in processing (?). Once again, as the stimulus features that might be tracked under the meaning or constraint conditions do not predictably appear in the acoustic signal of the stimuli, there should be no significant tracking of stimuli in either condition and no difference in time lag compared to randomized stimuli-EEG pairs.
+**e**
 
- 
+![](/Users/letitiaho/src/talker_change_data_processing/4_permutation_test/figs/constraint.png){width=500px}
 
-####Aim 4
-**How is attention involved in this tracking? [[Different theories of speech perception posit different roles for attention in speech from none to substantial.  Asking how here is a bit vague… but you can state a specific hypothesis—the evidence from previous research suggests that talker changes increase demands on attention.  Does increased attention to the speech signal with a talker change improve cortical representation of speech quality? (which it should but has not been tested)]]**
+******
 
-The recruitment of attention in each trial is measured by the averaged RMS over all of the left superior parietal electrodes. To see whether there is a relationship between tracking and attention a simple linear model will be fitted to the data of each of the channels. The distribution of the posterior estimates of the slope between RMS and cross-correlation will indicate how much tracking varies with attention. If tracking is mediated by attention, it is predicted that the channels responsible for normalizing between talker (the channels that track same- and different-talker stimuli significantly differently) should show a stronger relationship between tracking and attention. Next, to investigate whether the recruitment of attention for tracking is different between same- and different-talker stimuli, a multilevel model will be fitted to the data with same- and different-talker as the two levels. Similar to the previous analysis, the relationship between tracking and attention in channels that are not involved in talker normalization will be used as a control. These channels should show a weaker relationship between tracking and attention than channels involved in talker normalization. If attention is used to track either same- or different-talker stimuli, the talker normalization channels should have greater posterior estimates for their slope than non-normalization channels. Lastly, and most critically, the difference between the relationship between tracking and attention in same- and different-talker trials (i.e. the difference in the slope of cross-correlation and RMS for same- and different-talker models), will indicate whether there are channels that recruit attention differently for the tracking of same- vs different-talker stimuli.
+#####Fig 3. Simple linear model
+
+**a**
+
+![](/Users/letitiaho/src/talker_change_data_processing/5_rms/figs/simple_linear_models/channel_1.png){width=200px}
+![](/Users/letitiaho/src/talker_change_data_processing/5_rms/figs/simple_linear_models/channel_2.png){width=200px}
+![](/Users/letitiaho/src/talker_change_data_processing/5_rms/figs/simple_linear_models/channel_40.png){width=200px}
+![](/Users/letitiaho/src/talker_change_data_processing/5_rms/figs/simple_linear_models/channel_41.png){width=200px}
+
+**b**
+
+![](/Users/letitiaho/src/talker_change_data_processing/5_rms/figs/1_overall_attention.png){width=500px}
+
+******
+
+#####Fig 4. Multilevel model
+
+**a**
+
+![](/Users/letitiaho/src/talker_change_data_processing/5_rms/figs/multilevel_models/channel_1.png){width=200px}
+![](/Users/letitiaho/src/talker_change_data_processing/5_rms/figs/multilevel_models/channel_2.png){width=200px}
+![](/Users/letitiaho/src/talker_change_data_processing/5_rms/figs/multilevel_models/channel_40.png){width=200px}
+![](/Users/letitiaho/src/talker_change_data_processing/5_rms/figs/multilevel_models/channel_41.png){width=200px}
+
+**b**
+
+![](/Users/letitiaho/src/talker_change_data_processing/5_rms/figs/2_same_talker.png){width=500px}
+
+**c**
+
+![](/Users/letitiaho/src/talker_change_data_processing/5_rms/figs/3_different_talker.png){width=500px}
+
+**d**
+
+![](/Users/letitiaho/src/talker_change_data_processing/5_rms/figs/4_difference.png){width=500px}
+
+**e**
+
+![](/Users/letitiaho/src/talker_change_data_processing/5_rms/figs/5_difference_histogram.png){width=300px}
 
