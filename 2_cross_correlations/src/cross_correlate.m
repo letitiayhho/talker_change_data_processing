@@ -50,7 +50,7 @@ end
              auditory_stimuli = audioread(word);
 
              % Compute convolution and cross correlation
-             [cross_correlations, lags] = xcorr(auditory_stimuli, resampled_epoch);
+             [cross_correlations, lags] = xcorr(auditory_stimuli, resampled_epoch, 'normalize');
 
              % Write statistics to data arrays
              abs_average(j, i) = mean(abs(cross_correlations));
