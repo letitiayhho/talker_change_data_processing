@@ -166,7 +166,7 @@ nodiff_different_talker <- get_ps(levels, nodiff_talker_channels, "different_tal
 talker_df <- data.frame(group1 = same_talker, group2 = different_talker, nodiff_group1 = nodiff_same_talker, nodiff_group2 = nodiff_different_talker, coordinates)
 
 # Plot
-plot <- get_map(talker_df, talker_channels, nodiff_talker_channels, c("Same talker", "Different talker"))
+plot <- get_map(talker_df, talker_channels, nodiff_talker_channels, c("Different talker", "Same talker"))
 plot
 ggsave(plot = plot, filename = 'figs/talker.png', width = 12, height = 5)
 ```
@@ -214,3 +214,26 @@ plot <- get_map(constraint_df, constraint_channels, nodiff_constraint_channels, 
 plot
 ggsave(plot = plot, filename = 'figs/constraint.png', width = 12, height = 5)
 ```
+
+```{r}
+# get stats
+# number of different-talker channels (p < 0.05)
+sum(!is.na(different_talker))
+sum(different_talker > 0.01, na.rm = TRUE)
+# number of same-talker channels
+sum(!is.na(same_talker))
+sum(same_talker > 0.01, na.rm = TRUE)
+# number of meaningful channels (p < 0.05)
+sum(!is.na(meaningful))
+sum(meaningful > 0.01, na.rm = TRUE)
+# number of nonsense channels
+sum(!is.na(nonsense))
+sum(nonsense > 0.01, na.rm = TRUE)
+# number of low-constraint channels (p < 0.05)
+sum(!is.na(low_constraint))
+sum(low_constraint > 0.01, na.rm = TRUE)
+# number of high-constraint channels
+sum(!is.na(high_constraint))
+sum(high_constraint > 0.01, na.rm = TRUE)
+```
+
