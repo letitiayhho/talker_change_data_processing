@@ -1,0 +1,25 @@
+#!/bin/bash
+set -euo pipefail
+
+usage() {
+    cat <<eof >&2
+usage: $0
+
+    description
+        wrapper script to convert all .mat files to .csv
+        to be read into python
+eof
+    exit 1
+}
+
+if [[ $# -ne 0 ]]; then
+    usage
+fi
+
+GIT_HOME="$(git rev-parse --show-toplevel)"
+cd "$GIT_HOME"
+
+while read -r subject_number; do
+    echo "Converting mat to csv for $subject_number"
+    matlab -nodisplay -r "addpath('1_preprocessing/src'); mat_to_csv('$GIT_HOME', '$subject_number'); quit"
+done < 0_set_up_and_raw_data/data/subject_numbers.txt
