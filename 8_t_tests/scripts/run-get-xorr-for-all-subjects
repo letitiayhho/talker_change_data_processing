@@ -19,4 +19,4 @@ fi
 GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME"
 
-matlab -nodisplay -r "addpath('src/5_rms'); concat_cross_correlations('$GIT_HOME')"
+matlab -nodisplay -r "addpath('8_t_tests/src'); get_xcorr_for_all_subjects('$GIT_HOME')"
