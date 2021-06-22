@@ -1,0 +1,58 @@
+---
+title: "One-sample t-tests"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, warning=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/")
+setwd("/Users/letitiaho/src/talker_change_data_processing/")
+library("dplyr")
+library("ggplot2")
+library("ggpubr")
+source("tools/functions.R")
+source("8_t_tests/src/t_test_functions.R")
+```
+
+```{r}
+# Import data
+xcorr <- read.csv(file = "8_t_tests/data/maximum.csv")
+```
+
+**Same-talker**
+```{r}
+same_talker <- get_one_sample_t(subset(xcorr, condition = "talker", level = "S"))
+head(same_talker)
+```
+
+**Different-talker**
+```{r}
+different_talker <- get_one_sample_t(subset(xcorr, condition = "talker", level = "T"))
+head(different_talker)
+```
+
+**Meaningful**
+```{r}
+meaningful <- get_one_sample_t(subset(xcorr, condition = "meaning", level = "M"))
+head(meaningful)
+```
+
+**Nonsense**
+```{r}
+nonsense <- get_one_sample_t(subset(xcorr, condition = "meaning", level = "N"))
+head(nonsense)
+```
+
+**Low constraint**
+```{r}
+low_constraint <- get_one_sample_t(subset(xcorr, condition = "constraint", level = "L"))
+head(low_constraint)
+```
+
+**High constraint**
+```{r}
+high_constraint <- get_one_sample_t(subset(xcorr, condition = "constraint", level = "H"))
+head(high_constraint)
+```
