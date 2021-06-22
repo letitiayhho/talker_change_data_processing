@@ -1,4 +1,4 @@
-function [] = concat_cross_correlations(git_home)
+function [] = concat_xcorr(git_home)
 % DESCRIPTION:
 %   Computes cross-correlations or convolutions between eeg signal and audio
 %   stimuli across all subjects, channels and trials for each condition
