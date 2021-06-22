@@ -6,9 +6,9 @@ function [] = average_and_concat_cross_correlations()
     %% Main
     file_struct = dir(fullfile('2_cross_correlations/data/*/cross_correlations.mat'));
     data = shape(file_struct);
-    filename = '8_t_tests/data/maximum_averages.mat';
+    filename = '8_t_tests/data/maximum_averages.csv';
     fprintf(1, strcat('Writing data to /', filename, '\n'))
-    save(filename, 'data')
+    writetable(data, filename)
 
     %% Shape data
     function [data] = shape(file_struct)
