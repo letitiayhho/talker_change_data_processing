@@ -29,7 +29,7 @@ end
     stim_order = get_stim_order(subject_number, unique_id, shuffle);
 
     %% 2. Cross correlate
-    abs_average = zeros(size(eeg_data, 3), size(eeg_data, 1));
+    average = zeros(size(eeg_data, 3), size(eeg_data, 1));
     maximum = zeros(size(eeg_data, 3), size(eeg_data, 1));
     lag = zeros(size(eeg_data, 3), size(eeg_data, 1));
 
@@ -57,8 +57,8 @@ end
              [cross_correlations, lags] = xcorr(stim, resampled_epoch, 'normalize');
 
              % Write statistics to data arrays
-             abs_average(j, i) = mean(abs(cross_correlations));
-             [maximum(j, i), I] = max(abs(cross_correlations));
+             average(j, i) = mean(cross_correlations);
+             [maximum(j, i), I] = max(cross_correlations);
              lag(j, i) = lags(I);
          end
     end
@@ -68,20 +68,34 @@ end
 
     %% 4. Write data files
     % Add relevant info to data tables
-    cross_correlations = [table(repmat(subject_number, size(stim_order, 1), 1), 'VariableNames', {'subject_number'}),...
+    maximum = [
+        table(repmat(subject_number, size(stim_order, 1), 1), 'VariableNames', {'subject_number'}),...
         condition,...
         table(stim_order.epoch, 'VariableNames', {'epoch'}),...
         table(stim_order.word, 'VariableNames', {'word'}),...
-        array2table(maximum),...
+        array2table(maximum)];
+    maximum.Properties.VariableNames = cellstr(['subject_number',...
+        'constraint', 'meaning', 'talker', 'epoch', 'word', string(1:128)]);
+    lag = [
+        table(repmat(subject_number, size(stim_order, 1), 1), 'VariableNames', {'subject_number'}),...
+        condition,...
+        table(stim_order.epoch, 'VariableNames', {'epoch'}),...
+        table(stim_order.word, 'VariableNames', {'word'}),...
         array2table(lag)];
-
+    lag.Properties.VariableNames = cellstr(['subject_number',...
+        'constraint', 'meaning', 'talker', 'epoch', 'word', string(1:128)]);
+    
     % Write data
     if shuffle
-        cross_correlations_file_name = strcat(unique_id, '_cross_correlations_shuffle');
+        max_fp = strcat(unique_id, '_max_shuffle');
+        lag_fp = strcat(unique_id, '_lag_shuffle');
     else
-        cross_correlations_file_name = 'cross_correlations';
+        max_fp = strcat('maximum');
+        lag_fp = strcat('lag');
     end
-    fp = fullfile('2_cross_correlations/data', subject_number, cross_correlations_file_name);
-    fprintf(1, strcat('\nWriting data to /', fp, '\n'))
-    save(fp, 'cross_correlations');
+    max_fp = fullfile('2_cross_correlations/data', subject_number, max_fp);
+    lag_fp = fullfile('2_cross_correlations/data', subject_number, lag_fp);
+    fprintf(1, strcat('\nWriting data to /', max_fp, 'and', lag_fp, '\n'))
+    save(max_fp, 'maximum');
+    save(lag_fp, 'lag');
 end
