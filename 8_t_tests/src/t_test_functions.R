@@ -1,5 +1,5 @@
 subset <- function(data, formants = NaN, condition, level) {
-  channel_columns = paste("maximum", 1:128, sep = "")
+  channel_columns = paste("X", 1:128, sep = "")
   
   # Subset by condition if specified
   if (condition == "talker") {
