@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
     cat <<eof >&2
-usage: $0
+usage: $0 <maximum, lag, or abs_average>
 
     description
         wrapper script for combining xcorr values from all 
@@ -12,11 +12,13 @@ eof
     exit 1
 }
 
-if [[ $# -ne 0 ]]; then
+if [[ $# -ne 1 ]]; then
     usage
 fi
 
 GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME"
 
-matlab -nodisplay -r "addpath('8_t_tests/src'); concat_xcorr('$GIT_HOME')"
+stat="$1"
+
+matlab -nodisplay -r "addpath('8_t_tests/src'); concat_xcorr('$GIT_HOME', '$stat')"
