@@ -12,9 +12,9 @@ end
 
     %% 1. Import data
     addpath(fullfile('1_preprocessing/data/', subject_number)) % add subject data to path
+    addpath(fullfile('0_set_up_and_raw_data/data/', subject_number))
     load('epoch_order_original');
     load('epoch_order_pruned');
-    addpath(fullfile('0_set_up_and_raw_data/data/', subject_number))
     stim_order_original = readtable('stim_order.txt');
 
     %% 2. Match EEG epochs with words
@@ -52,12 +52,12 @@ end
         s = RandStream('dsfmt19937', 'Seed', str2double(unique_id));
         stim_order = epoch_order_pruned(randperm(s, size(epoch_order_pruned, 1)), :).word;
     else
-        stim_order = epoch_order_pruned.word;
+        stim_order = epoch_order_pruned;
     end
     
     %% 4. Save
     filename = fullfile('2_cross_correlate/data', subject_number, 'stim_order');
-    fprintf(1, ['Saving to ', filename])
+    fprintf(1, ['Saving to ', filename, '.m \n'])
     save(filename, 'stim_order')
     quit
 end
