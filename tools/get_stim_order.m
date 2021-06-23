@@ -54,4 +54,7 @@ end
     else
         stim_order = epoch_order_pruned;
     end
+    
+    %% 4. Save
+    save(fullfile('1_preprocessing', subject_number, 'stim_order'), stim_order.word)
 end
