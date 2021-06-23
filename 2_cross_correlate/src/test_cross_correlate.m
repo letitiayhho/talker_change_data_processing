@@ -7,14 +7,13 @@ addpath('tools')
 load('eeg_data')
 
 cross_correlations = [];
-average = [];
 abs_average = [];
 maximum = [];
 lags = [];
 
 for i = 120:121
     % Select epoch and resample
-    epoch = double(eeg_data(1, :, i));
+    epoch = double(eeg_data(40, :, i));
     epoch = resample(epoch, 44100, 1000);
     
     % Load audio file
@@ -25,8 +24,8 @@ for i = 120:121
     % Cross correlation
     [cross_correlation, lag] = xcorr(epoch, stim, 'normalize');
     cross_correlations = [cross_correlations; cross_correlation];
-    average(i) = mean(cross_correlation);
-    abs_average(i) = mean(abs(cross_correlation));
-    [maximum(i), I] = max(abs(cross_correlation));
-    lags(i) = lag(I);
+    abs_average = [abs_average, mean(abs(cross_correlation))];
+    [m, I] = max(abs(cross_correlation));
+    maximum = [maximum, m];
+    lags = [lag(I)];
 end
