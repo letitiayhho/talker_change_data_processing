@@ -50,11 +50,14 @@ end
     %% 3. Scramble if specified
     if shuffle
         s = RandStream('dsfmt19937', 'Seed', str2double(unique_id));
-        stim_order = epoch_order_pruned(randperm(s, size(epoch_order_pruned, 1)), :);
+        stim_order = epoch_order_pruned(randperm(s, size(epoch_order_pruned, 1)), :).word;
     else
-        stim_order = epoch_order_pruned;
+        stim_order = epoch_order_pruned.word;
     end
     
     %% 4. Save
-    save(fullfile('1_preprocessing', subject_number, 'stim_order'), stim_order.word)
+    filename = fullfile('2_cross_correlate/data', subject_number, 'stim_order');
+    fprintf(1, ['Saving to ', filename])
+    save(filename, 'stim_order')
+    quit
 end
