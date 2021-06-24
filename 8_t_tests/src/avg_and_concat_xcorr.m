@@ -1,14 +1,14 @@
-function [] = average_and_concat_cross_correlations()
+function [] = avg_and_concat_xcorr(filename)
 % DESCRIPTION:
 %   Computes cross-correlations or convolutions between eeg signal and audio
 %   stimuli across all subjects, channels and trials for each condition
 
     %% Main
-    file_struct = dir(fullfile('2_cross_correlations/data/*/cross_correlations.mat'));
+    file_struct = dir(['2_cross_correlate/data/*/', filename, '.mat']);
     data = shape(file_struct);
-    filename = '8_t_tests/data/maximum_averages.csv';
-    fprintf(1, strcat('Writing data to /', filename, '\n'))
-    writetable(data, filename)
+    write_to = ['8_t_tests/data/', filename '_averages.csv'];
+    fprintf(1, strcat('Writing data to /', write_to, '\n'))
+    writetable(data, write_to)
 
     %% Shape data
     function [data] = shape(file_struct)
@@ -18,8 +18,8 @@ function [] = average_and_concat_cross_correlations()
 
         % Iterate over subjects
         for i = 1:length(file_struct)
-            path = fullfile(file_struct(i).folder, 'cross_correlations.mat');
-            cross_correlations = load(path).cross_correlations;
+            path = fullfile(file_struct(i).folder, file_struct(i).name);
+            cross_correlations = load(path).data_frame;
             
             % Drop lags and indentifier columns
             cross_correlations = cross_correlations(:,1:134);
