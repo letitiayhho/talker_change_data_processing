@@ -26,7 +26,7 @@ end
     stim_order = load('stim_order').stim_order;
 
     %% 2. Cross correlate
-    average_nonorm = zeros(size(eeg_data, 3), size(eeg_data, 1));
+    average_nonorm_noresample_flip = zeros(size(eeg_data, 3), size(eeg_data, 1));
     
     % Loop over channels
     fprintf(1, 'Channel #')
@@ -49,10 +49,10 @@ end
 %              stim = [stim; pad];
 
              % Compute convolution and cross correlation
-             [cross_correlations, lags] = xcorr(stim, epoch);
+             average_nonorm_noresample_flip(j, i) = mean(xcorr(epoch, stim));
 
              % Write statistics to data arrays
-             average_nonorm(j, i) = mean(cross_correlations);
+%              average_nonorm_noresample(j, i) = mean(cross_correlations);
          end
     end
 
@@ -77,6 +77,6 @@ end
         save(fp, 'data_frame')
     end
 
-    save_xcorr(subject_number, condition, stim_order, average_nonorm, 'average_nonorm')
+    save_xcorr(subject_number, condition, stim_order, average_nonorm_noresample_flip, 'average_nonorm_noresample_flip')
     quit
 end
