@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
     cat <<eof >&2
-usage: $0
+usage: $0 <stat/output filename>
 
     description
         wrapper script for cross_correlate.m
@@ -14,16 +14,17 @@ eof
     exit 1
 }
 
-if [[ $# -ne 0 ]]; then
+if [[ $# -ne 1 ]]; then
     usage
 fi
 
 GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME"
+stat="$1"
 
 log_file="2_cross_correlate/data/logs/$(date +%s).log"
 
 while read -r subject_number; do
-    matlab -nodisplay -r "addpath('2_cross_correlate/src'); test_cross_correlate_average_nonorm('$GIT_HOME', '$subject_number'); quit" 2>&1 \
+    matlab -nodisplay -r "addpath('2_cross_correlate/src'); test_cross_correlate_average_nonorm('$GIT_HOME', '$subject_number', '$stat'); quit" 2>&1 \
         | tee -a "$log_file"
 done < 0_set_up_and_raw_data/data/subject_numbers.txt

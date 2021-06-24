@@ -1,4 +1,4 @@
-function [] = test_cross_correlate_average_nonorm(git_home, subject_number)
+function [] = test_cross_correlate_average_nonorm(git_home, subject_number, stat)
 % DESCRIPTION:
 %     Takes the preprocessed eeg data and convolves or cross-correlates the 
 %     waveforms with the waveform of the auditory stimuli
@@ -9,6 +9,7 @@ function [] = test_cross_correlate_average_nonorm(git_home, subject_number)
 arguments
     git_home string
     subject_number char
+    stat char
 end
 
     fprintf(1, strcat('Analyzing data from subject #', subject_number, '\n'))
@@ -26,7 +27,7 @@ end
     stim_order = load('stim_order').stim_order;
 
     %% 2. Cross correlate
-    average_nonorm_noresample_flip = zeros(size(eeg_data, 3), size(eeg_data, 1));
+    data = zeros(size(eeg_data, 3), size(eeg_data, 1));
     
     % Loop over channels
     fprintf(1, 'Channel #')
@@ -36,20 +37,24 @@ end
         % Loop over epochs
          for j = 1:size(eeg_data, 3)
 
-             % Extract eeg epoch and interpolate
+             % Extract eeg epoch and resample
              epoch = double(eeg_data(i, :, j));
 %              epoch = resample(epoch, 44100, 1000);
 
-             % Load stimuli .wav file for epoch
+             % Load stimuli .wav file and resample
+             original_sample_rate = 44100;
+             new_sample_rate = 1000;
+             [P, Q] = rat(new_sample_rate/original_sample_rate);
              word = char(stim_order.word(j));
              stim = audioread(word);
+             stim = resample(stim, P, Q);
              
              % Pad the stimuli signal to make it the same length as the eeg
-%              pad = zeros(length(epoch) - length(stim), 1);
-%              stim = [stim; pad];
+             pad = zeros(length(epoch) - length(stim), 1);
+             stim = [stim; pad];
 
              % Compute convolution and cross correlation
-             average_nonorm_noresample_flip(j, i) = mean(xcorr(epoch, stim));
+             data(j, i) = mean(abs(xcorr(epoch, stim, 'normalize')));
 
              % Write statistics to data arrays
 %              average_nonorm_noresample(j, i) = mean(cross_correlations);
@@ -77,6 +82,6 @@ end
         save(fp, 'data_frame')
     end
 
-    save_xcorr(subject_number, condition, stim_order, average_nonorm_noresample_flip, 'average_nonorm_noresample_flip')
+    save_xcorr(subject_number, condition, stim_order, data, stat)
     quit
 end
