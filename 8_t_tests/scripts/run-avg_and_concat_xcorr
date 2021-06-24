@@ -1,0 +1,24 @@
+#!/bin/bash
+set -euo pipefail
+
+usage() {
+    cat <<eof >&2
+usage: $0 <name of cross-correlation .mat files to con\cat>
+
+    description
+        wrapper script for combining and averaging xcorr 
+        values from all subjects into one file
+eof
+    exit 1
+}
+
+if [[ $# -ne 1 ]]; then
+    usage
+fi
+
+GIT_HOME="$(git rev-parse --show-toplevel)"
+cd "$GIT_HOME"
+
+filename="$1"
+
+matlab -nodisplay -r "addpath('8_t_tests/src'); avg_and_concat_xcorr('$filename')"
