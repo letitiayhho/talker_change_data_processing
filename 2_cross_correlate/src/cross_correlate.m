@@ -44,10 +44,7 @@ end
              stim = audioread(word);
              
              % Compute convolution and cross correlation
-             [cross_correlations, lags] = xcorr(stim, epoch, 'normalize');
-
-             % Write statistics to data arrays
-             average(j, i) = mean(cross_correlations);
+             average(j, i) = mean(xcorr(stim, epoch));
     end
 
     %% 3. Split condition codes up
