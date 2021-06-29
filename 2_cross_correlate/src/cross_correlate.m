@@ -40,11 +40,15 @@ end
 
              % Extract eeg epoch and interpolate
              epoch = double(eeg_data(i, :, j));
-             epoch = resample(epoch, 44100, 1000);
 
              % Load stimuli .wav file for epoch
              word = char(stim_order.word(j));
              stim = audioread(word);
+             stim = resample(stim, 10, 441);
+             
+             % Normalize both signals
+             epoch = normalize(epoch);
+             stim = normalize(stim);
              
              % Pad the stimuli signal to make it the same length as the eeg
              pad = zeros(length(epoch) - length(stim), 1);
