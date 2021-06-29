@@ -7,7 +7,7 @@ editor_options:
 
 Audio signal is resampled to 1000 hz, eeg signals are not resampled. Below are the p-values for the one-sample t-tests on both normalized and not normalized cross-correlations.
 
-```{r setup, warning=FALSE}
+```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
 knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/")
 setwd("/Users/letitiaho/src/talker_change_data_processing/")
@@ -21,12 +21,15 @@ source("8_t_tests/src/t_test_functions.R")
 
 ```{r}
 # Import data
-xcorr_norm <- read.csv(file = "8_t_tests/data/average_resample_audio_norm.csv")
 xcorr_no_norm <- read.csv(file = "8_t_tests/data/archive/average_resample_audio_nonorm.csv")
+xcorr_norm <- read.csv(file = "8_t_tests/data/archive/average_resample_audio_norm.csv")
+xcorr_nonorm_noresample <- read.csv(file = "8_t_tests/data/archive/average_nonorm_noresample.csv")
+xcorr_resample_eeg_norm <- read.csv(file = "8_t_tests/data/abs_average.csv")
 channels <- as.character(1:128)
 ```
 
-###Cross-correlations not normalized
+#### Cross-correlations not normalized
+
 ```{r}
 same_talker <- get_one_sample_t(subset(xcorr_no_norm, condition = "talker", level = "S"))
 different_talker <- get_one_sample_t(subset(xcorr_no_norm, condition = "talker", level = "T"))
@@ -35,6 +38,7 @@ nonsense <- get_one_sample_t(subset(xcorr_no_norm, condition = "meaning", level 
 low_constraint <- get_one_sample_t(subset(xcorr_no_norm, condition = "constraint", level = "L"))
 high_constraint <- get_one_sample_t(subset(xcorr_no_norm, condition = "constraint", level = "H"))
 ```
+
 ```{r}
 # Creating a table to display all the p-values
 spacer <- matrix(" ", 128, 1)
@@ -64,7 +68,7 @@ kable(one_sample_t, escape = F, col.names = c("Channel", "S", "T", " ",
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
-###Cross-correlations normalized
+#### Cross-correlations normalized
 
 ```{r}
 same_talker <- get_one_sample_t(subset(xcorr_norm, condition = "talker", level = "S"))
@@ -104,3 +108,42 @@ kable(one_sample_t, escape = F, col.names = c("Channel", "S", "T", " ",
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
+#### Cross-correlation not normalized, audio not downsampled to 1k
+
+```{r}
+same_talker <- get_one_sample_t(subset(xcorr_nonorm_noresample, condition = "talker", level = "S"))
+different_talker <- get_one_sample_t(subset(xcorr_nonorm_noresample, condition = "talker", level = "T"))
+meaningful <- get_one_sample_t(subset(xcorr_nonorm_noresample, condition = "meaning", level = "M"))
+nonsense <- get_one_sample_t(subset(xcorr_nonorm_noresample, condition = "meaning", level = "N"))
+low_constraint <- get_one_sample_t(subset(xcorr_nonorm_noresample, condition = "constraint", level = "L"))
+high_constraint <- get_one_sample_t(subset(xcorr_nonorm_noresample, condition = "constraint", level = "H"))
+```
+
+```{r}
+# Creating a table to display all the p-values
+spacer <- matrix(" ", 128, 1)
+one_sample_t <- data.frame(channels, 
+                     same_talker$p,
+                     different_talker$p, 
+                     spacer,
+                     meaningful$p,
+                     nonsense$p, 
+                     spacer,
+                     low_constraint$p,
+                     high_constraint$p)  %>%
+  mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
+  mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
+                                            cell_spec(x, NULL),
+                                            cell_spec(x, background = spec_color(x, 
+                                                                                 direction = 1, 
+                                                                                 begin = 0.65, 
+                                                                                 end = 1, 
+                                                                                 option = "B", 
+                                                                                 scale_from = c(0,0.1))))})
+
+kable(one_sample_t, escape = F, col.names = c("Channel", "S", "T", " ",
+                                                "M", "N", " ",
+                                                "S", "G")) %>%
+  add_header_above(c(" " = 1, "Talker" = 2, " "  = 1, "Meaning" = 2, " " = 1, "Constraint" = 2)) %>%
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
