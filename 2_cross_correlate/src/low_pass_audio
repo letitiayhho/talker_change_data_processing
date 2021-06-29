@@ -1,0 +1,52 @@
+########################
+#
+#  Low-pass filters all the files
+#  in a specified directory.  Deletes
+#  all signal above the given frequency.
+#  Resulting files are saved in the 
+#  specified directory.
+#
+########################
+
+
+form Low pass filter files
+	comment Directory of source sound files
+	text sound_directory /Users/letitiaho/src/talker_change_data_processing/0_set_up_and_raw_data/data/stim/original/
+	sentence Sound_file_extension .wav
+	comment Directory of created filtered files
+	text end_directory /Users/letitiaho/src/talker_change_data_processing/0_set_up_and_raw_data/data/stim/low_pass_400/
+	comment Filter above this frequency
+	positive Low_pass 400
+	positive Smoothing 50
+	comment Scale intensity to
+	positive intensity 80.0
+endform
+
+# Here, you make a listing of all the sound files in a directory.
+
+Create Strings as file list... list 'sound_directory$'*'sound_file_extension$'
+numberOfFiles = Get number of strings
+
+for ifile to numberOfFiles
+
+	# A sound file is opened from the listing:
+
+	filename$ = Get string... ifile
+	Read from file... 'sound_directory$''filename$'
+
+	# Filter
+
+	Filter (pass Hann band)... 0 low_pass smoothing
+
+	# Scale intensity
+
+	Scale intensity... intensity
+
+	# Save resulting files
+
+	Write to WAV file... 'end_directory$''filename$'
+	select Strings list
+endfor
+
+select all
+Remove

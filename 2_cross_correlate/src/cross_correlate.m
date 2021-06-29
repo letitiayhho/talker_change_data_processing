@@ -16,7 +16,7 @@ end
     %% 1. Import data
     cd(git_home)
     addpath(fullfile('1_preprocessing/data', subject_number)) % add subject data to path
-    addpath(fullfile('0_set_up_and_raw_data/data/stim/original')) % add audio stimuli directory to path
+    addpath(fullfile('0_set_up_and_raw_data/data/stim/low_pass_400')) % add audio stimuli directory to path
     addpath(fullfile('2_cross_correlate/data', subject_number))
 
     % Import EEG data
