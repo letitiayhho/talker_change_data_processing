@@ -54,7 +54,7 @@ end
              stim = [stim; pad];
 
              % Compute convolution and cross correlation
-             data(j, i) = mean(abs(xcorr(epoch, stim, 'normalize')));
+             data(j, i) = max(xcorr(epoch, stim, 'normalize'));
 
              % Write statistics to data arrays
 %              average_nonorm_noresample(j, i) = mean(cross_correlations);
