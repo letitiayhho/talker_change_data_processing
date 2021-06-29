@@ -26,9 +26,7 @@ end
     stim_order = load('stim_order').stim_order;
 
     %% 2. Cross correlate
-    abs_average = zeros(size(eeg_data, 3), size(eeg_data, 1));
-    maximum = zeros(size(eeg_data, 3), size(eeg_data, 1));
-    lag = zeros(size(eeg_data, 3), size(eeg_data, 1));
+    average = zeros(size(eeg_data, 3), size(eeg_data, 1));
 
     % Loop over channels
     fprintf(1, 'Channel #')
@@ -40,24 +38,16 @@ end
 
              % Extract eeg epoch and interpolate
              epoch = double(eeg_data(i, :, j));
-             epoch = resample(epoch, 44100, 1000);
 
              % Load stimuli .wav file for epoch
              word = char(stim_order.word(j));
              stim = audioread(word);
              
-             % Pad the stimuli signal to make it the same length as the eeg
-             pad = zeros(length(epoch) - length(stim), 1);
-             stim = [stim; pad];
-
              % Compute convolution and cross correlation
              [cross_correlations, lags] = xcorr(stim, epoch, 'normalize');
 
              % Write statistics to data arrays
-             abs_average(j, i) = mean(abs(cross_correlations));
-             [maximum(j, i), I] = max(cross_correlations);
-             lag(j, i) = lags(I);
-         end
+             average(j, i) = mean(cross_correlations);
     end
 
     %% 3. Split condition codes up
