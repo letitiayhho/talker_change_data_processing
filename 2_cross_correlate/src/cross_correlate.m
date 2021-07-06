@@ -46,16 +46,12 @@ end
              stim = audioread(word);
              stim = resample(stim, 10, 441);
              
-             % Normalize both signals
-             epoch = normalize(epoch);
-             stim = normalize(stim);
-             
              % Pad the stimuli signal to make it the same length as the eeg
              pad = zeros(length(epoch) - length(stim), 1);
              stim = [stim; pad];
 
              % Compute convolution and cross correlation
-             [cross_correlations, lags] = xcorr(stim, epoch, 'normalize');
+             [cross_correlations, lags] = xcorr(stim, epoch);
 
              % Write statistics to data arrays
              abs_average(j, i) = mean(abs(cross_correlations));
