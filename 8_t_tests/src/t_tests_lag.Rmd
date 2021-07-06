@@ -1,0 +1,80 @@
+---
+title: "Lags"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, warning=FALSE}
+knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/")
+setwd("/Users/letitiaho/src/talker_change_data_processing/")
+library("dplyr")
+library("ggplot2")
+library("ggpubr")
+library("kableExtra")
+source("tools/functions.R")
+source("8_t_tests/src/t_test_functions.R")
+theme_set(theme_minimal())  
+```
+
+```{r}
+# Import data
+lag <- read.csv(file = "2_cross_correlate/data/lag.csv")
+channels <- as.character(1:128)
+```
+
+#### One-sample t-tests
+
+Compares the cross correlations for each condition level (e.g. same-talker, meaningful) to 0.
+
+```{r}
+same_talker <- subset(lag, condition = "talker", level = "S")
+different_talker <- subset(lag, condition = "talker", level = "T")
+meaningful <- subset(lag, condition = "meaning", level = "M")
+nonsense <- subset(lag, condition = "meaning", level = "N")
+low_constraint <- subset(lag, condition = "constraint", level = "L")
+high_constraint <- subset(lag, condition = "constraint", level = "H")
+```
+
+#### Talker
+
+```{r}
+talker_1 <- get_lag_distribution(group1 = same_talker, group2 = different_talker, labels = c("same_talker", "different_talker"), channel = 1)
+talker_2 <- get_lag_distribution(group1 = same_talker, group2 = different_talker, labels = c("same_talker", "different_talker"), channel = 2)
+talker_3 <- get_lag_distribution(group1 = same_talker, group2 = different_talker, labels = c("same_talker", "different_talker"), channel = 3)
+
+ggarrange(talker_1,
+         talker_2,
+         talker_3,
+         nrow = 3,
+         ncol = 1)
+```
+
+#### Meaning
+
+```{r}
+meaning_1 <- get_lag_distribution(group1 = meaningful, group2 = nonsense, labels = c("meaningful", "nonsense"), channel = 1)
+meaning_2 <- get_lag_distribution(group1 = meaningful, group2 = nonsense, labels = c("meaningful", "nonsense"), channel = 2)
+meaning_3 <- get_lag_distribution(group1 = meaningful, group2 = nonsense, labels = c("meaningful", "nonsense"), channel = 3)
+
+ggarrange(meaning_1,
+         meaning_2,
+         meaning_3,
+         nrow = 3,
+         ncol = 1)
+```
+
+#### Constraint
+
+```{r}
+constraint_1 <- get_lag_distribution(group1 = low_constraint, group2 = high_constraint, labels = c("low constraint", "high constraint"), channel = 1)
+constraint_2 <- get_lag_distribution(group1 = low_constraint, group2 = high_constraint, labels = c("low constraint", "high constraint"), channel = 2)
+constraint_3 <- get_lag_distribution(group1 = low_constraint, group2 = high_constraint, labels = c("low constraint", "high constraint"), channel = 3)
+
+ggarrange(constraint_1,
+         constraint_2,
+         constraint_3,
+         nrow = 3,
+         ncol = 1)
+```
+
