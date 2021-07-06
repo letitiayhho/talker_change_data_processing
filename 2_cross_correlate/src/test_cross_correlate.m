@@ -18,6 +18,7 @@ for i = 120:121
     
     % Load audio file
     stim = audioread('churchbells_f.wav');
+%     stim = resample(stim, 10, 441);
     pad = zeros(length(epoch) - length(stim), 1);
     stim = [stim; pad];
     
