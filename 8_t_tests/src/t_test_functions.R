@@ -1,20 +1,26 @@
-subset <- function(data, formants = NaN, condition, level) {
-  channel_columns = paste("X", 1:128, sep = "")
-  
-  # Subset by condition if specified
-  if (condition == "talker") {
-    if (level == "S")
-      return(filter(data, talker == "S") %>% select(all_of(channel_columns)))
-    return(filter(data, talker == "T") %>% select(all_of(channel_columns)))
-  } else if (condition == "meaning") {
-    if (level == "M")
-      return(filter(data, meaning == "M") %>% select(all_of(channel_columns)))
-    return(filter(data, meaning == "N") %>% select(all_of(channel_columns)))
-  } else if (condition == "constraint") {
-    if (level == "L")
-      return(filter(data, constraint == "L") %>% select(all_of(channel_columns)))
-    return(filter(data, constraint == "H") %>% select(all_of(channel_columns)))
+subset <- function(data, talker = NaN, meaning = NaN, constraint = NaN, keep_subject_numbers = F) {
+  channel_columns = paste("X", as.character(1:128), sep = "")
+  if (talker == "S") {
+    data <- filter(data, talker == "S")
+  } else if (talker == "T") {
+    data <- filter(data, talker == "T")
   }
+  if (meaning == "M") {
+    data <- filter(data, meaning == "M")
+  } else if (meaning == "N") {
+    data <- filter(data, meaning == "N")
+  }
+  if (constraint == "L") {
+    data <- filter(data, constraint == "L")
+  } else if (constraint == "H") {
+    data <- filter(data, constraint == "H")
+  }
+  if (keep_subject_numbers == T) {
+    data <- select(data, all_of(c("subject_number", channel_columns)))
+  } else {
+    data <- select(data, all_of(channel_columns))
+  }
+  return(data)
 }
 
 get_one_sample_t <- function(data) {
