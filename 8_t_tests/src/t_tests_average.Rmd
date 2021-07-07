@@ -1,0 +1,261 @@
+---
+title: "Maximum"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, warning=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/")
+setwd("/Users/letitiaho/src/talker_change_data_processing/")
+library("dplyr")
+library("ggplot2")
+library("ggpubr")
+library("kableExtra")
+source("tools/functions.R")
+source("8_t_tests/src/t_test_functions.R")
+```
+
+```{r}
+# Import data
+xcorr <- read.csv(file = "2_cross_correlate/data/average.csv")
+channels <- as.character(1:128)
+```
+
+#### One-sample t-tests
+
+Compares the cross correlations for each condition level (e.g. same-talker, meaningful) to 0.
+
+```{r}
+# Data frames will be named according to their condition, with the code for talker, then meaning, then constraint listed in that order
+# Same-talker = S
+# Different-talker = T
+# Meaningful = M
+# Nonsense = N
+# Low constraint = L
+# High constraint = H
+S <- subset(xcorr, talker = "S")
+T <- subset(xcorr, talker = "T")
+M <- subset(xcorr, meaning = "M")
+N <- subset(xcorr, meaning = "N")
+L <- subset(xcorr, constraint = "L")
+H <- subset(xcorr, constraint = "H")
+```
+
+```{r}
+S_t <- get_one_sample_t(S)
+T_t <- get_one_sample_t(T)
+M_t <- get_one_sample_t(M)
+N_t <- get_one_sample_t(N)
+L_t <- get_one_sample_t(L)
+H_t <- get_one_sample_t(H)
+```
+
+```{r}
+# Creating a table to display all the p-values
+spacer <- matrix(" ", 128, 1)
+one_sample_t <- data.frame(channels, 
+                     S_t$p,
+                     T_t$p, 
+                     spacer,
+                     M_t$p,
+                     N_t$p, 
+                     spacer,
+                     L_t$p,
+                     H_t$p)  %>%
+  mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
+  mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
+                                            cell_spec(x, NULL),
+                                            cell_spec(x, background = spec_color(x, 
+                                                                                 direction = 1, 
+                                                                                 begin = 0.65, 
+                                                                                 end = 1, 
+                                                                                 option = "B", 
+                                                                                 scale_from = c(0,0.1))))})
+
+kable(one_sample_t, escape = F, col.names = c("Channel", "S", "T", " ",
+                                                "M", "N", " ",
+                                                "S", "G")) %>%
+  add_header_above(c(" " = 1, "Talker" = 2, " "  = 1, "Meaning" = 2, " " = 1, "Constraint" = 2)) %>%
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
+
+#### Two-sample t-tests
+
+Compares cross correlations between the two levels of each condition. 
+
+```{r}
+talker_t <- get_two_sample_t(S, T)
+meaning_t <- get_two_sample_t(M, N)
+constraint_t <- get_two_sample_t(L, H)
+```
+
+```{r}
+# Creating a table to display all the p-values
+two_sample_t <- data.frame(channels, 
+                     talker_t$p,
+                     meaning_t$p,
+                     constraint_t$p) %>%
+  mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
+  mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
+                                            cell_spec(x, NULL),
+                                            cell_spec(x, background = spec_color(x, 
+                                                                                 direction = 1, 
+                                                                                 begin = 0.65, 
+                                                                                 end = 1, 
+                                                                                 option = "B", 
+                                                                                 scale_from = c(0,0.1))))})
+
+kable(two_sample_t, escape = F, col.names = c("Channel", "Talker", "Meaning", "Constraint")) %>%
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
+
+#### T-tests with interaction by constraint
+
+```{r}
+# Subset talker
+SL <- subset(xcorr, talker = "S", constraint = "L")
+SH <- subset(xcorr, talker = "S", constraint = "H")
+TL <- subset(xcorr, talker = "T", constraint = "L")
+TH <- subset(xcorr, talker = "T", constraint = "H")
+
+# Subset meaning
+ML <- subset(xcorr, meaning = "M", constraint = "L")
+MH <- subset(xcorr, meaning = "M", constraint = "H")
+NL <- subset(xcorr, meaning = "N", constraint = "L")
+NH <- subset(xcorr, meaning = "N", constraint = "H")
+```
+
+```{r}
+# One-sample t-tests for talker
+SL_t <- get_one_sample_t(SL)
+SH_t <- get_one_sample_t(SH)
+TL_t <- get_one_sample_t(TL)
+TH_t <- get_one_sample_t(TH)
+
+# One-sample t-tests for meaning
+ML_t <- get_one_sample_t(ML)
+MH_t <- get_one_sample_t(MH)
+NL_t <- get_one_sample_t(NL)
+NH_t <- get_one_sample_t(NH)
+```
+
+```{r}
+# Creating a table to display all the p-values
+spacer <- matrix(" ", 128, 1)
+one_sample_t <- data.frame(channels, 
+                     SL_t$p,
+                     SH_t$p,
+                     spacer,
+                     TL_t$p,
+                     TH_t$p, 
+                     spacer,
+                     ML_t$p,
+                     MH_t$p,
+                     spacer,
+                     NL_t$p,
+                     NH_t$p)  %>%
+  mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
+  mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
+                                            cell_spec(x, NULL),
+                                            cell_spec(x, background = spec_color(x, 
+                                                                                 direction = 1, 
+                                                                                 begin = 0.65, 
+                                                                                 end = 1, 
+                                                                                 option = "B", 
+                                                                                 scale_from = c(0,0.1))))})
+
+kable(one_sample_t, escape = F, col.names = c("Channel", "L", "H", " ", "L", "H", " ",
+                                              "L", "H", " ", "L", "H")) %>%
+  add_header_above(c(" " = 1, "Same-talker" = 2, " "  = 1, "Different-talker" = 2, " " = 1, "Meaningful" = 2, " "  = 1, "Nonsense" = 2)) %>%
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
+
+```{r}
+talker_L_t <- get_two_sample_t(SL, TL)
+talker_H_t <- get_two_sample_t(SH, TH)
+meaning_L_t <- get_two_sample_t(ML, NL)
+meaning_H_t <- get_two_sample_t(MH, NH)
+```
+
+```{r}
+# Creating a table to display all the p-values
+spacer <- matrix(" ", 128, 1)
+one_sample_t <- data.frame(channels, 
+                     talker_L_t$p,
+                     talker_H_t$p,
+                     spacer,
+                     meaning_L_t$p,
+                     meaning_H_t$p)  %>%
+  mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
+  mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
+                                            cell_spec(x, NULL),
+                                            cell_spec(x, background = spec_color(x, 
+                                                                                 direction = 1, 
+                                                                                 begin = 0.65, 
+                                                                                 end = 1, 
+                                                                                 option = "B", 
+                                                                                 scale_from = c(0,0.1))))})
+
+kable(one_sample_t, escape = F, col.names = c("Channel", "L", "H", " ", "L", "H")) %>%
+  add_header_above(c(" " = 1, "Talker" = 2, " "  = 1, "Meaning" = 2)) %>%
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
+
+#### T-tests against difference set by low vs high-constraint sentences
+
+```{r}
+SML <- subset(xcorr, talker = "S", meaning = "M", constraint = "L", keep_subject_numbers = T)
+SML_means <- aggregate(SML[,2:129], by=list(SML$subject_number), FUN=mean) %>%
+  subset(SML_means, -1)
+```
+
+```{r}
+# take meaningful and same-talker sentences and compare correlations of low- vs high-constraint sentences
+# compare this difference to meaningful and high-constraint same- vs different-talker sentences
+# compare this difference to same-talker and high-constraint meaningful vs nonsense sentences
+SML <- subset(xcorr, talker = "S", meaning = "M", constraint = "L", keep_subject_numbers = T)
+SML_means <- aggregate(SML[,2:129], by=list(SML$subject_number), FUN=mean) %>%
+  subset(SML_means, -1)
+SMH <- subset(xcorr, talker = "S", meaning = "M", constraint = "H", keep_subject_numbers = T)
+SMH_means <- aggregate(SMH[,2:129], by=list(SMH$subject_number), FUN=mean) %>%
+  subset(SML_means, -1)
+baseline <- SMH_means - SML_means
+
+TMH <- subset(xcorr, talker = "T", meaning = "M", constraint = "H", keep_subject_numbers = T)
+TMH_means <- aggregate(TMH[,2:129], by=list(TMH$subject_number), FUN=mean) %>%
+  subset(SML_means, -1)
+talker_compare <- TMH_means - SMH_means
+
+SNH <- subset(xcorr, talker = "S", meaning = "N", constraint = "H", keep_subject_numbers = T)
+SNH_means <- aggregate(SNH[,2:129], by=list(SNH$subject_number), FUN=mean) %>%
+  subset(SML_means, -1)
+meaning_compare <- SNH_means - SMH_means
+```
+
+```{r}
+# t-test by subject
+talker_compare_t <- get_two_sample_t(baseline, talker_compare)
+meaning_compare_t <- get_two_sample_t(baseline, meaning_compare)
+```
+
+```{r}
+# Creating a table to display all the p-values
+spacer <- matrix(" ", 128, 1)
+one_sample_t <- data.frame(channels, 
+                     talker_compare_t$p,
+                     meaning_compare_t$p) %>%
+  mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
+  mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
+                                            cell_spec(x, NULL),
+                                            cell_spec(x, background = spec_color(x, 
+                                                                                 direction = 1, 
+                                                                                 begin = 0.65, 
+                                                                                 end = 1, 
+                                                                                 option = "B", 
+                                                                                 scale_from = c(0,0.1))))})
+
+kable(one_sample_t, escape = F, col.names = c("Channel", "Talker", "Meaning")) %>%
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
