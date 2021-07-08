@@ -1,11 +1,11 @@
 function [] = preprocess_eeg_data(subject_number)
     % Print given args
     fprintf(1, strcat('Preprocessing data for ', subject_number))
-    cd(fullfile('data', subject_number))
 
     %% 1. Open EEGLAB
     fprintf(1, '\n\n1. Opening EEGLAB\n\n\n')
     addpath('/Applications/eeglab2019')
+    cd(fullfile('0_set_up_and_raw_data/data', subject_number))
     [ALLEEG EEG CURRENTSET ALLCOM] = eeglab;
     EEG.etc.eeglabvers = '2019.1'; % tracks which version of EEGLAB is being used
 
@@ -95,7 +95,6 @@ function [] = preprocess_eeg_data(subject_number)
         EEG = pop_iclabel(EEG, 'default');
         set_name = strcat(set_name, '_pru')
         EEG = name_and_save(EEG, set_name);
-        EEG = pop_saveset( EEG, 'filename', set_name);
 
         % 7.3 Save pruned epoch order
         epoch_order_pruned = EEG.event;
@@ -105,6 +104,7 @@ function [] = preprocess_eeg_data(subject_number)
     fprintf(1, '\n\n8. Exporting preprocessed eeg data\n\n\n')
     eeg_data = EEG.data;
     save('eeg_data', 'eeg_data');
+    save -mat eeg_data.set EEG
 
     quit
 
@@ -112,6 +112,5 @@ function [] = preprocess_eeg_data(subject_number)
     function [ EEG ] = name_and_save(EEG, set_name)
         EEG.setname = set_name;
         [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET, 'setname', set_name);
-%        EEG = pop_saveset( EEG, 'filename', set_name);
     end
 end
