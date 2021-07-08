@@ -102,9 +102,10 @@ function [] = preprocess_eeg_data(subject_number)
 
     %% 8. Export
     fprintf(1, '\n\n8. Exporting preprocessed eeg data\n\n\n')
+    EEG.setname = subject_number;
     eeg_data = EEG.data;
-    save('eeg_data', 'eeg_data');
-    save -mat eeg_data.set EEG
+    save('eeg_data.mat', 'eeg_data'); 
+    save('eeg_data.set', 'EEG', '-mat');
 
     quit
 
