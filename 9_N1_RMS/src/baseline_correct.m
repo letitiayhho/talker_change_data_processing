@@ -1,5 +1,11 @@
-cd('/Users/letitiaho/src/talker_change_data_processing')
-subject_numbers = load_subject_numbers('0_set_up_and_raw_data/data/subject_numbers.txt');
+function [] = baseline_correct(git_home)
+
+arguments
+    git_home string
+end
+
+cd(git_home)
+subject_numbers = load_subject_numbers('./0_set_up_and_raw_data/data/subject_numbers.txt');
 
 for i = 1:length(subject_numbers)
     subject_number = num2str(subject_numbers(i));
@@ -11,18 +17,20 @@ for i = 1:length(subject_numbers)
     save(savefp, 'eeg')
 end
 
-function [subject_numbers] = load_subject_numbers(fp)
-    fileID = fopen(fp,'r');
-    subject_numbers = fscanf(fileID, '%f');
-end
+    function [subject_numbers] = load_subject_numbers(fp)
+        fileID = fopen(fp,'r');
+        subject_numbers = fscanf(fileID, '%f');
+    end
 
-function [eeg] = load_eeg(subject_number)
-    fp = fullfile('./1_preprocessing/data',  subject_number, 'eeg_data.mat');
-    eeg = load(fp).eeg_data;
-end
+    function [eeg] = load_eeg(subject_number)
+        fp = fullfile('./1_preprocessing/data',  subject_number, 'eeg_data.mat');
+        eeg = load(fp).eeg_data;
+    end
 
-function [eeg] = correct_baseline(eeg)
-    baseline_period = eeg(:, 1:100, :);
-    baseline = mean(baseline_period, 2);
-    eeg = eeg - baseline;
+    function [eeg] = correct_baseline(eeg)
+        baseline_period = eeg(:, 1:100, :);
+        baseline = mean(baseline_period, 2);
+        eeg = eeg - baseline;
+    end
+
 end

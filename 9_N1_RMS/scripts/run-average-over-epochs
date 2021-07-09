@@ -1,0 +1,26 @@
+#!/bin/bash
+set -euo pipefail
+
+usage() {
+    cat <<eof >&2
+usage: $0 <condition>
+
+    description
+        wrapper script for average_over_epochs.m
+        conditions are same, different, meaningful
+        nonsense, low, and high
+eof
+    exit 1
+}
+
+if [[ $# -ne 1 ]]; then
+    usage
+fi
+
+GIT_HOME="$(git rev-parse --show-toplevel)"
+cd "$GIT_HOME"
+condition="$1"
+
+while read -r subject_number; do
+    matlab -nodisplay -r "addpath('9_N1_RMS/src'); cross_correlate('$GIT_HOME', '$condition'); quit"
+done
