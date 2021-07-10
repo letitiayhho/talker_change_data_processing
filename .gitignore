@@ -23,3 +23,6 @@ archive/
 
 # ignore markdown output
 *.html
+
+# ignore jupyter notebook checkpoints
+.ipynb_checkpoints
