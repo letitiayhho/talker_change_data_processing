@@ -1,9 +1,6 @@
-function [] = average_over_epochs(git_home, talker, meaning, constraint)
+function [] = average_over_epochs(git_home)
 arguments
     git_home char
-    talker char {mustBeMember(talker,["same","different","NaN"])} = 'NaN'
-    meaning char {mustBeMember(meaning,["meaningful","nonsense","NaN"])}= 'NaN'
-    constraint char {mustBeMember(constraint,["low","high","NaN"])} = 'NaN'
 end
     
 cd(git_home)
@@ -63,24 +60,10 @@ quit
         talker_indexes = 1:size(conditions,1);
         meaning_indexes = 1:size(conditions, 1);
         constraint_indexes = 1:size(conditions, 1);
-            
-%         if strcmp(talker, 'same')
-            talker_indexes = find(contains(conditions.talker, talker));
-%         elseif strcmp(talker, 'different')
-%             talker_indexes = find(contains(conditions.talker, 'T'));
-%         end
         
-%         if strcmp(meaning, 'meaningful')
-            meaning_indexes = find(contains(conditions.meaning, meaning));
-%         elseif strcmp(meaning, 'nonsense')
-%             meaning_indexes = find(contains(conditions.meaning, 'N'));
-%         end
-        
-%         if strcmp(constraint, 'low')
-            constraint_indexes = find(contains(conditions.constraint, constraint));
-%         elseif strcmp(constraint, 'high')
-%             constraint_indexes = find(contains(conditions.constraint, 'H'));
-%         end
+        talker_indexes = find(contains(conditions.talker, talker));
+        meaning_indexes = find(contains(conditions.meaning, meaning));
+        constraint_indexes = find(contains(conditions.constraint, constraint));
         
         % Intersect of all indexes
         indexes = intersect(intersect(talker_indexes, meaning_indexes), constraint_indexes);
@@ -91,5 +74,4 @@ quit
         eeg = mean(eeg, 3); % data will be 128*1600
     end
 
-% end
-
+end
