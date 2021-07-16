@@ -32,9 +32,9 @@ quit
     end
 
     function [conditions] = recode_and_split(condition_codes)
-        constraint = recode_constraint(condition_codes(:, 1));
-        meaning = condition_codes(:, 2);
-        talker = condition_codes(:, 3);
+        constraint = string(recode_constraint(condition_codes(:, 1)));
+        meaning = string(condition_codes(:, 2));
+        talker = string(condition_codes(:, 3));
         conditions = table(constraint, meaning, talker);
     end
 
