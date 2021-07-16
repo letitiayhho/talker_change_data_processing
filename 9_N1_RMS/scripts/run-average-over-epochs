@@ -3,24 +3,22 @@ set -euo pipefail
 
 usage() {
     cat <<eof >&2
-usage: $0 <condition>
+usage: $0 
 
     description
         wrapper script for average_over_epochs.m
-        conditions are same, different, meaningful
-        nonsense, low, and high
+        outputs eeg_data_averaged.csv with a row
+        for the averaged data of each unique 3-
+        letter condition code for each channel
 eof
     exit 1
 }
 
-if [[ $# -ne 1 ]]; then
+if [[ $# -ne 0 ]]; then
     usage
 fi
 
 GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME"
-condition="$1"
 
-while read -r subject_number; do
-    matlab -nodisplay -r "addpath('9_N1_RMS/src'); cross_correlate('$GIT_HOME', '$condition'); quit"
-done
+matlab -nodisplay -r "addpath('9_N1_RMS/src'); average_over_epochs('$GIT_HOME'); quit"
