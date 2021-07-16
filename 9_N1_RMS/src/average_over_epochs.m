@@ -1,18 +1,16 @@
-% function [] = average_over_epochs(git_home, talker, meaning, constraint)
-%     arguments
-%         git_home char
-%         talker char {mustBeMember(talker,["same","different","NaN"])} = 'NaN'
-%         meaning char {mustBeMember(meaning,["meaningful","nonsense","NaN"])}= 'NaN'
-%         constraint char {mustBeMember(constraint,["low","high","NaN"])} = 'NaN'
-%         end
-%     
-% cd(git_home)
-% subject_numbers = load_subject_numbers('./0_set_up_and_raw_data/data/subject_numbers.txt');
-% 
-% for i = 1:length(subject_numbers)
-%     subject_number = num2str(subject_numbers(i));
-subject_number = '301';
+function [] = average_over_epochs(git_home, talker, meaning, constraint)
+arguments
+    git_home char
+    talker char {mustBeMember(talker,["same","different","NaN"])} = 'NaN'
+    meaning char {mustBeMember(meaning,["meaningful","nonsense","NaN"])}= 'NaN'
+    constraint char {mustBeMember(constraint,["low","high","NaN"])} = 'NaN'
+end
+    
+cd(git_home)
+subject_numbers = load_subject_numbers('./0_set_up_and_raw_data/data/subject_numbers.txt');
 
+for i = 1:length(subject_numbers)
+    subject_number = num2str(subject_numbers(i));
     fprintf(1, ['Averaging over epochs for subject ', subject_number, '\n'])
     conditions = load_conditions(subject_number);
     eeg = load_eeg(subject_number);
@@ -20,9 +18,9 @@ subject_number = '301';
     savefp = fullfile('./9_N1_RMS/data', subject_number, 'eeg_data_averaged.csv');
     fprintf(1, ['Saving data to ', savefp, '\n'])
     writetable(all_conditions_eeg, savefp)
-% end
+end
 
-% quit
+quit
 
     function [all_conditions_eeg] = average_over_conditions(eeg, conditions)
         all_conditions_eeg = [];
@@ -31,9 +29,9 @@ subject_number = '301';
                 for constraint = ["L", "H"]
                     one_condition_eeg = subset_by_condition(eeg, conditions, talker, meaning, constraint);
                     one_condition_eeg = array2table(flatten(one_condition_eeg));
-                    conditions = table(repmat(talker, 1, 128)', repmat(meaning, 1, 128)', repmat(constraint, 1, 128)', (1:128)');
-                    conditions.Properties.VariableNames(1:4) = {'talker', 'meaning', 'constraint', 'channel'};
-                    one_condition_eeg = [conditions, one_condition_eeg];
+                    labels = table(repmat(talker, 1, 128)', repmat(meaning, 1, 128)', repmat(constraint, 1, 128)', (1:128)');
+                    labels.Properties.VariableNames(1:4) = {'talker', 'meaning', 'constraint', 'channel'};
+                    one_condition_eeg = [labels, one_condition_eeg];
                     all_conditions_eeg = [all_conditions_eeg; one_condition_eeg];
                 end
             end
