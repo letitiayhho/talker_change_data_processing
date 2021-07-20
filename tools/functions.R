@@ -184,7 +184,7 @@ get_layout <- function() {
   coordinates <- read.delim(fp, header = FALSE)
   x <- coordinates[[1]]
   y <- -coordinates[[2]]+ 2*mean(coordinates[[2]]) # flip y coords and return to original center
-  return(list(x = x, y = y))
+  return(data.frame(x = x, y = y))
 }
 
 get_sig_channels <- function(data, variable) {
@@ -199,7 +199,7 @@ get_ps <- function(data, channels, condition, permutations) {
 
     # Exit early if not in list of significant channels
     if (!(i %in% channels)) {recoded_ps[i] = NaN}
-    
+
     # Recoding values if too small or too large
     else {
       if (p > 0.05) {recoded_ps[i] <- NaN}
