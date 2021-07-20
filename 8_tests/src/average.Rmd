@@ -100,9 +100,7 @@ one_sample_w <- data.frame(channels,
                                                                                  option = "B", 
                                                                                  scale_from = c(0,0.1))))})
 
-kable(one_sample_w, escape = F, col.names = c("Channel", "S", "T", " ",
-                                                "M", "N", " ",
-                                                "S", "G")) %>%
+kable(one_sample_w, escape = F, col.names = c("Channel", "S", "T", " ", "M", "N", " ", "S", "G")) %>%
   add_header_above(c(" " = 1, "Talker" = 2, " "  = 1, "Meaning" = 2, " " = 1, "Constraint" = 2)) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
@@ -192,8 +190,7 @@ interaction_w <- data.frame(channels,
                                                                                  option = "B", 
                                                                                  scale_from = c(0,0.1))))})
 
-kable(interaction_w, escape = F, col.names = c("Channel", "L", "H", " ", "L", "H", " ",
-                                              "L", "H", " ", "L", "H")) %>%
+kable(interaction_w, escape = F, col.names = c("Channel", "L", "H", " ", "L", "H", " ", "L", "H", " ", "L", "H")) %>%
   add_header_above(c(" " = 1, "Same-talker" = 2, " "  = 1, "Different-talker" = 2, " " = 1, "Meaningful" = 2, " "  = 1, "Nonsense" = 2)) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
