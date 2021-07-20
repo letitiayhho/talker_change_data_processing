@@ -14,7 +14,7 @@ library("ggplot2")
 library("ggpubr")
 library("kableExtra")
 source("tools/functions.R")
-source("8_t_tests/src/functions.R")
+source("8_tests/src/functions.R")
 ```
 
 ```{r}
