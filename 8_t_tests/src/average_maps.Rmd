@@ -1,0 +1,25 @@
+---
+title: "Average"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, warning=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/")
+setwd("/Users/letitiaho/src/talker_change_data_processing/")
+library("dplyr")
+library("ggplot2")
+library("ggpubr")
+library("kableExtra")
+source("tools/functions.R")
+source("8_t_tests/src/t_test_functions.R")
+```
+
+```{r}
+# Import data
+load("8_t_tests/data/t_test_results.RData")
+channels <- as.character(1:128)
+coordinates <- get_layout()
+```

@@ -1,5 +1,5 @@
 ---
-title: "Maximum"
+title: "Average"
 output: html_notebook
 editor_options: 
   chunk_output_type: inline
@@ -14,7 +14,7 @@ library("ggplot2")
 library("ggpubr")
 library("kableExtra")
 source("tools/functions.R")
-source("8_t_tests/src/t_test_functions.R")
+source("8_t_tests/src/functions.R")
 ```
 
 ```{r}
@@ -23,7 +23,33 @@ xcorr <- read.csv(file = "2_cross_correlate/data/average.csv")
 channels <- as.character(1:128)
 ```
 
-#### One-sample t-tests
+#### One-sample t-tests for overall tracking
+
+```{r}
+channel_labels <- paste("X", as.character(1:128), sep = "")
+all_channels <- select(xcorr, all_of(channel_labels))
+w <- get_one_sample_wilcoxon(all_channels)
+
+# Creating a table to display all the p-values
+spacer <- matrix(" ", 128, 1)
+overall <- data.frame(channels, w$p)  %>%
+  mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
+  mutate_if(is.numeric, function(x) {ifelse(x > 0.1,
+                                            cell_spec(x, NULL),
+                                            cell_spec(x, background = spec_color(x,
+                                                                                 direction = 1,
+                                                                                 begin = 0.65,
+                                                                                 end = 1,
+                                                                                 option = "B",
+                                                                                 scale_from = c(0,0.1))))})
+
+kable(overall, escape = F, col.names = c("Channel", "p")) %>%
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
+
+
+
+#### One-sample wilcoxon for each condition
 
 Compares the cross correlations for each condition level (e.g. same-talker, meaningful) to 0.
 
@@ -44,26 +70,26 @@ H <- subset(xcorr, constraint = "H")
 ```
 
 ```{r}
-S_t <- get_one_sample_t(S)
-T_t <- get_one_sample_t(T)
-M_t <- get_one_sample_t(M)
-N_t <- get_one_sample_t(N)
-L_t <- get_one_sample_t(L)
-H_t <- get_one_sample_t(H)
+S_w <- get_one_sample_wilcoxon(S)
+T_w <- get_one_sample_wilcoxon(T)
+M_w <- get_one_sample_wilcoxon(M)
+N_w <- get_one_sample_wilcoxon(N)
+L_w <- get_one_sample_wilcoxon(L)
+H_w <- get_one_sample_wilcoxon(H)
 ```
 
 ```{r}
 # Creating a table to display all the p-values
 spacer <- matrix(" ", 128, 1)
-one_sample_t <- data.frame(channels, 
-                     S_t$p,
-                     T_t$p, 
+one_sample_w <- data.frame(channels, 
+                     S_w$p,
+                     T_w$p, 
                      spacer,
-                     M_t$p,
-                     N_t$p, 
+                     M_w$p,
+                     N_w$p, 
                      spacer,
-                     L_t$p,
-                     H_t$p)  %>%
+                     L_w$p,
+                     H_w$p)  %>%
   mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
                                             cell_spec(x, NULL),
@@ -74,29 +100,29 @@ one_sample_t <- data.frame(channels,
                                                                                  option = "B", 
                                                                                  scale_from = c(0,0.1))))})
 
-kable(one_sample_t, escape = F, col.names = c("Channel", "S", "T", " ",
+kable(one_sample_w, escape = F, col.names = c("Channel", "S", "T", " ",
                                                 "M", "N", " ",
                                                 "S", "G")) %>%
   add_header_above(c(" " = 1, "Talker" = 2, " "  = 1, "Meaning" = 2, " " = 1, "Constraint" = 2)) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
-#### Two-sample t-tests
+#### Two-sample Wilcoxon
 
 Compares cross correlations between the two levels of each condition. 
 
 ```{r}
-talker_t <- get_two_sample_t(S, T)
-meaning_t <- get_two_sample_t(M, N)
-constraint_t <- get_two_sample_t(L, H)
+talker_w <- get_two_sample_wilcoxon(S, T)
+meaning_w <- get_two_sample_wilcoxon(M, N)
+constraint_w <- get_two_sample_wilcoxon(L, H)
 ```
 
 ```{r}
 # Creating a table to display all the p-values
-two_sample_t <- data.frame(channels, 
-                     talker_t$p,
-                     meaning_t$p,
-                     constraint_t$p) %>%
+two_sample_w <- data.frame(channels, 
+                     talker_w$p,
+                     meaning_w$p,
+                     constraint_w$p) %>%
   mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
                                             cell_spec(x, NULL),
@@ -107,11 +133,11 @@ two_sample_t <- data.frame(channels,
                                                                                  option = "B", 
                                                                                  scale_from = c(0,0.1))))})
 
-kable(two_sample_t, escape = F, col.names = c("Channel", "Talker", "Meaning", "Constraint")) %>%
+kable(two_sample_w, escape = F, col.names = c("Channel", "Talker", "Meaning", "Constraint")) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
-#### T-tests with interaction by constraint
+#### Wilcoxon with interaction by constraint
 
 ```{r}
 # Subset talker
@@ -129,33 +155,33 @@ NH <- subset(xcorr, meaning = "N", constraint = "H")
 
 ```{r}
 # One-sample t-tests for talker
-SL_t <- get_one_sample_t(SL)
-SH_t <- get_one_sample_t(SH)
-TL_t <- get_one_sample_t(TL)
-TH_t <- get_one_sample_t(TH)
+SL_w <- get_one_sample_wilcoxon(SL)
+SH_w <- get_one_sample_wilcoxon(SH)
+TL_w <- get_one_sample_wilcoxon(TL)
+TH_w <- get_one_sample_wilcoxon(TH)
 
 # One-sample t-tests for meaning
-ML_t <- get_one_sample_t(ML)
-MH_t <- get_one_sample_t(MH)
-NL_t <- get_one_sample_t(NL)
-NH_t <- get_one_sample_t(NH)
+ML_w <- get_one_sample_wilcoxon(ML)
+MH_w <- get_one_sample_wilcoxon(MH)
+NL_w <- get_one_sample_wilcoxon(NL)
+NH_w <- get_one_sample_wilcoxon(NH)
 ```
 
 ```{r}
 # Creating a table to display all the p-values
 spacer <- matrix(" ", 128, 1)
-one_sample_t <- data.frame(channels, 
-                     SL_t$p,
-                     SH_t$p,
+interaction_w <- data.frame(channels, 
+                     SL_w$p,
+                     SH_w$p,
                      spacer,
-                     TL_t$p,
-                     TH_t$p, 
+                     TL_w$p,
+                     TH_w$p, 
                      spacer,
-                     ML_t$p,
-                     MH_t$p,
+                     ML_w$p,
+                     MH_w$p,
                      spacer,
-                     NL_t$p,
-                     NH_t$p)  %>%
+                     NL_w$p,
+                     NH_w$p)  %>%
   mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
                                             cell_spec(x, NULL),
@@ -166,28 +192,28 @@ one_sample_t <- data.frame(channels,
                                                                                  option = "B", 
                                                                                  scale_from = c(0,0.1))))})
 
-kable(one_sample_t, escape = F, col.names = c("Channel", "L", "H", " ", "L", "H", " ",
+kable(interaction_w, escape = F, col.names = c("Channel", "L", "H", " ", "L", "H", " ",
                                               "L", "H", " ", "L", "H")) %>%
   add_header_above(c(" " = 1, "Same-talker" = 2, " "  = 1, "Different-talker" = 2, " " = 1, "Meaningful" = 2, " "  = 1, "Nonsense" = 2)) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
 ```{r}
-talker_L_t <- get_two_sample_t(SL, TL)
-talker_H_t <- get_two_sample_t(SH, TH)
-meaning_L_t <- get_two_sample_t(ML, NL)
-meaning_H_t <- get_two_sample_t(MH, NH)
+talker_L_w <- get_two_sample_wilcoxon(SL, TL)
+talker_H_w <- get_two_sample_wilcoxon(SH, TH)
+meaning_L_w <- get_two_sample_wilcoxon(ML, NL)
+meaning_H_w <- get_two_sample_wilcoxon(MH, NH)
 ```
 
 ```{r}
 # Creating a table to display all the p-values
 spacer <- matrix(" ", 128, 1)
-one_sample_t <- data.frame(channels, 
-                     talker_L_t$p,
-                     talker_H_t$p,
+interaction_two_sample_w <- data.frame(channels, 
+                     talker_L_w$p,
+                     talker_H_w$p,
                      spacer,
-                     meaning_L_t$p,
-                     meaning_H_t$p)  %>%
+                     meaning_L_w$p,
+                     meaning_H_w$p)  %>%
   mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
                                             cell_spec(x, NULL),
@@ -198,7 +224,7 @@ one_sample_t <- data.frame(channels,
                                                                                  option = "B", 
                                                                                  scale_from = c(0,0.1))))})
 
-kable(one_sample_t, escape = F, col.names = c("Channel", "L", "H", " ", "L", "H")) %>%
+kable(interaction_two_sample_w, escape = F, col.names = c("Channel", "L", "H", " ", "L", "H")) %>%
   add_header_above(c(" " = 1, "Talker" = 2, " "  = 1, "Meaning" = 2)) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
@@ -208,7 +234,7 @@ kable(one_sample_t, escape = F, col.names = c("Channel", "L", "H", " ", "L", "H"
 ```{r}
 SML <- subset(xcorr, talker = "S", meaning = "M", constraint = "L", keep_subject_numbers = T)
 SML_means <- aggregate(SML[,2:129], by=list(SML$subject_number), FUN=mean) %>%
-  subset(SML_means, -1)
+  subset(-1)
 ```
 
 ```{r}
@@ -236,16 +262,16 @@ meaning_compare <- SNH_means - SMH_means
 
 ```{r}
 # t-test by subject
-talker_compare_t <- get_two_sample_t(baseline, talker_compare)
-meaning_compare_t <- get_two_sample_t(baseline, meaning_compare)
+talker_compare_w <- get_two_sample_wilcoxon(baseline, talker_compare)
+meaning_compare_w <- get_two_sample_wilcoxon(baseline, meaning_compare)
 ```
 
 ```{r}
 # Creating a table to display all the p-values
 spacer <- matrix(" ", 128, 1)
-one_sample_t <- data.frame(channels, 
-                     talker_compare_t$p,
-                     meaning_compare_t$p) %>%
+compare_w <- data.frame(channels, 
+                     talker_compare_w$p,
+                     meaning_compare_w$p) %>%
   mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
                                             cell_spec(x, NULL),
@@ -256,6 +282,11 @@ one_sample_t <- data.frame(channels,
                                                                                  option = "B", 
                                                                                  scale_from = c(0,0.1))))})
 
-kable(one_sample_t, escape = F, col.names = c("Channel", "Talker", "Meaning")) %>%
+kable(compare_w, escape = F, col.names = c("Channel", "Talker", "Meaning")) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
+
+```{r}
+save(overall, one_sample_w, two_sample_w, interaction_w, interaction_two_sample_w, compare_w, file = "8_t_tests/data/wilcoxon_results.RData")
+```
+

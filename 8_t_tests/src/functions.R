@@ -30,11 +30,23 @@ get_one_sample_t <- function(data) {
   return(data.frame("t" = t, "df" = df, "p" = p))
 }
 
+get_one_sample_wilcoxon <- function(data) {
+  w <- apply(data, MARGIN = 2, function(channel) {wilcox.test(channel)$statistic})
+  p <- apply(data, MARGIN = 2, function(channel) {wilcox.test(channel)$p.value})
+  return(data.frame("w" = w, "p" = p))
+}
+
 get_two_sample_t <- function(group1, group2) {
   t <- mapply(function(x, y) {t.test(x, y)$statistic}, group1, group2)
   df <- mapply(function(x, y) {t.test(x, y)$parameter}, group1, group2)
   p <- mapply(function(x, y) {t.test(x, y)$p.value}, group1, group2)
   return(data.frame("t" = t, "df" = df, "p" = p))
+}
+
+get_two_sample_wilcoxon <- function(group1, group2) {
+  t <- mapply(function(x, y) {wilcox.test(x, y)$statistic}, group1, group2)
+  p <- mapply(function(x, y) {wilcox.test(x, y)$p.value}, group1, group2)
+  return(data.frame("t" = t, "p" = p))
 }
 
 get_lag_distribution <- function(group1, group2, labels, channel) {
