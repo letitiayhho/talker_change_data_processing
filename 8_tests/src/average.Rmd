@@ -32,7 +32,7 @@ w <- get_one_sample_wilcoxon(all_channels)
 
 # Creating a table to display all the p-values
 spacer <- matrix(" ", 128, 1)
-overall <- data.frame(channels, w$p)
+overall <- data.frame(channels, 'p'= w$p)
 map_df <- mutate_if(overall, is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 0.1,
                                             cell_spec(x, NULL),
@@ -80,16 +80,13 @@ H_w <- get_one_sample_wilcoxon(H)
 
 ```{r}
 # Creating a table to display all the p-values
-spacer <- matrix(" ", 128, 1)
 one_sample_w <- data.frame(channels, 
-                     S_w$p,
-                     T_w$p, 
-                     spacer,
-                     M_w$p,
-                     N_w$p, 
-                     spacer,
-                     L_w$p,
-                     H_w$p)
+                     'S' = S_w$p,
+                     'T' = T_w$p, 
+                     'M' = M_w$p,
+                     'N' = N_w$p, 
+                     'L' = L_w$p,
+                     'H' = H_w$p)
 map_df <- mutate_if(one_sample_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
                                             cell_spec(x, NULL),
@@ -100,8 +97,8 @@ map_df <- mutate_if(one_sample_w, is.numeric, function(x) {round(x, digits = 3)}
                                                                                  option = "B", 
                                                                                  scale_from = c(0,0.1))))})
 
-kable(map_df, escape = F, col.names = c("Channel", "S", "T", " ", "M", "N", " ", "S", "G")) %>%
-  add_header_above(c(" " = 1, "Talker" = 2, " "  = 1, "Meaning" = 2, " " = 1, "Constraint" = 2)) %>%
+kable(map_df, escape = F, col.names = c("Channel", "S", "T", "M", "N", "S", "G")) %>%
+  add_header_above(c(" " = 1, "Talker" = 2, "Meaning" = 2, "Constraint" = 2)) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
@@ -118,9 +115,9 @@ constraint_w <- get_two_sample_wilcoxon(L, H)
 ```{r}
 # Creating a table to display all the p-values
 two_sample_w <- data.frame(channels, 
-                     talker_w$p,
-                     meaning_w$p,
-                     constraint_w$p)
+                     'talker' = talker_w$p,
+                     'meaning' = meaning_w$p,
+                     'constraint' = constraint_w$p)
 map_df <-  mutate_if(two_sample_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
                                             cell_spec(x, NULL),
@@ -167,19 +164,15 @@ NH_w <- get_one_sample_wilcoxon(NH)
 
 ```{r}
 # Creating a table to display all the p-values
-spacer <- matrix(" ", 128, 1)
 interaction_w <- data.frame(channels, 
-                     SL_w$p,
-                     SH_w$p,
-                     spacer,
-                     TL_w$p,
-                     TH_w$p, 
-                     spacer,
-                     ML_w$p,
-                     MH_w$p,
-                     spacer,
-                     NL_w$p,
-                     NH_w$p)
+                     'SL' = SL_w$p,
+                     'SH' = SH_w$p,
+                     'TL' = TL_w$p,
+                     'TH' = TH_w$p, 
+                     'ML' = ML_w$p,
+                     'MH' = MH_w$p,
+                     'NL' = NL_w$p,
+                     'NH' = NH_w$p)
 map_df <- mutate_if(interaction_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
                                             cell_spec(x, NULL),
@@ -190,8 +183,8 @@ map_df <- mutate_if(interaction_w, is.numeric, function(x) {round(x, digits = 3)
                                                                                  option = "B", 
                                                                                  scale_from = c(0,0.1))))})
 
-kable(map_df, escape = F, col.names = c("Channel", "L", "H", " ", "L", "H", " ", "L", "H", " ", "L", "H")) %>%
-  add_header_above(c(" " = 1, "Same-talker" = 2, " "  = 1, "Different-talker" = 2, " " = 1, "Meaningful" = 2, " "  = 1, "Nonsense" = 2)) %>%
+kable(map_df, escape = F, col.names = c("Channel", "L", "H", "L", "H", "L", "H", "L", "H")) %>%
+  add_header_above(c(" " = 1, "Same-talker" = 2, "Different-talker" = 2, "Meaningful" = 2, "Nonsense" = 2)) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
@@ -204,13 +197,11 @@ meaning_H_w <- get_two_sample_wilcoxon(MH, NH)
 
 ```{r}
 # Creating a table to display all the p-values
-spacer <- matrix(" ", 128, 1)
 interaction_two_sample_w <- data.frame(channels, 
-                     talker_L_w$p,
-                     talker_H_w$p,
-                     spacer,
-                     meaning_L_w$p,
-                     meaning_H_w$p)
+                     'talker_L' = talker_L_w$p,
+                     'talker_H' = talker_H_w$p,
+                     'meaning_L' = meaning_L_w$p,
+                     'meaning_H' = meaning_H_w$p)
 map_df <- mutate_if(interaction_two_sample_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
                                             cell_spec(x, NULL),
@@ -221,8 +212,8 @@ map_df <- mutate_if(interaction_two_sample_w, is.numeric, function(x) {round(x, 
                                                                                  option = "B", 
                                                                                  scale_from = c(0,0.1))))})
 
-kable(map_df, escape = F, col.names = c("Channel", "L", "H", " ", "L", "H")) %>%
-  add_header_above(c(" " = 1, "Talker" = 2, " "  = 1, "Meaning" = 2)) %>%
+kable(map_df, escape = F, col.names = c("Channel", "L", "H", "L", "H")) %>%
+  add_header_above(c(" " = 1, "Talker" = 2, "Meaning" = 2)) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
@@ -265,10 +256,9 @@ meaning_compare_w <- get_two_sample_wilcoxon(baseline, meaning_compare)
 
 ```{r}
 # Creating a table to display all the p-values
-spacer <- matrix(" ", 128, 1)
 compare_w <- data.frame(channels, 
-                     talker_compare_w$p,
-                     meaning_compare_w$p)
+                     'talker' = talker_compare_w$p,
+                     'meaning' = meaning_compare_w$p)
 map_df <- mutate_if(compare_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
                                             cell_spec(x, NULL),
