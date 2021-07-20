@@ -32,8 +32,8 @@ w <- get_one_sample_wilcoxon(all_channels)
 
 # Creating a table to display all the p-values
 spacer <- matrix(" ", 128, 1)
-overall <- data.frame(channels, w$p)  %>%
-  mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
+overall <- data.frame(channels, w$p)
+map_df <- mutate_if(overall, is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 0.1,
                                             cell_spec(x, NULL),
                                             cell_spec(x, background = spec_color(x,
@@ -43,7 +43,7 @@ overall <- data.frame(channels, w$p)  %>%
                                                                                  option = "B",
                                                                                  scale_from = c(0,0.1))))})
 
-kable(overall, escape = F, col.names = c("Channel", "p")) %>%
+kable(map_df, escape = F, col.names = c("Channel", "p")) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
@@ -89,8 +89,8 @@ one_sample_w <- data.frame(channels,
                      N_w$p, 
                      spacer,
                      L_w$p,
-                     H_w$p)  %>%
-  mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
+                     H_w$p)
+map_df <- mutate_if(one_sample_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
                                             cell_spec(x, NULL),
                                             cell_spec(x, background = spec_color(x, 
@@ -100,7 +100,7 @@ one_sample_w <- data.frame(channels,
                                                                                  option = "B", 
                                                                                  scale_from = c(0,0.1))))})
 
-kable(one_sample_w, escape = F, col.names = c("Channel", "S", "T", " ", "M", "N", " ", "S", "G")) %>%
+kable(map_df, escape = F, col.names = c("Channel", "S", "T", " ", "M", "N", " ", "S", "G")) %>%
   add_header_above(c(" " = 1, "Talker" = 2, " "  = 1, "Meaning" = 2, " " = 1, "Constraint" = 2)) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
@@ -120,8 +120,8 @@ constraint_w <- get_two_sample_wilcoxon(L, H)
 two_sample_w <- data.frame(channels, 
                      talker_w$p,
                      meaning_w$p,
-                     constraint_w$p) %>%
-  mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
+                     constraint_w$p)
+map_df <-  mutate_if(two_sample_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
                                             cell_spec(x, NULL),
                                             cell_spec(x, background = spec_color(x, 
@@ -131,7 +131,7 @@ two_sample_w <- data.frame(channels,
                                                                                  option = "B", 
                                                                                  scale_from = c(0,0.1))))})
 
-kable(two_sample_w, escape = F, col.names = c("Channel", "Talker", "Meaning", "Constraint")) %>%
+kable(map_df, escape = F, col.names = c("Channel", "Talker", "Meaning", "Constraint")) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
@@ -179,8 +179,8 @@ interaction_w <- data.frame(channels,
                      MH_w$p,
                      spacer,
                      NL_w$p,
-                     NH_w$p)  %>%
-  mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
+                     NH_w$p)
+map_df <- mutate_if(interaction_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
                                             cell_spec(x, NULL),
                                             cell_spec(x, background = spec_color(x, 
@@ -190,7 +190,7 @@ interaction_w <- data.frame(channels,
                                                                                  option = "B", 
                                                                                  scale_from = c(0,0.1))))})
 
-kable(interaction_w, escape = F, col.names = c("Channel", "L", "H", " ", "L", "H", " ", "L", "H", " ", "L", "H")) %>%
+kable(map_df, escape = F, col.names = c("Channel", "L", "H", " ", "L", "H", " ", "L", "H", " ", "L", "H")) %>%
   add_header_above(c(" " = 1, "Same-talker" = 2, " "  = 1, "Different-talker" = 2, " " = 1, "Meaningful" = 2, " "  = 1, "Nonsense" = 2)) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
@@ -210,8 +210,8 @@ interaction_two_sample_w <- data.frame(channels,
                      talker_H_w$p,
                      spacer,
                      meaning_L_w$p,
-                     meaning_H_w$p)  %>%
-  mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
+                     meaning_H_w$p)
+map_df <- mutate_if(interaction_two_sample_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
                                             cell_spec(x, NULL),
                                             cell_spec(x, background = spec_color(x, 
@@ -221,7 +221,7 @@ interaction_two_sample_w <- data.frame(channels,
                                                                                  option = "B", 
                                                                                  scale_from = c(0,0.1))))})
 
-kable(interaction_two_sample_w, escape = F, col.names = c("Channel", "L", "H", " ", "L", "H")) %>%
+kable(map_df, escape = F, col.names = c("Channel", "L", "H", " ", "L", "H")) %>%
   add_header_above(c(" " = 1, "Talker" = 2, " "  = 1, "Meaning" = 2)) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
@@ -268,8 +268,8 @@ meaning_compare_w <- get_two_sample_wilcoxon(baseline, meaning_compare)
 spacer <- matrix(" ", 128, 1)
 compare_w <- data.frame(channels, 
                      talker_compare_w$p,
-                     meaning_compare_w$p) %>%
-  mutate_if(is.numeric, function(x) {round(x, digits = 3)}) %>%
+                     meaning_compare_w$p)
+map_df <- mutate_if(compare_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
                                             cell_spec(x, NULL),
                                             cell_spec(x, background = spec_color(x, 
@@ -279,11 +279,11 @@ compare_w <- data.frame(channels,
                                                                                  option = "B", 
                                                                                  scale_from = c(0,0.1))))})
 
-kable(compare_w, escape = F, col.names = c("Channel", "Talker", "Meaning")) %>%
+kable(map_df, escape = F, col.names = c("Channel", "Talker", "Meaning")) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
 ```{r}
-save(overall, one_sample_w, two_sample_w, interaction_w, interaction_two_sample_w, compare_w, file = "8_t_tests/data/wilcoxon_results.RData")
+save(overall, one_sample_w, two_sample_w, interaction_w, interaction_two_sample_w, compare_w, file = "8_tests/data/wilcoxon_results.RData")
 ```
 
