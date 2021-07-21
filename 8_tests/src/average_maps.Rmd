@@ -19,12 +19,13 @@ source("8_tests/src/functions.R")
 
 ```{r}
 # Import data
-load("8_tests/data/wilcoxon_results.RData")
+load("data/wilcoxon_results.RData")
 ```
 
 #### One-sample t-tests for overall tracking
 
 ```{r}
+coordinates <- get_layout()
 overall <- data.frame(overall, coordinates)
 plot <- ggplot() +
   geom_point(data = overall, aes(x = x, y = y, 
@@ -35,7 +36,10 @@ plot <- ggplot() +
                                     size = 1,
                                     alpha = 0.5,
                                     stroke = 0)) + 
-  scale_size_continuous(name = "p", breaks = c(20, 100, 200), labels = c("0.05", "0.01", "0.005")) +
+  scale_size_continuous(name = "p", 
+                        limits = c(1, 1000),
+                        breaks = c(20, 100, 200), 
+                        labels = c("0.05", "0.01", "0.005")) +
   guides(alpha = FALSE) +
   ylim(0, 900) +
   xlim(0, 900) +
@@ -102,7 +106,10 @@ get_map <- function(df, channels, nodiff_channels, levels_label) {
                                               alpha = 0.5,
                                               stroke = 0)) +
     scale_color_discrete(name = "Level", labels = levels_label) +
-    scale_size_continuous(name = "p", breaks = c(20, 100, 200), labels = c("0.05", "0.01", "0.005")) +
+    scale_size_continuous(name = "p", 
+                          limits = c(1, 1000),
+                          breaks = c(20, 100, 200), 
+                          labels = c("0.05", "0.01", "0.005")) +
     guides(alpha = FALSE) +
     annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
     annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
@@ -142,6 +149,7 @@ get_ps <- function(data, condition, channels){
 
 ```{r}
 # Identify channels that differentiate between same and different talker and channels that don't
+channels <- as.character(c(1:128))
 talker_channels <- get_sig_channels(two_sample_w, "talker")
 nodiff_talker_channels <- get_inverted_list(channels, talker_channels)
 
