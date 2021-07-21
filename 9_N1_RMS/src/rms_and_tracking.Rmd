@@ -18,8 +18,6 @@ source("tools/functions.R")
 source("8_tests/src/functions.R")
 ```
 
-**Same**
-
 ```{r}
 recode_ps <- function(df){
   df$recoded_ps <- df$f_p
@@ -31,7 +29,7 @@ recode_ps <- function(df){
   return(df)
 }
 
-get_map <- function(df) {
+get_map <- function(df, title) {
   plot <- ggplot() +
     geom_point(data = df, aes(x = x, y = y, 
                               size = 1/recoded_ps, 
@@ -48,6 +46,7 @@ get_map <- function(df) {
     guides(alpha = FALSE) +
     ylim(0, 900) +
     xlim(0, 900) +
+    ggtitle(title) +
     annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
     annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
     theme(axis.line=element_blank(),axis.text.x=element_blank(),
@@ -64,11 +63,23 @@ get_map <- function(df) {
 coords <- get_layout()
 ```
 
+**Overall**
+
+```{r}
+overall <- read.csv('9_N1_RMS/data/overall_lin_reg.csv') %>%
+  bind_cols(coords)
+plot <- recode_ps(overall) %>%
+  get_map('Overall')
+ggsave(plot = plot, filename = '9_N1_RMS/figs/overall_lin_reg.png', width = 6, height = 5)
+```
+
+**By condition**
+
 ```{r}
 same <- read.csv('9_N1_RMS/data/same_lin_reg.csv') %>%
   bind_cols(coords)
 plot <- recode_ps(same) %>%
-  get_map()
+  get_map('Same')
 ggsave(plot = plot, filename = '9_N1_RMS/figs/same_lin_reg.png', width = 6, height = 5)
 ```
 
@@ -76,7 +87,7 @@ ggsave(plot = plot, filename = '9_N1_RMS/figs/same_lin_reg.png', width = 6, heig
 different <- read.csv('9_N1_RMS/data/different_lin_reg.csv') %>%
   bind_cols(coords)
 plot <- recode_ps(different) %>%
-  get_map()
+  get_map('Different')
 ggsave(plot = plot, filename = '9_N1_RMS/figs/different_lin_reg.png', width = 6, height = 5)
 ```
 
@@ -84,7 +95,7 @@ ggsave(plot = plot, filename = '9_N1_RMS/figs/different_lin_reg.png', width = 6,
 meaningful <- read.csv('9_N1_RMS/data/meaningful_lin_reg.csv') %>%
   bind_cols(coords)
 plot <- recode_ps(meaningful) %>%
-  get_map()
+  get_map('Meaningful')
 ggsave(plot = plot, filename = '9_N1_RMS/figs/meaningful_lin_reg.png', width = 6, height = 5)
 ```
 
@@ -92,7 +103,7 @@ ggsave(plot = plot, filename = '9_N1_RMS/figs/meaningful_lin_reg.png', width = 6
 nonsense <- read.csv('9_N1_RMS/data/nonsense_lin_reg.csv') %>%
   bind_cols(coords)
 plot <- recode_ps(nonsense) %>%
-  get_map()
+  get_map('Nonsense')
 ggsave(plot = plot, filename = '9_N1_RMS/figs/nonsense_lin_reg.png', width = 6, height = 5)
 ```
 
@@ -100,7 +111,7 @@ ggsave(plot = plot, filename = '9_N1_RMS/figs/nonsense_lin_reg.png', width = 6, 
 low <- read.csv('9_N1_RMS/data/low_lin_reg.csv') %>%
   bind_cols(coords)
 plot <- recode_ps(low) %>%
-  get_map()
+  get_map('Low')
 ggsave(plot = plot, filename = '9_N1_RMS/figs/low_lin_reg.png', width = 6, height = 5)
 ```
 
@@ -108,7 +119,7 @@ ggsave(plot = plot, filename = '9_N1_RMS/figs/low_lin_reg.png', width = 6, heigh
 high <- read.csv('9_N1_RMS/data/high_lin_reg.csv') %>%
   bind_cols(coords)
 plot <- recode_ps(high) %>%
-  get_map()
+  get_map('High')
 ggsave(plot = plot, filename = '9_N1_RMS/figs/high_lin_reg.png', width = 6, height = 5)
 ```
 
