@@ -1,0 +1,114 @@
+---
+title: "RMS and tracking"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, warning=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/")
+setwd("/Users/letitiaho/src/talker_change_data_processing/")
+library("dplyr")
+library("ggplot2")
+library("ggpubr")
+library("kableExtra")
+library("data.table")
+source("tools/functions.R")
+source("8_tests/src/functions.R")
+```
+
+**Same**
+
+```{r}
+recode_ps <- function(df){
+  df$recoded_ps <- df$f_p
+  for (i in 1:128) {
+    p <- df$f_p[i]
+    if (p > 0.05) {df$recoded_ps[i] <- NaN}
+    else if (p < 0.001) {df$recoded_ps[i] <- 0.001}
+  }
+  return(df)
+}
+
+get_map <- function(df) {
+  plot <- ggplot() +
+    geom_point(data = df, aes(x = x, y = y, 
+                              size = 1/recoded_ps, 
+                              alpha = 0.5,
+                              stroke = 0)) +
+    geom_point(data = df, aes(x = x, y = y, 
+                              size = 1,
+                              alpha = 0.5,
+                              stroke = 0)) + 
+    scale_size_continuous(name = "p", 
+                          limits = c(1, 1000), 
+                          breaks = c(20, 100, 200), 
+                          labels = c("0.05", "0.01", "0.005")) +
+    guides(alpha = FALSE) +
+    ylim(0, 900) +
+    xlim(0, 900) +
+    annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+    annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+    theme(axis.line=element_blank(),axis.text.x=element_blank(),
+          axis.text.y=element_blank(),axis.ticks=element_blank(),
+          axis.title.x=element_blank(),
+          axis.title.y=element_blank(),
+          panel.background=element_blank(),
+          panel.border=element_blank(),
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
+          plot.background=element_blank())
+  return(plot)
+}
+coords <- get_layout()
+```
+
+```{r}
+same <- read.csv('9_N1_RMS/data/same_lin_reg.csv') %>%
+  bind_cols(coords)
+plot <- recode_ps(same) %>%
+  get_map()
+ggsave(plot = plot, filename = '9_N1_RMS/figs/same_lin_reg.png', width = 6, height = 5)
+```
+
+```{r}
+different <- read.csv('9_N1_RMS/data/different_lin_reg.csv') %>%
+  bind_cols(coords)
+plot <- recode_ps(different) %>%
+  get_map()
+ggsave(plot = plot, filename = '9_N1_RMS/figs/different_lin_reg.png', width = 6, height = 5)
+```
+
+```{r}
+meaningful <- read.csv('9_N1_RMS/data/meaningful_lin_reg.csv') %>%
+  bind_cols(coords)
+plot <- recode_ps(meaningful) %>%
+  get_map()
+ggsave(plot = plot, filename = '9_N1_RMS/figs/meaningful_lin_reg.png', width = 6, height = 5)
+```
+
+```{r}
+nonsense <- read.csv('9_N1_RMS/data/nonsense_lin_reg.csv') %>%
+  bind_cols(coords)
+plot <- recode_ps(nonsense) %>%
+  get_map()
+ggsave(plot = plot, filename = '9_N1_RMS/figs/nonsense_lin_reg.png', width = 6, height = 5)
+```
+
+```{r}
+low <- read.csv('9_N1_RMS/data/low_lin_reg.csv') %>%
+  bind_cols(coords)
+plot <- recode_ps(low) %>%
+  get_map()
+ggsave(plot = plot, filename = '9_N1_RMS/figs/low_lin_reg.png', width = 6, height = 5)
+```
+
+```{r}
+high <- read.csv('9_N1_RMS/data/high_lin_reg.csv') %>%
+  bind_cols(coords)
+plot <- recode_ps(high) %>%
+  get_map()
+ggsave(plot = plot, filename = '9_N1_RMS/figs/high_lin_reg.png', width = 6, height = 5)
+```
+
