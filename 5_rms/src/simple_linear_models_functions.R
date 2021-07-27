@@ -12,17 +12,17 @@ clean_data <- function(rms, xcorr, channel_number) {
   
   # Extract xcorr values for specified channel
   raw_df <- data.frame(rms = rms,
-                       xcorr = xcorr[[paste('maximum', channel_number, sep = "")]],
+                       xcorr = xcorr[[paste('X', channel_number, sep = "")]],
                        talker = xcorr$talker)
   
   # Remove outliers
-  rms <- remove_outliers(raw_df$rms, 3)
-  xcorr <- remove_outliers(raw_df$xcorr, 3)
+  raw_df$rms <- remove_outliers(raw_df$rms, 3)
+  raw_df$xcorr <- remove_outliers(raw_df$xcorr, 3)
   
   # Change rms and xcorr to log scale
-  dim(rms)
-  raw_df$log_rms <- log(rms)
-  raw_df$log_xcorr <- log(xcorr)
+  # raw_df$log_rms <- log(rms)
+  # raw_df$log_xcorr <- log(xcorr)
+  raw_df$rms
   
   # Remove NAs
   clean_df <- raw_df[complete.cases(raw_df),]
@@ -32,15 +32,15 @@ clean_data <- function(rms, xcorr, channel_number) {
 
 get_simple_linear_model <- function(df) {
   # Create data frame for model 
-  ulam_df <- list(log_rms = df$log_rms,
-                  log_xcorr = df$log_xcorr,
+  ulam_df <- list(rms = df$rms,
+                  rms = df$xcorr,
                   talker = ifelse(df$talker == "S", 1, 2)) # Recode talker to 1s and 2s to get link() to work
   
   # Fit model
   talker_model <- ulam(
     alist(
-      log_xcorr ~ dnorm(mu, sigma),
-      mu <- a + b*log_rms,
+      xcorr ~ dnorm(mu, sigma),
+      mu <- a + b*rms,
       a ~ dnorm(5, 5),
       b ~ dnorm(0, 5),
       sigma ~ dexp(1)
@@ -54,15 +54,15 @@ get_model_summary <- function(model) {
 }
 
 get_figure <- function(model, clean_df) {
-  rms_seq <- seq(from = 0, to = 3, by = 0.1)
+  rms_seq <- seq(from = 0, to = 20, by = 0.1)
   
   # Extract posterior for same talker
-  s_mu <- link(model, data = data.frame(talker = 1, log_rms = rms_seq))
+  s_mu <- link(model, data = data.frame(talker = 1, rms = rms_seq))
   s_mu_mean <- apply(s_mu, 2, mean)
   s_mu_ci <- apply(s_mu, 2, PI, prob = 0.95)
   
   # Extract posterior for different talker
-  t_mu <- link(model, data = data.frame(talker = 2, log_rms = rms_seq))
+  t_mu <- link(model, data = data.frame(talker = 2, rms = rms_seq))
   t_mu_mean <- apply(t_mu, 2, mean)
   t_mu_ci <- apply(t_mu, 2, PI, prob = 0.95)
   
@@ -77,11 +77,11 @@ get_figure <- function(model, clean_df) {
   
   # Plot
   p <- ggplot(NULL) +
-    ylim(0, 8) + 
-    xlim(0, 3) +
+    # ylim(0, 8) + 
+    # xlim(0, 3) +
     
     # Plot raw data
-    geom_point(data = clean_df, alpha = 0.5, stroke = 0, size = 2, aes(x = log_rms, y = log_xcorr, color = factor(talker))) +
+    geom_point(data = clean_df, alpha = 0.5, stroke = 0, size = 2, aes(x = rms, y = xcorr, color = factor(talker))) +
     scale_color_manual(values = c("#2D708EFF", "#29AF7FFF")) +
     
     # Plot lines with 95% CI
@@ -110,11 +110,11 @@ get_model_for_one_channel <- function(rms, xcorr, channel_number) {
   
   # Run and save model
   model <- get_simple_linear_model(clean_df)
-  model_path <- paste('5_rms/data/models/simple_linear_models/channel_', as.character(channel_number), '.RDa', sep = "")
+  model_path <- paste('5_b_rms/data/models/simple_linear_models/channel_', as.character(channel_number), '.RDa', sep = "")
   save(model, file = model_path)
   
   # Plot and save figure
-  figure_path <- paste("5_rms/figs/simple_linear_models/channel_", as.character(channel_number), '.png', sep = "")
+  figure_path <- paste("5_b_rms/figs/simple_linear_models/channel_", as.character(channel_number), '.png', sep = "")
   figure <- get_figure(model, clean_df)
   ggsave(figure_path, plot = figure)
 

@@ -12,17 +12,17 @@ clean_data <- function(rms, xcorr, channel_number) {
   
   # Extract xcorr values for specified channel
   raw_df <- data.frame(rms = rms,
-                       xcorr = xcorr[[paste('maximum', channel_number, sep = "")]],
+                       xcorr = xcorr[[paste('X', channel_number, sep = "")]],
                        talker = xcorr$talker)
   
   # Remove outliers
-  rms <- remove_outliers(raw_df$rms, 3)
-  xcorr <- remove_outliers(raw_df$xcorr, 3)
+  raw_df$rms <- remove_outliers(raw_df$rms, 3)
+  raw_df$xcorr <- remove_outliers(raw_df$xcorr, 3)
   
   # Change rms and xcorr to log scale
-  dim(rms)
-  raw_df$log_rms <- log(rms)
-  raw_df$log_xcorr <- log(xcorr)
+  # dim(rms)
+  # raw_df$log_rms <- log(rms)
+  # raw_df$log_xcorr <- log(xcorr)
   
   # Remove NAs
   clean_df <- raw_df[complete.cases(raw_df),]
@@ -57,7 +57,7 @@ get_model_summary <- function(model) {
 }
 
 get_figure <- function(model, clean_df) {
-  rms_seq <- seq(from = 0, to = 3, by = 0.1)
+  rms_seq <- seq(from = 0, to = 20, by = 0.1)
   
   # Extract posterior for same talker
   s_mu <- link(model, data = data.frame(talker = 1, log_rms = rms_seq))
@@ -80,8 +80,8 @@ get_figure <- function(model, clean_df) {
   
   # Plot
   p <- ggplot(NULL) +
-    ylim(0, 8) + 
-    xlim(0, 3) +
+    # ylim(0, 8) + 
+    # xlim(0, 3) +
     
     # Plot raw data
     geom_point(data = clean_df, alpha = 0.5, stroke = 0, size = 2, aes(x = log_rms, y = log_xcorr, color = factor(talker))) +
@@ -113,11 +113,11 @@ get_model_for_one_channel <- function(rms, xcorr, channel_number) {
   
   # Run and save model
   model <- get_multilevel_model(clean_df)
-  model_path <- paste('5_rms/data/models/multilevel_models/channel_', as.character(channel_number), '.RDa', sep = "")
+  model_path <- paste('5_b_rms/data/models/multilevel_models/channel_', as.character(channel_number), '.RDa', sep = "")
   save(model, file = model_path)
   
   # Plot and save figure
-  figure_path <- paste("5_rms/figs/multilevel_models/channel_", as.character(channel_number), '.png', sep = "")
+  figure_path <- paste("5_b_rms/figs/multilevel_models/channel_", as.character(channel_number), '.png', sep = "")
   figure <- get_figure(model, clean_df)
   ggsave(figure_path, plot = figure)
 
