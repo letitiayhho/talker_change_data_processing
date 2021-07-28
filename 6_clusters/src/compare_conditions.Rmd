@@ -1,0 +1,161 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r set up, warning=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/8_tests/")
+setwd("/Users/letitiaho/src/talker_change_data_processing/")
+library("dplyr")
+# library("ggplot2")
+# library("ggpubr")
+# library("kableExtra")
+```
+
+**Find largest cluster**
+
+```{r}
+get_coordinates <- function() {
+  coordinates_fp <- file.path("../../3_channel_locations/data/average_channel_locations.sfp")
+  coordinates <- read.delim(coordinates_fp, header = FALSE, sep = "", dec = ".") %>%
+    .[startsWith(as.character(.$V1), "E"), ] %>%
+    .[c("V2", "V3", "V4")]
+  names(coordinates) <- c("x", "y", "z")
+  
+  # Return
+  return(coordinates)
+}
+
+get_pairwise_distances <- function(coordinates) {
+  distances <- as.matrix(dist(coordinates))
+  
+  # Return
+  return(distances)
+}
+
+get_histogram_of_pairwise_distances <- function(distances) {
+  sort_distances = as.vector(distances) %>%
+    .[!duplicated(.)] %>%
+    sort() %>%
+    hist(., breaks = 50, main = "Histogram of pairwise distances")
+}
+
+get_neighboring_clusters <- function(w, max_distance, alpha, distances) {
+  # Determine threshold for t-values based on specified alpha level
+  # t_threshold <- qt(1-(alpha/2), df = n-1)
+  
+  # Identify neighboring above-threshold channels of all above-threshold channels
+  clusters <- vector(mode = "list")
+  for (i in 1:nrow(distances)) {
+    
+    # Check whether channel itself is above threshold
+    if (w[i] < alpha) {
+      
+      # Identify all neighboring channels within the specified max_distance
+      neighboring_channels = which(distances[i, ] < max_distance)
+      
+      # Keep above-threshold neighbors
+      indexes = which(w[neighboring_channels] < alpha)
+      clusters_for_one_channel = list(neighboring_channels[indexes])
+      
+      # Exclude channels whose only active neighbor is itself
+      if (length(clusters_for_one_channel[[1]]) > 1) {
+        clusters = c(clusters, clusters_for_one_channel)
+      }
+    } 
+  }
+  # Combine overlaps
+  # clusters <- combine_overlaps(clusters)
+  
+  # Return
+  return(clusters)
+}
+
+combine_overlaps <- function(clusters, min_cluster_size = 2) {
+  if (length(clusters) == 0) {
+    return(clusters)
+  }
+  
+  # Compare every cluster to every other cluster
+  for (i in 1:length(clusters)) {
+    cluster_a <- clusters[[i]]
+    
+    # Loop through every cluster
+    for (j in 1:length(clusters)) {
+      cluster_b <- clusters[[j]]
+      
+      # Compare the two clusters...
+      combined <- c(cluster_a, cluster_b)
+      
+      # If there are duplicates...
+      if (TRUE %in% duplicated(combined) & (j > i)) { 
+        
+        # Set the original cluster into the merged cluster
+        clusters[[i]] <- unique(combined)
+        
+        # Set the compared cluster to null
+        clusters[[j]] <- 0
+      }
+    }
+  }
+  
+  # Remove all clusters smaller than min_cluster_size, remove 0s
+  keep = vector(mode = "list")
+  for (i in 1:length(clusters)) {
+    cluster = clusters[[i]]
+    if (length(cluster) >= min_cluster_size) {
+      keep <- c(keep, list(cluster))
+    }
+  }
+  clusters <- keep
+
+  # Return if all possible clusters are created
+  if (!(TRUE %in% duplicated(unlist(clusters)))) {
+    return(clusters)
+  }
+  
+  # Recursively apply function
+  return(combine_overlaps(clusters, min_cluster_size))
+}
+
+cluster_one_condition <- function(w, max_distance, alpha) {
+  coordinates <- get_coordinates()
+  distances <- get_pairwise_distances(coordinates)
+  neighboring_clusters <- get_neighboring_clusters(w, max_distance, alpha, distances)
+  clusters <- combine_overlaps(neighboring_clusters)
+}
+
+get_cluster_stats <- function(data, max_distance, alpha) {
+  largest <- c()
+  n_clusters <- c()
+  for (i in colnames(data)) {
+    clusters <- cluster_one_condition(data[[i]], max_distance, alpha)
+    largest <- c(largest, max(unlist(lapply(clusters, length))))
+    n_clusters <- c(n_clusters, length(clusters))
+  }
+  return(data.frame(condition = colnames(data), largest = largest, n_clusters = n_clusters))
+}
+```
+
+```{r}
+load("../../8_wilcoxon/data/wilcoxon_results.RData")
+ws <- select(one_sample_w, -c("channels"))
+max_distance <- 5
+alpha <- 0.05
+
+observed <- get_cluster_stats(ws, max_distance, alpha)
+```
+
+```{r}
+n_permutations <- 10
+permuted_stats <- c()
+for (i in 1:n_permutations) {
+  permuted_ws <- ws[sample(1:nrow(ws)),]
+  permuted_stats <- rbind(permuted_stats, get_cluster_stats(permuted_ws, max_distance, alpha))
+}
+permuted_stats[permuted_stats$condition == "T",]
+
+```
+
+
