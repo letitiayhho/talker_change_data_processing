@@ -1,13 +1,17 @@
 ---
-title: "R Notebook"
+title: "Comparing conditions"
 output: html_notebook
 ---
 
 ```{r set up, warning=FALSE}
-knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
-knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/8_tests/")
-setwd("/Users/letitiaho/src/talker_change_data_processing/")
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE) 
+knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing")
+# setwd("/Users/letitiaho/src/talker_change_data_processing/")
 library("dplyr")
+library("ggplot2")
+source('../../tools/functions.R')
+source("8_tests/src/functions.R")
+
 # library("ggplot2")
 # library("ggpubr")
 # library("kableExtra")
@@ -140,6 +144,40 @@ get_cluster_stats <- function(data, max_distance, alpha) {
 
 ```{r}
 load("../../8_wilcoxon/data/wilcoxon_results.RData")
+```
+
+### T-test
+
+**Talker**
+
+```{r}
+w <- get_one_sample_wilcoxon(all_channels)
+```
+
+    <!-- I was thinking if you can identify the electrodes that track significantly for each subject in each condition (10 in different talker and 2 in same talker for subject 1, 5 in diff talker and 1 in same for subject 2 etc) you can do a t-test for number of active electrodes between conditions… -->
+
+
+```{r}
+wilcox.test(one_sample_w$S, one_sample_w$T)
+```
+
+**Meaning**
+
+```{r}
+wilcox.test(one_sample_w$M, one_sample_w$N)
+```
+
+**Constraint**
+
+```{r}
+wilcox.test(one_sample_w$L, one_sample_w$H)
+```
+
+### Permutation test
+
+#### Get observed cluster stats
+
+```{r}
 ws <- select(one_sample_w, -c("channels"))
 max_distance <- 5
 alpha <- 0.05
@@ -147,15 +185,63 @@ alpha <- 0.05
 observed <- get_cluster_stats(ws, max_distance, alpha)
 ```
 
-```{r}
-n_permutations <- 10
+#### Get resampled cluster stats
+
+```{r, warning=FALSE}
+n_permutations <- 1000
 permuted_stats <- c()
 for (i in 1:n_permutations) {
   permuted_ws <- ws[sample(1:nrow(ws)),]
   permuted_stats <- rbind(permuted_stats, get_cluster_stats(permuted_ws, max_distance, alpha))
 }
-permuted_stats[permuted_stats$condition == "T",]
+```
 
+**Same talker**
+
+```{r}
+shuffled <- permuted_stats[permuted_stats$condition == "S",]$largest
+obs <- observed$largest[observed$condition == "S"]
+histogram(shuffled, obs, "S")
+```
+
+**Different talker**
+
+```{r}
+shuffled <- permuted_stats[permuted_stats$condition == "T",]$largest
+obs <- observed$largest[observed$condition == "T"]
+histogram(shuffled, obs, "T")
+```
+
+**Meaningful**
+
+```{r}
+shuffled <- permuted_stats[permuted_stats$condition == "M",]$largest
+obs <- observed$largest[observed$condition == "M"]
+histogram(shuffled, obs, "M")
+```
+
+**Nonsense**
+
+```{r}
+shuffled <- permuted_stats[permuted_stats$condition == "N",]$largest
+obs <- observed$largest[observed$condition == "N"]
+histogram(shuffled, obs, "N")
+```
+
+**Low constraint**
+
+```{r}
+shuffled <- permuted_stats[permuted_stats$condition == "L",]$largest
+obs <- observed$largest[observed$condition == "L"]
+histogram(shuffled, obs, "L")
+```
+
+**High constraint**
+
+```{r}
+shuffled <- permuted_stats[permuted_stats$condition == "H",]$largest
+obs <- observed$largest[observed$condition == "H"]
+histogram(shuffled, obs, "H")
 ```
 
 
