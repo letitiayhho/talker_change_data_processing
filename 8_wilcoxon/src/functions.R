@@ -1,22 +1,22 @@
-subset <- function(data, talker = NaN, meaning = NaN, constraint = NaN, keep_subject_numbers = F) {
+subset <- function(data, condition, keepLabels = FALSE) {
   channel_columns = paste("X", as.character(1:128), sep = "")
-  if (talker == "S") {
+  if (grepl("S", condition)) {
     data <- filter(data, talker == "S")
-  } else if (talker == "T") {
+  } else if (grepl("T", condition)) {
     data <- filter(data, talker == "T")
   }
-  if (meaning == "M") {
+  if (grepl("M", condition)) {
     data <- filter(data, meaning == "M")
-  } else if (meaning == "N") {
+  } else if (grepl("N", condition)) {
     data <- filter(data, meaning == "N")
   }
-  if (constraint == "L") {
+  if (grepl("L", condition)) {
     data <- filter(data, constraint == "L")
-  } else if (constraint == "H") {
+  } else if (grepl("H", condition)) {
     data <- filter(data, constraint == "H")
   }
-  if (keep_subject_numbers == T) {
-    data <- select(data, all_of(c("subject_number", channel_columns)))
+  if (keepLabels) {
+    data <- select(data, all_of(c("subject_number", "talker", "meaning", "constraint", channel_columns)))
   } else {
     data <- select(data, all_of(channel_columns))
   }
