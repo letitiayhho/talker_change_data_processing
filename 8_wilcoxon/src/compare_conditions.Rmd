@@ -5,19 +5,91 @@ output: html_notebook
 
 ```{r set up, warning=FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE) 
-knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing")
-# setwd("/Users/letitiaho/src/talker_change_data_processing/")
+knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/")
+setwd("/Users/letitiaho/src/talker_change_data_processing/")
 library("dplyr")
-library("ggplot2")
-source('../../tools/functions.R')
-source("8_tests/src/functions.R")
-
+library("tibble")
 # library("ggplot2")
 # library("ggpubr")
 # library("kableExtra")
+source("tools/functions.R")
+source("8_wilcoxon/src/functions.R")
+
+xcorr <- read.csv(file = "2_cross_correlate/data/average.csv")
 ```
 
-**Find largest cluster**
+### Wilcoxon
+
+<!-- I was thinking if you can identify the electrodes that track significantly for each subject in each condition (10 in different talker and 2 in same talker for subject 1, 5 in diff talker and 1 in same for subject 2 etc) you can do a t-test for number of active electrodes between conditions… -->
+
+```{r}
+# tmp <- subset(xcorr, "LM", keepLabels = TRUE)
+
+# One sample wilcoxon for each channel for each subject
+# get_one_sample_wilcoxon_per_subject <- function(data, subjects) {
+#   channel_labels <- paste("X", as.character(1:128), sep = "")
+#   subjects <- unique(xcorr$subject_number)
+#   ws <- c()
+#   subject_number <- c()
+#   for (subject in subjects) {
+#     subject_data <- select(data[data$subject_number == subject,], all_of(channel_labels))
+#     w <- get_one_sample_wilcoxon(subject_data)
+#     w <- add_column(w, subject_number = subject, channel = c(1:128))
+#     ws <- rbind(ws, w)
+#   }
+#   return(ws)
+# }
+
+# S <- get_one_sample_wilcoxon_per_subject(subset(xcorr, talker = "S", keep_subject_numbers = TRUE))
+# T <- get_one_sample_wilcoxon_per_subject(subset(xcorr, talker = "T", keep_subject_numbers = TRUE), subjects)
+# M <- get_one_sample_wilcoxon_per_subject(subset(xcorr, meaning = "M", keep_subject_numbers = TRUE), subjects)
+# N <- get_one_sample_wilcoxon_per_subject(subset(xcorr, meaning = "N", keep_subject_numbers = TRUE), subjects)
+# L <- get_one_sample_wilcoxon_per_subject(subset(xcorr, constraint = "L", keep_subject_numbers = TRUE), subjects)
+# H <- get_one_sample_wilcoxon_per_subject(subset(xcorr, constraint = "H", keep_subject_numbers = TRUE), subjects)
+```
+
+```{r}
+channel_labels <- paste("X", as.character(1:128), sep = "")
+conditions <- c("S", "T", "M", "N", "L", "H")
+subjects <- unique(xcorr$subject_number)
+
+df <- data.frame(subject = numeric(),
+                 condition = character(),
+                 count = numeric())
+for (condition in conditions) {
+  condition_data <- subset(xcorr, condition = condition, keepLabels = TRUE)
+  for (subject in subjects) {
+    subject_data <- select(condition_data[condition_data$subject_number == subject,], all_of(channel_labels))
+    w <- get_one_sample_wilcoxon(subject_data)
+    count <- sum(w$p < 0.05)
+    df <- add_row(df, subject = subject, condition = condition, count = count)
+  }
+}
+
+
+# conditions <- c("S", "T", "M", "N", "L", "H")
+# subjects <- unique(xcorr$subject_number)
+# 
+# tmp <- function(data, conditions, subjects) {
+#   channel_labels <- paste("X", as.character(1:128), sep = "")
+#   df <- data.frame(subject = numeric(),
+#                    condition = character(),
+#                    count = numeric())
+#   for (condition in conditions) {
+#     for (subject in subjects) {
+#       subject_data <- select(tmp[tmp$subject_number == subject,], all_of(channel_labels))
+#       w <- get_one_sample_wilcoxon(subject_data)
+#       count <- sum(w$p < 0.05)
+#       df <- add_row(df, subject = subject, condition = condition, count = count)
+#     }
+#   }
+#   return(df)
+# }
+```
+
+
+
+### Permutation test
 
 ```{r}
 get_coordinates <- function() {
@@ -113,7 +185,7 @@ combine_overlaps <- function(clusters, min_cluster_size = 2) {
     }
   }
   clusters <- keep
-
+  
   # Return if all possible clusters are created
   if (!(TRUE %in% duplicated(unlist(clusters)))) {
     return(clusters)
@@ -141,39 +213,6 @@ get_cluster_stats <- function(data, max_distance, alpha) {
   return(data.frame(condition = colnames(data), largest = largest, n_clusters = n_clusters))
 }
 ```
-
-```{r}
-load("../../8_wilcoxon/data/wilcoxon_results.RData")
-```
-
-### T-test
-
-**Talker**
-
-```{r}
-w <- get_one_sample_wilcoxon(all_channels)
-```
-
-    <!-- I was thinking if you can identify the electrodes that track significantly for each subject in each condition (10 in different talker and 2 in same talker for subject 1, 5 in diff talker and 1 in same for subject 2 etc) you can do a t-test for number of active electrodes between conditions… -->
-
-
-```{r}
-wilcox.test(one_sample_w$S, one_sample_w$T)
-```
-
-**Meaning**
-
-```{r}
-wilcox.test(one_sample_w$M, one_sample_w$N)
-```
-
-**Constraint**
-
-```{r}
-wilcox.test(one_sample_w$L, one_sample_w$H)
-```
-
-### Permutation test
 
 #### Get observed cluster stats
 
