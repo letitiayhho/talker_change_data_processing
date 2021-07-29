@@ -31,8 +31,8 @@ get_one_sample_t <- function(data) {
 }
 
 get_one_sample_wilcoxon <- function(data) {
-  w <- apply(data, MARGIN = 2, function(channel) {wilcox.test(channel)$statistic})
-  p <- apply(data, MARGIN = 2, function(channel) {wilcox.test(channel)$p.value})
+  w <- apply(data, MARGIN = 2, function(channel) {wilcox.test(channel, alternative = "greater")$statistic})
+  p <- apply(data, MARGIN = 2, function(channel) {wilcox.test(channel, alternative = "greater")$p.value})
   return(data.frame("w" = w, "p" = p))
 }
 
