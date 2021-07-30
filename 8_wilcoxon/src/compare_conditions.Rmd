@@ -9,9 +9,7 @@ knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_process
 setwd("/Users/letitiaho/src/talker_change_data_processing/")
 library("dplyr")
 library("tibble")
-# library("ggplot2")
-# library("ggpubr")
-# library("kableExtra")
+library("knitr")
 source("tools/functions.R")
 source("8_wilcoxon/src/functions.R")
 
@@ -20,72 +18,135 @@ xcorr <- read.csv(file = "2_cross_correlate/data/average.csv")
 
 ### Wilcoxon
 
-<!-- I was thinking if you can identify the electrodes that track significantly for each subject in each condition (10 in different talker and 2 in same talker for subject 1, 5 in diff talker and 1 in same for subject 2 etc) you can do a t-test for number of active electrodes between conditions… -->
+Identify the electrodes that track significantly for each subject in each condition (10 in different talker and 2 in same talker for subject 1, 5 in diff talker and 1 in same for subject 2 etc). Then run a test for number of active electrodes between conditions.
 
 ```{r}
-# tmp <- subset(xcorr, "LM", keepLabels = TRUE)
-
-# One sample wilcoxon for each channel for each subject
-# get_one_sample_wilcoxon_per_subject <- function(data, subjects) {
-#   channel_labels <- paste("X", as.character(1:128), sep = "")
-#   subjects <- unique(xcorr$subject_number)
-#   ws <- c()
-#   subject_number <- c()
-#   for (subject in subjects) {
-#     subject_data <- select(data[data$subject_number == subject,], all_of(channel_labels))
-#     w <- get_one_sample_wilcoxon(subject_data)
-#     w <- add_column(w, subject_number = subject, channel = c(1:128))
-#     ws <- rbind(ws, w)
-#   }
-#   return(ws)
-# }
-
-# S <- get_one_sample_wilcoxon_per_subject(subset(xcorr, talker = "S", keep_subject_numbers = TRUE))
-# T <- get_one_sample_wilcoxon_per_subject(subset(xcorr, talker = "T", keep_subject_numbers = TRUE), subjects)
-# M <- get_one_sample_wilcoxon_per_subject(subset(xcorr, meaning = "M", keep_subject_numbers = TRUE), subjects)
-# N <- get_one_sample_wilcoxon_per_subject(subset(xcorr, meaning = "N", keep_subject_numbers = TRUE), subjects)
-# L <- get_one_sample_wilcoxon_per_subject(subset(xcorr, constraint = "L", keep_subject_numbers = TRUE), subjects)
-# H <- get_one_sample_wilcoxon_per_subject(subset(xcorr, constraint = "H", keep_subject_numbers = TRUE), subjects)
-```
-
-```{r}
-channel_labels <- paste("X", as.character(1:128), sep = "")
-conditions <- c("S", "T", "M", "N", "L", "H")
-subjects <- unique(xcorr$subject_number)
-
-df <- data.frame(subject = numeric(),
-                 condition = character(),
-                 count = numeric())
-for (condition in conditions) {
-  condition_data <- subset(xcorr, condition = condition, keepLabels = TRUE)
-  for (subject in subjects) {
-    subject_data <- select(condition_data[condition_data$subject_number == subject,], all_of(channel_labels))
-    w <- get_one_sample_wilcoxon(subject_data)
-    count <- sum(w$p < 0.05)
-    df <- add_row(df, subject = subject, condition = condition, count = count)
+count_channels <- function(data, conditions, subjects, alpha) {
+  channel_labels <- paste("X", as.character(1:128), sep = "")
+  df <- data.frame(subject = numeric(),
+                   condition = character(),
+                   count = numeric())
+  for (condition in conditions) {
+    condition_data <- subset(xcorr, condition = condition, keepLabels = TRUE)
+    for (subject in subjects) {
+      subject_data <- select(condition_data[condition_data$subject_number == subject,], all_of(channel_labels))
+      w <- get_one_sample_wilcoxon(subject_data)
+      count <- sum(w$p < alpha)
+      df <- add_row(df, subject = subject, condition = condition, count = count)
+    }
   }
+  return(df)
 }
 
-
-# conditions <- c("S", "T", "M", "N", "L", "H")
-# subjects <- unique(xcorr$subject_number)
-# 
-# tmp <- function(data, conditions, subjects) {
-#   channel_labels <- paste("X", as.character(1:128), sep = "")
-#   df <- data.frame(subject = numeric(),
-#                    condition = character(),
-#                    count = numeric())
-#   for (condition in conditions) {
-#     for (subject in subjects) {
-#       subject_data <- select(tmp[tmp$subject_number == subject,], all_of(channel_labels))
-#       w <- get_one_sample_wilcoxon(subject_data)
-#       count <- sum(w$p < 0.05)
-#       df <- add_row(df, subject = subject, condition = condition, count = count)
-#     }
-#   }
-#   return(df)
-# }
+conditions <- c("S", "T", "M", "N", "L", "H")
+subjects <- unique(xcorr$subject_number)
+loose_alpha <- count_channels(xcorr, conditions, subjects, alpha = 0.05)
+strict_alpha <- count_channels(xcorr, conditions, subjects, alpha = 0.01)
+mean_alpha <- count_channels(xcorr, conditions, subjects, alpha = 0.001)
 ```
+
+**Talker**
+
+```{r}
+df <- data.frame(condition = character(),
+                 alpha = numeric(),
+                 alternative = character(),
+                 V = numeric(),
+                 p = numeric())
+
+talker_loose_alpha_w <- wilcox.test(loose_alpha$count[loose_alpha$condition == "T"], 
+                                    loose_alpha$count[loose_alpha$condition == "S"], 
+                                    paired = TRUE,
+                                    alternative = "greater")
+df <- add_row(df, condition = "talker", 
+              alpha = 0.05, 
+              alternative = "one-sided",
+              V = talker_loose_alpha_w$statistic, 
+              p = talker_loose_alpha_w$p.value)
+talker_strict_alpha_w <- wilcox.test(strict_alpha$count[strict_alpha$condition == "T"], 
+                                     strict_alpha$count[strict_alpha$condition == "S"], 
+                                    paired = TRUE,
+                                    alternative = "greater")
+df <- add_row(df, condition = "talker", 
+              alpha = 0.01, 
+              alternative = "one-sided",
+              V = talker_strict_alpha_w$statistic,
+              p = talker_strict_alpha_w$p.value)
+talker_mean_alpha_w <- wilcox.test(mean_alpha$count[mean_alpha$condition == "T"], 
+                                   mean_alpha$count[mean_alpha$condition == "S"], 
+                                    paired = TRUE,
+                                    alternative = "greater")
+df <- add_row(df, condition = "talker", 
+              alpha = 0.001, 
+              alternative = "one-sided",
+              V = talker_mean_alpha_w$statistic, 
+              p = talker_mean_alpha_w$p.value)
+```
+
+**Meaning**
+
+```{r}
+meaning_loose_alpha_w <- wilcox.test(loose_alpha$count[loose_alpha$condition == "N"], 
+                                     loose_alpha$count[loose_alpha$condition == "M"], 
+                                    paired = TRUE,
+                                    alternative = "greater")
+df <- add_row(df, condition = "meaning", 
+              alpha = 0.05, 
+              alternative = "one-sided",
+              V = meaning_loose_alpha_w$statistic, 
+              p = meaning_loose_alpha_w$p.value)
+meaning_strict_alpha_w <- wilcox.test(strict_alpha$count[strict_alpha$condition == "N"], 
+                                      strict_alpha$count[strict_alpha$condition == "M"], 
+                                    paired = TRUE,
+                                    alternative = "greater")
+df <- add_row(df, condition = "meaning",
+              alpha = 0.01, 
+              alternative = "one-sided",
+              V = meaning_strict_alpha_w$statistic, 
+              p = meaning_strict_alpha_w$p.value)
+meaning_mean_alpha_w <- wilcox.test(mean_alpha$count[mean_alpha$condition == "N"], 
+                                    mean_alpha$count[mean_alpha$condition == "M"], 
+                                    paired = TRUE,
+                                    alternative = "greater")
+df <- add_row(df, condition = "meaning", 
+              alpha = 0.001, 
+              alternative = "one-sided",
+              V = meaning_mean_alpha_w$statistic, 
+              p = meaning_mean_alpha_w$p.value)
+```
+
+**Constraint**
+
+```{r}
+constraint_loose_alpha_w <- wilcox.test(loose_alpha$count[loose_alpha$condition == "L"], 
+                                        loose_alpha$count[loose_alpha$condition == "H"], paired = TRUE)
+df <- add_row(df, condition = "constraint", 
+              alpha = 0.05, 
+              alternative = "two-sided",
+              V = constraint_loose_alpha_w$statistic, 
+              p = constraint_loose_alpha_w$p.value)
+constraint_strict_alpha_w <- wilcox.test(strict_alpha$count[strict_alpha$condition == "L"], 
+                                         strict_alpha$count[strict_alpha$condition == "H"], paired = TRUE)
+df <- add_row(df, condition = "constraint", 
+              alpha = 0.01, 
+              alternative = "two-sided",
+              V = constraint_strict_alpha_w$statistic, 
+              p = constraint_strict_alpha_w$p.value)
+constraint_mean_alpha_w <- wilcox.test(mean_alpha$count[mean_alpha$condition == "L"], 
+                                       mean_alpha$count[mean_alpha$condition == "H"], paired = TRUE)
+df <- add_row(df, condition = "constraint", 
+              alpha = 0.001, 
+              alternative = "two-sided",
+              V = constraint_mean_alpha_w$statistic, 
+              p = constraint_mean_alpha_w$p.value)
+```
+
+```{r}
+df
+```
+
+
+
 
 
 
