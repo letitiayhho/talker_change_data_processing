@@ -298,7 +298,7 @@ nodiff_NL <- get_ps(interaction_w, "NL", nodiff_meaning_L_interaction_channels)
 meaning_L_interaction_df <- data.frame(group1 = ML, group2 = NL, nodiff_group1 = nodiff_ML, nodiff_group2 = nodiff_NL, coordinates)
 
 # Plot
-plot <- get_map(meaning_L_interaction_df, meaning_L_interaction_channels, nodiff_meaning_L_interaction_channels, c("Meaningful low constraint", "Nonsense low constraint"))
+plot <- get_map(meaning_L_interaction_df, meaning_L_interaction_channels, nodiff_meaning_L_interaction_channels, c("Nonsense low constraint", "Meaningful low constraint"))
 plot
 ggsave(plot = plot, filename = 'figs/meaning_L.png', width = 12, height = 5)
 ```
@@ -320,7 +320,7 @@ nodiff_NH <- get_ps(interaction_w, "NH", nodiff_meaning_H_interaction_channels)
 meaning_H_interaction_df <- data.frame(group1 = MH, group2 = NH, nodiff_group1 = nodiff_MH, nodiff_group2 = nodiff_NH, coordinates)
 
 # Plot
-plot <- get_map(meaning_H_interaction_df, meaning_H_interaction_channels, nodiff_meaning_H_interaction_channels, c("Meaningful high constraint", "Nonsense high constraint"))
+plot <- get_map(meaning_H_interaction_df, meaning_H_interaction_channels, nodiff_meaning_H_interaction_channels, c("Nonsense high constraint", "Meaningful high constraint"))
 plot
 ggsave(plot = plot, filename = 'figs/meaning_H.png', width = 12, height = 5)
 ```
