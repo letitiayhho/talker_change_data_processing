@@ -10,9 +10,11 @@ setwd("/Users/letitiaho/src/talker_change_data_processing/")
 library("dplyr")
 library("tibble")
 library("knitr")
+library("ggplot2")
 source("tools/functions.R")
 source("8_wilcoxon/src/functions.R")
 
+load("8_wilcoxon/data/wilcoxon_results.RData")
 xcorr <- read.csv(file = "2_cross_correlate/data/average.csv")
 ```
 
@@ -21,41 +23,68 @@ xcorr <- read.csv(file = "2_cross_correlate/data/average.csv")
 Identify the electrodes that track significantly for each subject in each condition (10 in different talker and 2 in same talker for subject 1, 5 in diff talker and 1 in same for subject 2 etc). Then run a test for number of active electrodes between conditions.
 
 ```{r}
-count_channels <- function(data, conditions, subjects, alpha) {
+count_channels <- function(data) {
   channel_labels <- paste("X", as.character(1:128), sep = "")
   df <- data.frame(subject = numeric(),
+                   alpha = numeric(),
                    condition = character(),
                    count = numeric())
-  for (condition in conditions) {
-    condition_data <- subset(xcorr, condition = condition, keepLabels = TRUE)
-    for (subject in subjects) {
-      subject_data <- select(condition_data[condition_data$subject_number == subject,], all_of(channel_labels))
-      w <- get_one_sample_wilcoxon(subject_data)
-      count <- sum(w$p < alpha)
-      df <- add_row(df, subject = subject, condition = condition, count = count)
+  for (alpha in c(0.05, 0.01, 0.001)) {
+    for (condition in c("S", "T", "M", "N", "L", "H")) {
+      condition_data <- subset(xcorr, condition = condition, keepLabels = TRUE)
+      for (subject in unique(xcorr$subject_number)) {
+        subject_data <- select(condition_data[condition_data$subject_number == subject,], all_of(channel_labels))
+        w <- get_one_sample_wilcoxon(subject_data)
+        count <- sum(w$p < alpha)
+        df <- add_row(df, alpha = alpha, subject = subject, condition = condition, count = count)
+      }
     }
   }
   return(df)
 }
 
-conditions <- c("S", "T", "M", "N", "L", "H")
-subjects <- unique(xcorr$subject_number)
-loose_alpha <- count_channels(xcorr, conditions, subjects, alpha = 0.05)
-strict_alpha <- count_channels(xcorr, conditions, subjects, alpha = 0.01)
-mean_alpha <- count_channels(xcorr, conditions, subjects, alpha = 0.001)
+counts <- count_channels(xcorr)
+```
+
+```{r warning = FALSE, message = FALSE}
+# checks
+S <- data.frame(p = one_sample_w$S, label = "S")
+T <- data.frame(p = one_sample_w$T, label = "T")
+talker <- rbind(S, T)
+ggplot(talker, aes(p, fill = label)) + geom_density(alpha = 0.2) + geom_vline(xintercept = 0.05)
+
+M <- data.frame(p = one_sample_w$M, label = "M")
+N <- data.frame(p = one_sample_w$N, label = "N")
+meaning <- rbind(M, N)
+ggplot(meaning, aes(p, fill = label)) + geom_density(alpha = 0.2) + geom_vline(xintercept = 0.05)
+
+L <- data.frame(p = one_sample_w$L, label = "L")
+H <- data.frame(p = one_sample_w$H, label = "H")
+constraint <- rbind(L, H)
+ggplot(constraint, aes(p, fill = label)) + geom_density(alpha = 0.2) + geom_vline(xintercept = 0.05)
+```
+
+
+**Channel counts**
+
+```{r, warning=FALSE, message=FALSE}
+agg <- counts %>%
+  group_by(alpha, condition) %>%
+  summarize(mean = mean(count), sd = sd(count))
+kable(agg, digits = c(4, 0, 1, 1))
 ```
 
 **Talker**
 
-```{r}
+```{r warning = FALSE, message = FALSE}
 df <- data.frame(condition = character(),
                  alpha = numeric(),
                  alternative = character(),
                  V = numeric(),
                  p = numeric())
 
-talker_loose_alpha_w <- wilcox.test(loose_alpha$count[loose_alpha$condition == "T"], 
-                                    loose_alpha$count[loose_alpha$condition == "S"], 
+talker_loose_alpha_w <- wilcox.test(counts$count[(counts$condition == "T") & (counts$alpha == 0.05)], 
+                                    counts$count[(counts$condition == "S") & (counts$alpha == 0.05)], 
                                     paired = TRUE,
                                     alternative = "greater")
 df <- add_row(df, condition = "talker", 
@@ -63,8 +92,8 @@ df <- add_row(df, condition = "talker",
               alternative = "one-sided",
               V = talker_loose_alpha_w$statistic, 
               p = talker_loose_alpha_w$p.value)
-talker_strict_alpha_w <- wilcox.test(strict_alpha$count[strict_alpha$condition == "T"], 
-                                     strict_alpha$count[strict_alpha$condition == "S"], 
+talker_strict_alpha_w <- wilcox.test(counts$count[(counts$condition == "T") & (counts$alpha == 0.01)], 
+                                     counts$count[(counts$condition == "S") & (counts$alpha == 0.01)], 
                                     paired = TRUE,
                                     alternative = "greater")
 df <- add_row(df, condition = "talker", 
@@ -72,8 +101,8 @@ df <- add_row(df, condition = "talker",
               alternative = "one-sided",
               V = talker_strict_alpha_w$statistic,
               p = talker_strict_alpha_w$p.value)
-talker_mean_alpha_w <- wilcox.test(mean_alpha$count[mean_alpha$condition == "T"], 
-                                   mean_alpha$count[mean_alpha$condition == "S"], 
+talker_mean_alpha_w <- wilcox.test(counts$count[(counts$condition == "T") & (counts$alpha == 0.001)], 
+                                   counts$count[(counts$condition == "S") & (counts$alpha == 0.001)], 
                                     paired = TRUE,
                                     alternative = "greater")
 df <- add_row(df, condition = "talker", 
@@ -85,9 +114,9 @@ df <- add_row(df, condition = "talker",
 
 **Meaning**
 
-```{r}
-meaning_loose_alpha_w <- wilcox.test(loose_alpha$count[loose_alpha$condition == "N"], 
-                                     loose_alpha$count[loose_alpha$condition == "M"], 
+```{r warning = FALSE, message = FALSE}
+meaning_loose_alpha_w <- wilcox.test(counts$count[(counts$condition == "M") & (counts$alpha == 0.05)], 
+                                    counts$count[(counts$condition == "N") & (counts$alpha == 0.05)], 
                                     paired = TRUE,
                                     alternative = "greater")
 df <- add_row(df, condition = "meaning", 
@@ -95,8 +124,8 @@ df <- add_row(df, condition = "meaning",
               alternative = "one-sided",
               V = meaning_loose_alpha_w$statistic, 
               p = meaning_loose_alpha_w$p.value)
-meaning_strict_alpha_w <- wilcox.test(strict_alpha$count[strict_alpha$condition == "N"], 
-                                      strict_alpha$count[strict_alpha$condition == "M"], 
+meaning_strict_alpha_w <- wilcox.test(counts$count[(counts$condition == "M") & (counts$alpha == 0.05)], 
+                                    counts$count[(counts$condition == "N") & (counts$alpha == 0.05)], 
                                     paired = TRUE,
                                     alternative = "greater")
 df <- add_row(df, condition = "meaning",
@@ -104,8 +133,8 @@ df <- add_row(df, condition = "meaning",
               alternative = "one-sided",
               V = meaning_strict_alpha_w$statistic, 
               p = meaning_strict_alpha_w$p.value)
-meaning_mean_alpha_w <- wilcox.test(mean_alpha$count[mean_alpha$condition == "N"], 
-                                    mean_alpha$count[mean_alpha$condition == "M"], 
+meaning_mean_alpha_w <- wilcox.test(counts$count[(counts$condition == "M") & (counts$alpha == 0.05)], 
+                                    counts$count[(counts$condition == "N") & (counts$alpha == 0.05)], 
                                     paired = TRUE,
                                     alternative = "greater")
 df <- add_row(df, condition = "meaning", 
@@ -117,23 +146,23 @@ df <- add_row(df, condition = "meaning",
 
 **Constraint**
 
-```{r}
-constraint_loose_alpha_w <- wilcox.test(loose_alpha$count[loose_alpha$condition == "L"], 
-                                        loose_alpha$count[loose_alpha$condition == "H"], paired = TRUE)
+```{r warning = FALSE, message = FALSE}
+constraint_loose_alpha_w <- wilcox.test(counts$count[(counts$condition == "L") & (counts$alpha == 0.05)], 
+                                        counts$count[(counts$condition == "H") & (counts$alpha == 0.05)], paired = TRUE)
 df <- add_row(df, condition = "constraint", 
               alpha = 0.05, 
               alternative = "two-sided",
               V = constraint_loose_alpha_w$statistic, 
               p = constraint_loose_alpha_w$p.value)
-constraint_strict_alpha_w <- wilcox.test(strict_alpha$count[strict_alpha$condition == "L"], 
-                                         strict_alpha$count[strict_alpha$condition == "H"], paired = TRUE)
+constraint_strict_alpha_w <- wilcox.test(counts$count[(counts$condition == "L") & (counts$alpha == 0.01)], 
+                                         counts$count[(counts$condition == "H") & (counts$alpha == 0.01)], paired = TRUE)
 df <- add_row(df, condition = "constraint", 
               alpha = 0.01, 
               alternative = "two-sided",
               V = constraint_strict_alpha_w$statistic, 
               p = constraint_strict_alpha_w$p.value)
-constraint_mean_alpha_w <- wilcox.test(mean_alpha$count[mean_alpha$condition == "L"], 
-                                       mean_alpha$count[mean_alpha$condition == "H"], paired = TRUE)
+constraint_mean_alpha_w <- wilcox.test(counts$count[(counts$condition == "L") & (counts$alpha == 0.001)], 
+                                       counts$count[(counts$condition == "H") & (counts$alpha == 0.001)], paired = TRUE)
 df <- add_row(df, condition = "constraint", 
               alpha = 0.001, 
               alternative = "two-sided",
@@ -142,7 +171,7 @@ df <- add_row(df, condition = "constraint",
 ```
 
 ```{r}
-df
+kable(df, digits = c(0, 4, 0, 1, 3))
 ```
 
 
@@ -278,70 +307,70 @@ get_cluster_stats <- function(data, max_distance, alpha) {
 #### Get observed cluster stats
 
 ```{r}
-ws <- select(one_sample_w, -c("channels"))
-max_distance <- 5
-alpha <- 0.05
-
-observed <- get_cluster_stats(ws, max_distance, alpha)
+# ws <- select(one_sample_w, -c("channels"))
+# max_distance <- 5
+# alpha <- 0.05
+# 
+# observed <- get_cluster_stats(ws, max_distance, alpha)
 ```
 
 #### Get resampled cluster stats
 
 ```{r, warning=FALSE}
-n_permutations <- 1000
-permuted_stats <- c()
-for (i in 1:n_permutations) {
-  permuted_ws <- ws[sample(1:nrow(ws)),]
-  permuted_stats <- rbind(permuted_stats, get_cluster_stats(permuted_ws, max_distance, alpha))
-}
+# n_permutations <- 1000
+# permuted_stats <- c()
+# for (i in 1:n_permutations) {
+#   permuted_ws <- ws[sample(1:nrow(ws)),]
+#   permuted_stats <- rbind(permuted_stats, get_cluster_stats(permuted_ws, max_distance, alpha))
+# }
 ```
 
 **Same talker**
 
 ```{r}
-shuffled <- permuted_stats[permuted_stats$condition == "S",]$largest
-obs <- observed$largest[observed$condition == "S"]
-histogram(shuffled, obs, "S")
+# shuffled <- permuted_stats[permuted_stats$condition == "S",]$largest
+# obs <- observed$largest[observed$condition == "S"]
+# histogram(shuffled, obs, "S")
 ```
 
 **Different talker**
 
 ```{r}
-shuffled <- permuted_stats[permuted_stats$condition == "T",]$largest
-obs <- observed$largest[observed$condition == "T"]
-histogram(shuffled, obs, "T")
+# shuffled <- permuted_stats[permuted_stats$condition == "T",]$largest
+# obs <- observed$largest[observed$condition == "T"]
+# histogram(shuffled, obs, "T")
 ```
 
 **Meaningful**
 
 ```{r}
-shuffled <- permuted_stats[permuted_stats$condition == "M",]$largest
-obs <- observed$largest[observed$condition == "M"]
-histogram(shuffled, obs, "M")
+# shuffled <- permuted_stats[permuted_stats$condition == "M",]$largest
+# obs <- observed$largest[observed$condition == "M"]
+# histogram(shuffled, obs, "M")
 ```
 
 **Nonsense**
 
 ```{r}
-shuffled <- permuted_stats[permuted_stats$condition == "N",]$largest
-obs <- observed$largest[observed$condition == "N"]
-histogram(shuffled, obs, "N")
+# shuffled <- permuted_stats[permuted_stats$condition == "N",]$largest
+# obs <- observed$largest[observed$condition == "N"]
+# histogram(shuffled, obs, "N")
 ```
 
 **Low constraint**
 
 ```{r}
-shuffled <- permuted_stats[permuted_stats$condition == "L",]$largest
-obs <- observed$largest[observed$condition == "L"]
-histogram(shuffled, obs, "L")
+# shuffled <- permuted_stats[permuted_stats$condition == "L",]$largest
+# obs <- observed$largest[observed$condition == "L"]
+# histogram(shuffled, obs, "L")
 ```
 
 **High constraint**
 
 ```{r}
-shuffled <- permuted_stats[permuted_stats$condition == "H",]$largest
-obs <- observed$largest[observed$condition == "H"]
-histogram(shuffled, obs, "H")
+# shuffled <- permuted_stats[permuted_stats$condition == "H",]$largest
+# obs <- observed$largest[observed$condition == "H"]
+# histogram(shuffled, obs, "H")
 ```
 
 
