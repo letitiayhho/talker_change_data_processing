@@ -16,34 +16,72 @@ stim = resample(stim, 10, 441);
 pad = zeros(length(eeg) - length(stim), 1);
 stim = [stim; pad];
 
+%% Test coherence between simulated signals
+x = createComplexSignal([40, 300]);
+y = createComplexSignal([40, 100, 300]);
+% apply_mscohere(x, y, fs)
+% apply_coherencyc(x, y)
+plotPowerSpectrum(x, fs)
+plotPowerSpectrum(y, fs)
+
 %% Plot power spectra
-plot_power_spectra(stim, fs)
-plot_power_spectra(eeg, fs)
+% plotPowerSpectrum(stim, fs)
+% plotPowerSpectrum(eeg, fs)
 
 %% Plot coherence
-plot_coherence(stim, eeg, fs)
+% plotCoherence(stim, eeg, fs)
 
 %% FUNCTIONS
+% Create complex signal
+function [x] = createComplexSignal(frequency_components, amplitudes, duration, fs)
+    arguments
+        frequency_components double
+        amplitudes double = repmat(1, 1, length(frequency_components))
+        duration double = 1.6
+        fs double = 1000
+    end
+    % time span vector
+    t = 0:1/fs:duration-1/fs;
+
+    % initialize a signal of Gaussian noise
+    x = randn(size(t));
+
+    % create a sine wave for each component and add to waveform
+    for i = 1:length(frequency_components)
+        component = amplitudes(i)*sin(2*pi*frequency_components(i)*t);
+        x = x + component; 
+    end
+end
+
 % Power spectra
-function [] = plot_power_spectra(x, fs)
+function [] = plotPowerSpectrum(x, fs)
     y = fft(x);
     n = length(x);
-    f = (0:n-1)*(fs/n); 
+    f = (0:n-1)*(fs/n);
     power = abs(y).^2/n;
     figure
     plot(f, power)
-    xlim([0, 500])
-    title("Power spectra")
+%     xlim([0, fs/2])
+    title("Power spectrum")
     xlabel('Frequency')
     ylabel('Power')
 end
 
-% Coherence
-function [] = plot_coherence(x, y, fs)
+% Coherence with mscohere
+function [] = apply_mscohere(x, y, fs)
     figure
     [cxy, f] = mscohere(x, y, [], [], [], fs);
     plot(f, cxy)
-    title("Coherence between stim and eeg")
+    title("Coherence")
+    xlabel("Frequency")
+end
+
+% Coherence with chronux
+function [] = apply_coherencyc(x, y)
+    figure
+    [C,phi,S12,S1,S2,f] = coherencyc(x, y);
+    plot(f, C)
+    title("Coherence")
     xlabel("Frequency")
 end
 
