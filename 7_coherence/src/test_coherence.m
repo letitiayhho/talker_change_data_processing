@@ -19,10 +19,17 @@ stim = [stim; pad];
 %% Test coherence between simulated signals
 x = createComplexSignal([40, 300]);
 y = createComplexSignal([40, 100, 300]);
+
+% Plot power spectrum
+% plotPowerSpectrum(x, fs)
+% plotPowerSpectrum(y, fs)
+
+% Test with mscohere
 % apply_mscohere(x, y, fs)
-% apply_coherencyc(x, y)
-plotPowerSpectrum(x, fs)
-plotPowerSpectrum(y, fs)
+
+% Test with coherencyc
+params = struct('Fs', 1000);
+apply_coherencyc(x, y, params)
 
 %% Plot power spectra
 % plotPowerSpectrum(stim, fs)
@@ -61,7 +68,7 @@ function [] = plotPowerSpectrum(x, fs)
     power = abs(y).^2/n;
     figure
     plot(f, power)
-%     xlim([0, fs/2])
+    xlim([0, fs/2])
     title("Power spectrum")
     xlabel('Frequency')
     ylabel('Power')
@@ -69,17 +76,19 @@ end
 
 % Coherence with mscohere
 function [] = apply_mscohere(x, y, fs)
-    figure
     [cxy, f] = mscohere(x, y, [], [], [], fs);
+
+    figure
     plot(f, cxy)
     title("Coherence")
     xlabel("Frequency")
 end
 
 % Coherence with chronux
-function [] = apply_coherencyc(x, y)
+function [] = apply_coherencyc(x, y, params)
+    [C,phi,S12,S1,S2,f] = coherencyc(x, y, params);
+    
     figure
-    [C,phi,S12,S1,S2,f] = coherencyc(x, y);
     plot(f, C)
     title("Coherence")
     xlabel("Frequency")
