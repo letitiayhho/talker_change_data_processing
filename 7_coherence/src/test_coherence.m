@@ -28,8 +28,22 @@ y = createComplexSignal([40, 100, 300]);
 % apply_mscohere(x, y, fs)
 
 % Test with coherencyc
-params = struct('Fs', 1000);
-apply_coherencyc(x, y, params)
+% params = struct('Fs', 1000, 'tapers', [3, 5]);
+% apply_coherencyc(x, y, params)
+% apply_coherencyc(stim, eeg, params)
+% apply_mscohere(stim, eeg, fs)
+
+tiledlayout(5,5)
+for i = 2:4:20
+    for j = 2:4:20
+        nexttile
+        params = struct('Fs', 1000, 'tapers', [i, j]);
+        [C,phi,S12,S1,S2,f] = coherencyc(x, y, params);
+        plot(f, C)
+        title(['TW: ', num2str(i), ' K: ', num2str(j)])
+        xlabel("Frequency")
+    end
+end
 
 %% Plot power spectra
 % plotPowerSpectrum(stim, fs)
