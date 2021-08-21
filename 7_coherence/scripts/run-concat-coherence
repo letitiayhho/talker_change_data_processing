@@ -1,0 +1,24 @@
+#!/bin/bash
+set -euo pipefail
+
+usage() {
+    cat <<eof >&2
+usage: $0 <average or max_average>
+
+    description
+        wrapper script for combining coherence values from 
+        all subjects into one file
+eof
+    exit 1
+}
+
+if [[ $# -ne 1 ]]; then
+    usage
+fi
+
+GIT_HOME="$(git rev-parse --show-toplevel)"
+cd "$GIT_HOME"
+
+stat="$1"
+
+matlab -nodisplay -r "addpath('7_coherence/src'); concat_coherence('$GIT_HOME', '$stat')"
