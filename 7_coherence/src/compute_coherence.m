@@ -1,11 +1,11 @@
-function [] = compute_coherence(subject_number)
+function [] = compute_coherence(git_home, subject_number)
     %% Set up
-    cd("/Users/letitiaho/src/talker_change_data_processing")
+    cd(git_home)
     addpath(fullfile('0_set_up_and_raw_data/data/stim/low_pass_400')) % add audio stimuli directory to path
-    addpath(fullfile('1_preprocessing/data/304')) % add subject data to path
-    addpath(fullfile('2_cross_correlate/data', subject_number))
-    addpath(fullfile('7_coherence/data/'))
-    addpath('tools')
+    addpath(fullfile('1_preprocessing/data/', subject_number)) % add subject stim order to path
+    addpath(fullfile('2_cross_correlate/data', subject_number)) % add subject data to path
+    addpath('7_coherence/data') % add path to stim_pitches
+    addpath('7_coherence/src/chronux/') % add chronux scripts
 
     % Import json file for pitch ranges
     fname = 'stim_pitches.json';
