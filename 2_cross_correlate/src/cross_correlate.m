@@ -61,7 +61,7 @@ end
     end
 
     %% 3. Split condition codes up
-    condition = get_split_conditions(stim_order.type);
+    condition = load('split_conditions.mat').split_conditions;
 
     %% 4. Write data files
     function [] = save_xcorr(subject_number, condition, stim_order, data, stat)
