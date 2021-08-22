@@ -69,15 +69,15 @@ function [] = compute_coherence(git_home, subject_number)
                 max_coherence_each_syllable = [max_coherence_each_syllable, max(coherence_within_range)];
                 avg_coherence_each_syllable = [avg_coherence_each_syllable, mean(coherence_within_range)];
             end
-        end
 
-        % Compute the average of both max
-        max_trial_coherence = mean(max_coherence_each_syllable);
-        avg_trial_coherence = mean(avg_coherence_each_syllable);
+            % Compute the average of both max
+            max_trial_coherence = mean(max_coherence_each_syllable);
+            avg_trial_coherence = mean(avg_coherence_each_syllable);
 
-        % Write statistics to data arrays
-        average_max(j, i) = max_trial_coherence;
-        average(j, i) = avg_trial_coherence;
+            % Write statistics to data arrays
+            average_max(j, i) = max_trial_coherence;
+            average(j, i) = avg_trial_coherence;
+            end
     end
 
     %% 3. Split condition codes up
