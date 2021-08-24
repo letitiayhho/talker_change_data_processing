@@ -113,7 +113,9 @@ dropOutliers <- function(data) {
 
 # Scaling is relative to each condition, so you can only compare topography, not abs numbers
 
-S <- subset(coherr, condition = "S") %>% colMeans() %>% scaleData()
+S <- subset(coherr, condition = "S") %>% colMeans()
+%>% scaleData()
+S[which(S < 0.3)] <- NaN
 T <- subset(coherr, condition = "T") %>% colMeans() %>% scaleData()
 M <- subset(coherr, condition = "M") %>% colMeans() %>% scaleData()
 N <- subset(coherr, condition = "N") %>% colMeans() %>% scaleData()
@@ -136,159 +138,50 @@ kable(by_condition_df, escape = F, col.names = c("Channel", "S", "T", "M", "N", 
 ```
 
 
-```{r include=FALSE}
-# scaleData <- function(subset_of_data, sd_all, min_all) {
-#   scaled_data <- subset_of_data * (1/sd_all) # set sd to 1
-#   scaled_data <- scaled_data - min(min_all) # set min value to 0
-#   return(scaled_data)
-# }
-
-# data_only <- select(coherr, all_of(channel_labels))  # keep only data columns
-# all_trials2 <- data_only * (1/sd(data_only)) # set sd to 1
-# all_trials2 <- all_trials2 - min(all_trials2) # set min value to 0
-# all_trials2 <- colMeans(all_trials2) # compute channel means
-
-## CAN ONLY NORMALIZE RELATIVE
- 
-# S <- subset(coherr, condition = "S") %>% colMeans()
-# T <- subset(coherr, condition = "S") %>% colMeans()
-# M <- subset(coherr, condition = "S") %>% colMeans()
-# N <- subset(coherr, condition = "S") %>% colMeans()
-# L <- subset(coherr, condition = "S") %>% colMeans()
-# H <- subset(coherr, condition = "S") %>% colMeans()
-# 
-# min_all <- min(S, T_, M, N, L, H)
-# sd_all <- sd(c(S, T, M, N, L, H))
-# 
-# S_scaled <- c(S*(1/sd_all)) - min_all
-# 
-# scaleData <- function(data, min, sd) {
-#   return([data*(1/sd)])
-# }
-
-# channel_labels <- paste("X", as.character(1:128), sep = "")
-# all_trials <- select(coherr, all_of(channel_labels))  # keep only data columns
-# all_trials <- colMeans(all_trials) # compute channel means
-# all_trials <- all_trials * (1/sd(all_trials)) # set sd to 1
-# all_trials <- all_trials - min(all_trials) # set min value to 0
-# 
-# # Creating a table to display all the p-values
-# df_by_condition <- data.frame(channels, S, T, M, N, L, H) %>%
-#   mutate_if(is.numeric, function(x) {round(x, digits = 2)}) %>%
-#   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
-#                                             cell_spec(x, NULL),
-#                                             cell_spec(x, background = spec_color(x,
-#                                                                                  direction = -1,
-#                                                                                  begin = 0.5,
-#                                                                                  end = 1,
-#                                                                                  option = "B",
-#                                                                                  scale_from = c(0,5))))})
-# kable(df_by_condition, escape = F, col.names = c("Channel", "S", "T", "M", "N", "S", "G")) %>%
-#   add_header_above(c(" " = 1, "Talker" = 2, "Meaning" = 2, "Constraint" = 2)) %>%
-#   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
-
-# 
-# df_by_condition <- data.frame(channels, S, T, M, N, L, H)
-# map_df <- mutate_if(df_by_condition, is.numeric, function(x) {round(x, digits = 2)}) %>%
-#   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
-#                                             cell_spec(x, NULL),
-#                                             cell_spec(x, background = spec_color(x, 
-#                                                                                  direction = 1, 
-#                                                                                  begin = 0.65, 
-#                                                                                  end = 1, 
-#                                                                                  option = "B", 
-#                                                                                  scale_from = c(0,0.1))))})
-# 
-# kable(map_df, escape = F, col.names = c("Channel", "S", "T", "M", "N", "S", "G")) %>%
-#   add_header_above(c(" " = 1, "Talker" = 2, "Meaning" = 2, "Constraint" = 2)) %>%
-#   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
-```
-
-
 ``` {r}
-# channels <- as.character(c(1:128))
-# 
-# get_inverted_list <- function(channels, list) {
-#   inverted_list <- channels[!channels %in% list]
-#   return(inverted_list)
-# }
-# 
-# get_relevant_coords <- function(x, y, channels) {
-#   x <- x[channels]
-#   y <- y[channels]
-#   return(data.frame(x = x, y = y))
-# }
-# 
-# get_map <- function(df, channels, nodiff_channels, levels_label) {
-#   diff_coordinates <- get_relevant_coords(df$x, df$y, channels)
-#   nodiff_coordinates <- get_relevant_coords(df$x, df$y, nodiff_channels)
-# 
-#   ggplot() +
-#     geom_point(data = df, aes(x = x, y = y,
-#                               size = 1/group1,
-#                               colour = "#B8DE29FF",
-#                               alpha = 0.5,
-#                               stroke = 0)) +
-#     geom_point(data = df, aes(x = x, y = y,
-#                               size = 1/group2,
-#                               colour = "#287D8EFF",
-#                               alpha = 0.5,
-#                               stroke = 0)) +
-#     geom_point(data = df, aes(x = 1000+x, y = y,
-#                               size = 1/nodiff_group1,
-#                               colour = "#B8DE29FF",
-#                               alpha = 0.5,
-#                               stroke = 0)) +
-#     geom_point(data = df, aes(x = 1000+x, y = y,
-#                               size = 1/nodiff_group2,
-#                               colour = "#287D8EFF",
-#                               alpha = 0.5,
-#                               stroke = 0)) +
-#     geom_point(data = diff_coordinates, aes(x = x, y = y,
-#                                             size = 1,
-#                                             alpha = 0.5,
-#                                             stroke = 0)) +
-#     geom_point(data = nodiff_coordinates, aes(x = 1000+x, y = y,
-#                                               size = 1,
-#                                               alpha = 0.5,
-#                                               stroke = 0)) +
-#     scale_color_discrete(name = "Level", labels = levels_label) +
-#     scale_size_continuous(name = "p", 
-#                           limits = c(1, 1000),
-#                           breaks = c(20, 100, 200), 
-#                           labels = c("0.05", "0.01", "0.005")) +
-#     guides(alpha = FALSE) +
-#     annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
-#     annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
-#     theme(axis.line=element_blank(),axis.text.x=element_blank(),
-#           axis.text.y=element_blank(),axis.ticks=element_blank(),
-#           axis.title.x=element_blank(),
-#           axis.title.y=element_blank(),
-#           panel.background=element_blank(),
-#           panel.border=element_blank(),
-#           panel.grid.major=element_blank(),
-#           panel.grid.minor=element_blank(),
-#           plot.background=element_blank())
-# }
-# 
-# get_ps <- function(data, condition, channels){
-#   recoded_ps <- c()
-#   for (i in 1:128) {
-#     # Get p-value for channel i
-#     p <- data[[condition]][i]
-# 
-#     # Exit early if not in list of significant channels
-#     if (!(i %in% channels)) {recoded_ps[i] = NaN}
-# 
-#     # Recoding values if too small or too large
-#     else {
-#       if (p > 0.05) {recoded_ps[i] <- NaN}
-#       if (p < 0.001) {recoded_ps[i] <- 0.001}
-#       else {recoded_ps[i] <- p}
-#     }
-#   }
-#   return(recoded_ps)
-# }
+talker_df <- data.frame(S, T, coordinates)
 
+# get_map <- function(df) {
+ggplot() +
+  geom_point(data = talker_df, aes(x = x, 
+                                   y = y,
+                                   size = S,
+                                   colour = "#B8DE29FF",
+                                   alpha = S,
+                                   stroke = 0))
+  # geom_point(data = talker_df, aes(1000+x = x, 
+  #                                  y = y,
+  #                                  size = T,
+  #                                  colour = "#287D8EFF",
+  #                                  alpha = T,
+  #                                  stroke = 0)) +
+  # geom_point(data = diff_coordinates, aes(x = x, 
+  #                                         y = y,
+  #                                         size = 1,
+  #                                         alpha = 0.5,
+  #                                         stroke = 0)) +
+  # geom_point(data = nodiff_coordinates, aes(x = 1000+x, 
+  #                                           y = y,
+  #                                           size = 1,
+  #                                           alpha = 0.5,
+  #                                           stroke = 0)) +
+  # # scale_color_discrete(name = "Level", labels = levels_label) +
+  # # scale_size_continuous(name = "p",
+  # #                       limits = c(1, 1000),
+  # #                       breaks = c(20, 100, 200),
+  # #                       labels = c("0.05", "0.01", "0.005")) +
+  # guides(alpha = FALSE) +
+  # annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+  # annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+  # theme(axis.line=element_blank(),axis.text.x=element_blank(),
+  #       axis.text.y=element_blank(),axis.ticks=element_blank(),
+  #       axis.title.x=element_blank(),
+  #       axis.title.y=element_blank(),
+  #       panel.background=element_blank(),
+  #       panel.border=element_blank(),
+  #       panel.grid.major=element_blank(),
+  #       panel.grid.minor=element_blank(),
+  #       plot.background=element_blank())
+# }
 ```
  
