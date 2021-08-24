@@ -1,0 +1,50 @@
+---
+title: "Average"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, warning=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/")
+setwd("/Users/letitiaho/src/talker_change_data_processing/")
+library("dplyr")
+library("ggplot2")
+library("ggpubr")
+library("kableExtra")
+source("tools/functions.R")
+source("8_wilcoxon/src/functions.R")
+```
+
+```{r}
+# Import data
+coherr <- read.csv(file = "7_coherence/data/average_max.csv")
+channels <- as.character(1:128)
+```
+
+#### Mean coherence per channel over all subjects and trials
+
+```{r}
+channel_labels <- paste("X", as.character(1:128), sep = "")
+all_trials <- select(coherr, all_of(channel_labels))  # keep only data columns
+all_trials <- colMeans(all_trials) # compute channel means
+all_trials <- all_trials * (1/sd(all_trials)) # set sd to 1
+all_trials <- all_trials - min(all_trials) # set min value to 0
+
+# Creating a table to display all the p-values
+all_trials <- as.data.frame(all_trials) %>%
+  round(digits = 2) %>%
+  mutate_all(function(x) {cell_spec(x, background = spec_color(x,
+                                                               direction = -1,
+                                                               begin = 0.5,
+                                                               end = 1,
+                                                               option = "B",
+                                                               scale_from = c(0,5)))})
+
+all_trials_df <- data.frame(channels, 'C' = all_trials) # change to a df
+kable(all_trials_df, escape = F, col.names = c("Channel", "C")) %>%
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
+
+
