@@ -23,14 +23,6 @@ coherr <- read.csv(file = "7_coherence/data/average_max.csv")
 channels <- as.character(1:128)
 ```
 
-``` {r}
-# scale all the data and put back into data frame
-channel_labels <- paste("X", as.character(1:128), sep = "")
-data_only <- as.matrix(select(coherr, all_of(channel_labels))) # keep only data columns
-data_only <- data_only * (1/sd(data_only)) # set sd to 1
-data_only <- data_only - min(data_only) # set min value to 0
-```
-
 #### Mean coherence per channel over all subjects and trials
 
 ```{r}
@@ -52,26 +44,6 @@ all_trials <- as.data.frame(all_trials) %>%
 all_trials_df <- data.frame(channels, 'C' = all_trials) # change to a df
 kable(all_trials_df, escape = F, col.names = c("Channel", "C")) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
-
-# # all_trials <- colMeans(data_only) # compute channel means
-# all_trials <- select(coherr, all_of(channel_labels))  # keep only data columns
-# all_trials <- colMeans(all_trials) # compute channel means
-# all_trials <- all_trials * (1/sd(all_trials)) # set sd to 1
-# all_trials <- all_trials - min(all_trials) # set min value to 0
-# 
-# # Creating a table to display all the p-values
-# all_trials_df <- as.data.frame(all_trials) %>%
-#   round(digits = 2) %>%
-#   mutate_all(function(x) {cell_spec(x, background = spec_color(x,
-#                                                                direction = -1,
-#                                                                begin = 0.5,
-#                                                                end = 1,
-#                                                                option = "B",
-#                                                                scale_from = c(0,5)))})
-# 
-# all_trials_df <- data.frame(channels, 'C' = all_trials) # change to a df
-# kable(all_trials_df, escape = F, col.names = c("Channel", "C")) %>%
-#   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
 #### Map
