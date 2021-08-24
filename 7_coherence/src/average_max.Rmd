@@ -20,20 +20,31 @@ source("8_wilcoxon/src/functions.R")
 ```{r}
 # Import data
 coherr <- read.csv(file = "7_coherence/data/average_max.csv")
+```
+
+```{r}
 channels <- as.character(1:128)
+channel_labels <- paste("X", channels, sep = "")
+data_only <- select(coherr, all_of(channel_labels))  # keep only data columns
+all_trials <- colMeans(data_only) # compute channel means
+
+# Clean anomalous trial
+
+# all_trials <- all_trials * (1/sd(all_trials)) # set sd to 1
+# all_trials <- all_trials - min(all_trials) # set min value to 0
 ```
 
 #### Mean coherence per channel over all subjects and trials
 
 ```{r}
 channel_labels <- paste("X", as.character(1:128), sep = "")
-all_trials <- select(coherr, all_of(channel_labels))  # keep only data columns
+data_only <- select(coherr, all_of(channel_labels))  # keep only data columns
 all_trials <- colMeans(data_only) # compute channel means
 all_trials <- all_trials * (1/sd(all_trials)) # set sd to 1
 all_trials <- all_trials - min(all_trials) # set min value to 0
 
 # Creating a table to display all the p-values
-all_trials <- as.data.frame(all_trials) %>%
+all_trials_color <- as.data.frame(all_trials) %>%
   round(digits = 2) %>%
   mutate_all(function(x) {cell_spec(x, background = spec_color(x,
                                                                direction = -1,
@@ -41,7 +52,7 @@ all_trials <- as.data.frame(all_trials) %>%
                                                                end = 1,
                                                                option = "B",
                                                                scale_from = c(0,5)))})
-all_trials_df <- data.frame(channels, 'C' = all_trials) # change to a df
+all_trials_df <- data.frame(channels, 'C' = all_trials_color) # change to a df
 kable(all_trials_df, escape = F, col.names = c("Channel", "C")) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
@@ -87,11 +98,45 @@ ggsave(plot = plot, filename = '7_coherence/figs/overall.png', width = 6, height
 #### Table for each condition
 
 ```{r}
-data_only <- as.matrix(select(coherr, all_of(channel_labels)))
-all_trials <- data_only * (1/sd(data_only)) # set sd to 1
-all_trials <- all_trials - min(all_trials) # set min value to 0
-mean_over_all_trials <- colMeans(all_trials) # compute channel means
+scaleData <- function(data) {
+  return((data-min(data))/sd(data))
+}
 
+dropOutliers <- function(data) {
+  iqr <- IQR(data)
+  Q <- quantile(data)
+  up <-  Q[2]+1.5*iqr # Upper Range  
+  low <- Q[1]-1.5*iqr # Lower Range
+  data <- data[-which(data < low & data > high),]
+  return(low, high)
+}
+
+# Scaling is relative to each condition, so you can only compare topography, not abs numbers
+
+S <- subset(coherr, condition = "S") %>% colMeans() %>% scaleData()
+T <- subset(coherr, condition = "T") %>% colMeans() %>% scaleData()
+M <- subset(coherr, condition = "M") %>% colMeans() %>% scaleData()
+N <- subset(coherr, condition = "N") %>% colMeans() %>% scaleData()
+L <- subset(coherr, condition = "L") %>% colMeans() %>% scaleData()
+H <- subset(coherr, condition = "H") %>% colMeans() %>% scaleData()
+
+# Creating a table to display all the p-values
+by_condition <- data.frame(channels, S, T, M, N, L, H)
+by_condition_df <- mutate_if(by_condition, is.numeric, function(x) {round(x, digits = 2)}) %>%
+  mutate_if(is.numeric, function(x) {cell_spec(x, background = spec_color(x, 
+                                                                          direction = -1,
+                                                                          begin = 0.5,
+                                                                          end = 1,
+                                                                          option = "B",
+                                                                          scale_from = c(0, 6.2)))})
+
+kable(by_condition_df, escape = F, col.names = c("Channel", "S", "T", "M", "N", "S", "G")) %>%
+  add_header_above(c(" " = 1, "Talker" = 2, "Meaning" = 2, "Constraint" = 2)) %>%
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
+
+
+```{r include=FALSE}
 # scaleData <- function(subset_of_data, sd_all, min_all) {
 #   scaled_data <- subset_of_data * (1/sd_all) # set sd to 1
 #   scaled_data <- scaled_data - min(min_all) # set min value to 0
@@ -102,33 +147,24 @@ mean_over_all_trials <- colMeans(all_trials) # compute channel means
 # all_trials2 <- data_only * (1/sd(data_only)) # set sd to 1
 # all_trials2 <- all_trials2 - min(all_trials2) # set min value to 0
 # all_trials2 <- colMeans(all_trials2) # compute channel means
+
+## CAN ONLY NORMALIZE RELATIVE
  
-S2 <- all_trials[coherr$talker == "S",] %>% colMeans()
-T2 <- all_trials[coherr$talker == "T",] %>% colMeans()
-M2 <- all_trials[coherr$talker == "M",] %>% colMeans()
-N2 <- all_trials[coherr$talker == "N",] %>% colMeans()
-L2 <- all_trials[coherr$talker == "L",] %>% colMeans()
-H2 <- all_trials[coherr$talker == "H",] %>% colMeans()
-
-S <- subset(coherr, condition = "S") %>%
-  colMeans() %>%
-  scaleData(sd_all, min_all)
-# T <- subset(coherr, condition = "T") %>%
-#   colMeans() %>%
-#   scaleData(sd_all, min_all)
-# M <- subset(coherr, condition = "M") %>%
-#   colMeans() %>%
-#   scaleData(sd_all, min_all)
-# N <- subset(coherr, condition = "N") %>%
-#   colMeans() %>%
-#   scaleData(sd_all, min_all)
-# L <- subset(coherr, condition = "L") %>%
-#   colMeans() %>%
-#   scaleData(sd_all, min_all)
-# H <- subset(coherr, condition = "H") %>%
-#   colMeans() %>%
-#   scaleData(sd_all, min_all)
-
+# S <- subset(coherr, condition = "S") %>% colMeans()
+# T <- subset(coherr, condition = "S") %>% colMeans()
+# M <- subset(coherr, condition = "S") %>% colMeans()
+# N <- subset(coherr, condition = "S") %>% colMeans()
+# L <- subset(coherr, condition = "S") %>% colMeans()
+# H <- subset(coherr, condition = "S") %>% colMeans()
+# 
+# min_all <- min(S, T_, M, N, L, H)
+# sd_all <- sd(c(S, T, M, N, L, H))
+# 
+# S_scaled <- c(S*(1/sd_all)) - min_all
+# 
+# scaleData <- function(data, min, sd) {
+#   return([data*(1/sd)])
+# }
 
 # channel_labels <- paste("X", as.character(1:128), sep = "")
 # all_trials <- select(coherr, all_of(channel_labels))  # keep only data columns
@@ -151,21 +187,21 @@ S <- subset(coherr, condition = "S") %>%
 #   add_header_above(c(" " = 1, "Talker" = 2, "Meaning" = 2, "Constraint" = 2)) %>%
 #   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 
-
-df_by_condition <- data.frame(channels, S, T, M, N, L, H)
-map_df <- mutate_if(df_by_condition, is.numeric, function(x) {round(x, digits = 2)}) %>%
-  mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
-                                            cell_spec(x, NULL),
-                                            cell_spec(x, background = spec_color(x, 
-                                                                                 direction = 1, 
-                                                                                 begin = 0.65, 
-                                                                                 end = 1, 
-                                                                                 option = "B", 
-                                                                                 scale_from = c(0,0.1))))})
-
-kable(map_df, escape = F, col.names = c("Channel", "S", "T", "M", "N", "S", "G")) %>%
-  add_header_above(c(" " = 1, "Talker" = 2, "Meaning" = 2, "Constraint" = 2)) %>%
-  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+# 
+# df_by_condition <- data.frame(channels, S, T, M, N, L, H)
+# map_df <- mutate_if(df_by_condition, is.numeric, function(x) {round(x, digits = 2)}) %>%
+#   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
+#                                             cell_spec(x, NULL),
+#                                             cell_spec(x, background = spec_color(x, 
+#                                                                                  direction = 1, 
+#                                                                                  begin = 0.65, 
+#                                                                                  end = 1, 
+#                                                                                  option = "B", 
+#                                                                                  scale_from = c(0,0.1))))})
+# 
+# kable(map_df, escape = F, col.names = c("Channel", "S", "T", "M", "N", "S", "G")) %>%
+#   add_header_above(c(" " = 1, "Talker" = 2, "Meaning" = 2, "Constraint" = 2)) %>%
+#   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
 
