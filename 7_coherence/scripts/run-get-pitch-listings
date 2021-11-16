@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+"""
+Runs a praat script on all the stimuli
+gets their pitch listings and saves
+them to .txt files
+"""
+
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+print("Getting pitch listings")
+# Get list of all files
+
+# Iterate over files and get pitch listing
+for file in files:
+    print(s)
+    stim = file.stem
+    subprocess.check_output(
+            [
+                "/Applications/Praat.app/Contents/MacOS/Praat",
+                "--run",
+                "src/get_pitch_listing.praat",
+                stim
+            ]
+        )
+
