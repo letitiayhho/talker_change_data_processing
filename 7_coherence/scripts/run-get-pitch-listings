@@ -5,24 +5,33 @@ gets their pitch listings and saves
 them to .txt files
 """
 
-import os
 import subprocess
 import sys
 from pathlib import Path
 
-print("Getting pitch listings")
-# Get list of all files
+def main() -> None:
+    print("Getting pitch listings")
 
-# Iterate over files and get pitch listing
-for file in files:
-    print(s)
-    stim = file.stem
-    subprocess.check_output(
-            [
-                "/Applications/Praat.app/Contents/MacOS/Praat",
-                "--run",
-                "src/get_pitch_listing.praat",
-                stim
-            ]
-        )
+    # Get list of all files
+    files = Path("/Users/letitiaho/src/talker_change_data_processing/0_set_up_and_raw_data/data/stim/original/")
 
+    # Iterate over files and get pitch listing
+    for file in files.iterdir():
+        if file.suffix != ".wav":
+            continue
+        stim = file.stem
+        print(stim)
+        subprocess.check_output(
+                [
+                    "/Applications/Praat.app/Contents/MacOS/Praat",
+                    "--run",
+                    "src/get_pitch_listing.praat",
+                    stim
+                ]
+            )
+
+if __name__ == "__main__":
+    if len(sys.argv) != 1:
+        print(__doc__)
+        sys.exit(1)
+    main()
