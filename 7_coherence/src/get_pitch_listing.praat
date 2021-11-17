@@ -7,7 +7,7 @@ writefile$ = "/Users/letitiaho/src/talker_change_data_processing/7_coherence/dat
 Read from file: readfile$
 writeFileLine: writefile$, "time,pitch"
 selectObject: 1
-To Pitch: 0, 75, 600
+To Pitch: 0.02, 75, 600
 no_of_frames = Get number of frames
 
 for frame from 1 to no_of_frames
