@@ -1,4 +1,9 @@
-function [] = migrate_to_set()
+function [] = mat_to_set()
+    %% 
+    % Take all the eeg_data.set files and combine them with the eeg_data.m
+    % files that I computed my analyses on
+    %% 
+    
     cd '/Users/letitiaho/src/talker_change_data_processing'
     subjects = ["301", "302", "303", "304", "305", "307", "308", "310", "315", "316", "317"];
     [ALLEEG EEG CURRENTSET ALLCOM] = eeglab; % need this for the first
