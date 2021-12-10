@@ -4,17 +4,15 @@ function [] = preprocess_eeg_data(subject_number)
 
     %% 1. Open EEGLAB
     fprintf(1, '\n\n1. Opening EEGLAB\n\n\n')
-    addpath('/Applications/eeglab2019')
-    cd(fullfile('0_set_up_and_raw_data/data', subject_number))
     [ALLEEG EEG CURRENTSET ALLCOM] = eeglab;
-    EEG.etc.eeglabvers = '2019.1'; % tracks which version of EEGLAB is being used
 
     % Set error breakpoint
-    dbstop if error
+%     dbstop if error
 
     %% 2. Import data
     fprintf(1, '\n\n2. Importing eeg data\n\n\n')
-    EEG = pop_fileio('eeg_data.raw', 'dataformat', 'auto')
+    raw_fp = fullfile('0_set_up_and_raw_data/data', subject_number, 'eeg_data.raw')
+    EEG = pop_fileio(raw_fp, 'dataformat', 'auto');
     EEG = eeg_checkset( EEG ); % check the consistency of the fields of an EEG dataset
 
     % 2.1 Save original epoch order
@@ -31,7 +29,8 @@ function [] = preprocess_eeg_data(subject_number)
 
     % 4. Set channel locations
     fprintf(1, '\n\n4. Setting channel locations\n\n\n')
-    EEG = pop_chanedit(EEG, 'lookup', 'channel_locations.sfp', 'setref', {'128' ''});
+    sfp_fp = fullfile('0_set_up_and_raw_data/data', subject_number, 'channel_locations.sfp')
+    EEG = pop_chanedit(EEG, 'lookup', sfp_fp, 'setref', {'128' ''});
 
         % 4.1 Re-reference to Cz
         fprintf(1, '\n\n4.1. Re-referencing data to Cz\n\n\n')
@@ -83,9 +82,15 @@ function [] = preprocess_eeg_data(subject_number)
     %% 8. Export
     fprintf(1, '\n\n8. Exporting preprocessed eeg data\n\n\n')
     EEG.setname = subject_number;
+    
+    % Save as .set
+    set_fp = fullfile('1_preprocessing/data', subject_number, 'eeg_data_2.set')
+    save(set_fp, 'EEG', '-mat');
+    
+    % Save as .mat
     eeg_data = EEG.data;
-    save('eeg_data.mat', 'eeg_data'); 
-    save('eeg_data.set', 'EEG', '-mat');
+    mat_fp = fullfile('1_preprocessing/data', subject_number, 'eeg_data_2.mat')
+    save(mat_fp, 'eeg_data'); 
 
     quit
 end
