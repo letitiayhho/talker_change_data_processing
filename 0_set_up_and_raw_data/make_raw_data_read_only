@@ -1,0 +1,4 @@
+#!/bin/bash
+
+chmod 444 data/*.txt
+chmod 444 data/*/*
