@@ -1,4 +1,4 @@
-function [] = cross_correlate(git_home, subject_number)
+function cross_correlate()
 % DESCRIPTION:
 %     Takes the preprocessed eeg data and convolves or cross-correlates the 
 %     waveforms with the waveform of the auditory stimuli
@@ -6,77 +6,48 @@ function [] = cross_correlate(git_home, subject_number)
 % OUTPUT:
 %     Writes files named cross_correlations.mat
 
-arguments
-    git_home string
-    subject_number char
-end
+    cd '/Users/letitiaho/src/talker_change_data_processing'
+    subjects = ["301", "302", "303", "304", "305", "307", "308", "310", "315", "316", "317"];
 
-    fprintf(1, strcat('Analyzing data from subject #', subject_number, '\n'))
+    for subject = subjects
+        fprintf(1, strcat("Cross correlating for subject #", subject, "\n"))
+        
+        %% 1. Import data
+        load(fullfile('1_preprocessing/data', subject, 'eeg_data.mat'), 'eeg_data') % add subject data to path
+        addpath(fullfile('0_set_up_and_raw_data/data/stim/low_pass_400')) % add audio stimuli directory to path
+        load(fullfile('2_cross_correlate/data', subject, 'stim_order.mat'), 'stim_order')
 
-    %% 1. Import data
-    cd(git_home)
-    addpath(fullfile('1_preprocessing/data', subject_number)) % add subject data to path
-    addpath(fullfile('0_set_up_and_raw_data/data/stim/low_pass_400')) % add audio stimuli directory to path
-    addpath(fullfile('2_cross_correlate/data', subject_number))
+        %% 2. Cross correlate
+        cross_correlations = zeros(size(eeg_data, 1), 3199, size(eeg_data, 3));
 
-    % Import EEG data
-    eeg_data = load('eeg_data').eeg_data;
+        % Loop over channels
+        fprintf(1, 'Channel #')
+        for i = 1:size(eeg_data, 1)
+            fprintf(1, strcat(num2str(i), ', #'))
 
-    % Import pruned epoch order
-    stim_order = load('stim_order').stim_order;
+            % Loop over epochs
+             for j = 1:size(eeg_data, 3)
 
-    %% 2. Cross correlate
-    cross_correlations = zeros(size(eeg_data, 1), 3199, size(eeg_data, 3));
+                 % Extract eeg epoch and interpolate
+                 epoch = double(eeg_data(i, :, j));
 
-    % Loop over channels
-    fprintf(1, 'Channel #')
-    for i = 1:size(eeg_data, 1)
-        fprintf(1, strcat(num2str(i), ', #'))
+                 % Load stimuli .wav file for epoch
+                 word = char(stim_order.word(j));
+                 stim = audioread(word);
+                 stim = resample(stim, 10, 441);
 
-        % Loop over epochs
-         for j = 1:size(eeg_data, 3)
+                 % Pad the stimuli signal to make it the same length as the eeg
+                 pad = zeros(length(epoch) - length(stim), 1);
+                 stim = [stim; pad];
 
-             % Extract eeg epoch and interpolate
-             epoch = double(eeg_data(i, :, j));
+                 % Compute convolution and cross correlation
+                 cross_correlations(i, :, j) = xcorr(stim, epoch); % all are 3199x1
+             end
+        end
 
-             % Load stimuli .wav file for epoch
-             word = char(stim_order.word(j));
-             stim = audioread(word);
-             stim = resample(stim, 10, 441);
-             
-             % Pad the stimuli signal to make it the same length as the eeg
-             pad = zeros(length(epoch) - length(stim), 1);
-             stim = [stim; pad];
-
-             % Compute convolution and cross correlation
-             cross_correlations(i, :, j) = xcorr(stim, epoch); % all are 3199x1
-         end
+        cross_correlations_fp = fullfile('threshold_free_clustering/data', subject, 'cross_correlations.mat');
+        fprintf(1, strcat('\nSaving to ', cross_correlations_fp, '\n'))
+        save(cross_correlations_fp, 'cross_correlations')
     end
 
-    %% 3. Split condition codes up
-%     condition = load('split_conditions.mat').split_conditions;
-
-    %% 4. Write data files
-    
-%     function [] = save_xcorr(subject_number, condition, stim_order, data, stat)
-%         % Create data frame
-%         data_frame = [
-%             table(repmat(subject_number, size(stim_order, 1), 1), 'VariableNames', {'subject_number'}),...
-%             condition,...
-%             table(stim_order.epoch, 'VariableNames', {'epoch'}),...
-%             table(stim_order.word, 'VariableNames', {'word'}),...
-%             array2table(data)];
-%         data_frame.Properties.VariableNames = cellstr(['subject_number',...
-%             'constraint', 'meaning', 'talker', 'epoch', 'word', string(1:128)]);
-%         
-%         % Save
-%         fp = fullfile('2_cross_correlate/data', subject_number, [stat, '.mat']);
-%         fprintf(1, ['\nWriting data to /', fp, '\n'])
-%         save(fp, 'data_frame')
-%     end
-% 
-%     save_xcorr(subject_number, condition, stim_order, maximum, 'maximum')
-%     save_xcorr(subject_number, condition, stim_order, lag, 'lag')
-%     save_xcorr(subject_number, condition, stim_order, average, 'average')
-%     quit
 end

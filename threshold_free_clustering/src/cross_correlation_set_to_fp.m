@@ -1,4 +1,4 @@
-function [] = set_to_ft()
+function [] = cross_correlation_set_to_fp()
     %% 
     % Take all the eeg_data.set files with the correct data, turns them 
     % into fieldtrip formatted data and saves all structs into a cell
@@ -20,10 +20,11 @@ function [] = set_to_ft()
         fprintf(1, strcat("Converting from .set to fieldtrip format for subject #", subject, "\n"))
 
         % Load the .set file
-        set_fp = char(fullfile('1_preprocessing/data', subject, 'eeg_data.set'));
+        set_fp = char(fullfile('threshold_free_clustering/data', subject, 'cross_correlations.set'));
         [EEG] = pop_loadset(set_fp);
         
         % Convert to ft data format
+        EEG.xmax = 1.4990;
         ft = eeglab2fieldtrip(EEG, 'raw');
         
         % Add split conditions to tf.trialinfo
@@ -42,7 +43,7 @@ function [] = set_to_ft()
     end
     
     % Save data
-    ft_fp = char(fullfile('threshold_free_clustering/data/eeg_data_ft.mat'));
+    ft_fp = char(fullfile('threshold_free_clustering/data/cross_correlations_ft.mat'));
     fprintf(1, strcat("Saving to: ", ft_fp, "\n"))
     save(ft_fp, 'allsubjS', 'allsubjT', 'allsubjM', 'allsubjN', 'allsubjL', 'allsubjH');
     fprintf('Done\n')

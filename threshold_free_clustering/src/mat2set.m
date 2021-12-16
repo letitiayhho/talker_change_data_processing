@@ -1,4 +1,4 @@
-function [] = mat_to_set()
+function [] = mat2set()
     %% 
     % Take all the eeg_data.set files and combine them with the eeg_data.m
     % files that I computed my analyses on

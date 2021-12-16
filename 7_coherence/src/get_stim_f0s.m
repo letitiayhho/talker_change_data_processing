@@ -48,20 +48,21 @@
 % so overlap of 330 samples
 
 cd ~/src/talker_change_data_processing/7_coherence
-files = dir('data/pitch_listings/*_1.txt');
+files = dir('data/pitch_listings/churchbells_f.txt');
 
-min_f0 = 600;
+% min_f0 = 600;
 for i = length(files)
     path = fullfile(files(i).folder, files(i).name);
     data = readmatrix(path);
     length(data)
     f0 = data(~isnan(data(:,2)),2);
-    this_min_f0 = min(f0);
-    if this_min_f0 < min_f0
-        min_f0 = this_min_f0;
-    end
+%     this_min_f0 = min(f0);
+%     if this_min_f0 < min_f0
+%         min_f0 = this_min_f0;
+%     end
 end
-min_f0
+% min_f0
+hist(f0)
 
 % IDENTIFY MEAN PITCH
 
