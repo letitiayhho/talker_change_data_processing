@@ -21,11 +21,14 @@ get_pairwise_distances <- function(coordinates) {
   return(distances)
 }
 
-get_histogram_of_pairwise_distances <- function(distances) {
-  sort_distances = as.vector(distances) %>%
+get_histogram_of_pairwise_distances <- function(distances, title) {
+  sort_distances <- as.vector(distances) %>%
     .[!duplicated(.)] %>%
-    sort() %>%
-    hist(., breaks = 50, main = "Histogram of pairwise distances")
+    sort()
+  plot <- ggplot(data.frame(sort_distances), aes(x = sort_distances)) +
+    geom_histogram() +
+    ggtitle(title)
+  return(plot)
 }
 
 get_distance_score <- function(distances) {
