@@ -14,7 +14,7 @@ library("ggplot2")
 library("ggpubr")
 library("kableExtra")
 source("tools/functions.R")
-source("8_tests/src/functions.R")
+source("8_wilcoxon/src/functions.R")
 ```
 
 ```{r}
@@ -229,22 +229,18 @@ SML_means <- aggregate(SML[,2:129], by=list(SML$subject_number), FUN=mean) %>%
 # take meaningful and same-talker sentences and compare correlations of low- vs high-constraint sentences
 # compare this difference to meaningful and high-constraint same- vs different-talker sentences
 # compare this difference to same-talker and high-constraint meaningful vs nonsense sentences
-SML <- subset(xcorr, talker = "S", meaning = "M", constraint = "L", keep_subject_numbers = T)
-SML_means <- aggregate(SML[,2:129], by=list(SML$subject_number), FUN=mean) %>%
-  subset(SML_means, -1)
-SMH <- subset(xcorr, talker = "S", meaning = "M", constraint = "H", keep_subject_numbers = T)
-SMH_means <- aggregate(SMH[,2:129], by=list(SMH$subject_number), FUN=mean) %>%
-  subset(SML_means, -1)
+SML <- subset(xcorr, talker = "S", meaning = "M", constraint = "L", keepLabels = TRUE)
+SML_means <- aggregate(SML[,5:132], by=list(SML$subject_number), FUN=mean) %>% select(-"Group.1")
+SMH <- subset(xcorr, talker = "S", meaning = "M", constraint = "H", keepLabels = TRUE) 
+SMH_means <- aggregate(SMH[,5:132], by=list(SMH$subject_number), FUN=mean) %>% select(-"Group.1")
 baseline <- SMH_means - SML_means
 
-TMH <- subset(xcorr, talker = "T", meaning = "M", constraint = "H", keep_subject_numbers = T)
-TMH_means <- aggregate(TMH[,2:129], by=list(TMH$subject_number), FUN=mean) %>%
-  subset(SML_means, -1)
+TMH <- subset(xcorr, talker = "T", meaning = "M", constraint = "H", keepLabels = TRUE)
+TMH_means <- aggregate(TMH[,5:132], by=list(TMH$subject_number), FUN=mean) %>% select(-"Group.1")
 talker_compare <- TMH_means - SMH_means
 
-SNH <- subset(xcorr, talker = "S", meaning = "N", constraint = "H", keep_subject_numbers = T)
-SNH_means <- aggregate(SNH[,2:129], by=list(SNH$subject_number), FUN=mean) %>%
-  subset(SML_means, -1)
+SNH <- subset(xcorr, talker = "S", meaning = "N", constraint = "H", keepLabels = TRUE)
+SNH_means <- aggregate(SNH[,5:132], by=list(SNH$subject_number), FUN=mean) %>% select(-"Group.1")
 meaning_compare <- SNH_means - SMH_means
 ```
 
@@ -274,6 +270,7 @@ kable(map_df, escape = F, col.names = c("Channel", "Talker", "Meaning")) %>%
 ```
 
 ```{r}
-save(overall, one_sample_w, two_sample_w, interaction_w, interaction_two_sample_w, compare_w, file = "8_tests/data/wilcoxon_results.RData")
+# save(overall, one_sample_w, two_sample_w, interaction_w, interaction_two_sample_w, compare_w, file = "8_tests/data/wilcoxon_results.RData")
+save(S_w, T_w, M_w, N_w, L_w, H_w, talker_w, meaning_w, constraint_w, SH_w, SL_w, TH_w, TL_w, file = "8_wilcoxon/data/full_wilcoxon_results.RData")
 ```
 

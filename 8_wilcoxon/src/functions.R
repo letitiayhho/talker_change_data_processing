@@ -1,18 +1,18 @@
-subset <- function(data, condition, keepLabels = FALSE) {
+subset <- function(data, talker = NaN, meaning = NaN, constraint = NaN, keepLabels = FALSE) {
   channel_columns = paste("X", as.character(1:128), sep = "")
-  if (grepl("S", condition)) {
+  if (talker == "S") {
     data <- filter(data, talker == "S")
-  } else if (grepl("T", condition)) {
+  } else if (talker == "T") {
     data <- filter(data, talker == "T")
   }
-  if (grepl("M", condition)) {
+  if (meaning == "M") {
     data <- filter(data, meaning == "M")
-  } else if (grepl("N", condition)) {
+  } else if (meaning == "N") {
     data <- filter(data, meaning == "N")
   }
-  if (grepl("L", condition)) {
+  if (constraint == "L") {
     data <- filter(data, constraint == "L")
-  } else if (grepl("H", condition)) {
+  } else if (constraint == "H") {
     data <- filter(data, constraint == "H")
   }
   if (keepLabels) {
