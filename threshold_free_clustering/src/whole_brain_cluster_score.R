@@ -1,30 +1,12 @@
----
-title: "R Notebook"
-output: html_notebook
----
-
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
-
-```{r setup, warning=FALSE}
-# knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
-knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/")
 setwd("/Users/letitiaho/src/talker_change_data_processing/")
 library("dplyr")
 library("ggplot2")
 library("ggpubr")
 source("tools/functions.R")
 source("threshold_free_clustering/src/functions.R")
-```
 
-```{r}
-(var_names <- load("8_wilcoxon/data/full_wilcoxon_results.RData"))
-```
+var_names <- load("8_wilcoxon/data/full_wilcoxon_results.RData")
 
-**Compute distance score**
-
-```{r}
 # Compute pairwise distances
 coordinates <- get_coordinates()
 distances <- get_pairwise_distances(coordinates)
@@ -36,10 +18,7 @@ distance_scores <- get_distance_score(distances)
 inverse_distances_hist <- get_histogram_of_pairwise_distances(distance_scores, title = "Histogram of inverse and normalized pairwise distances")
 ggsave(inverse_distances_hist, filename = 'threshold_free_clustering/figs/inverse_normed_distances.png', width = 8, height = 6)
 
-```
-
-**Compute weight**
-```{r}
+# Compute weight scores
 S_weight_scores <- sigmoid(S_w$w)
 S_hist <- histogram(S_weight_scores, title = "S", xlim = c(0.5, 1.5))
 T_weight_scores <- sigmoid(T_w$w)
@@ -53,79 +32,60 @@ L_hist <- histogram(L_weight_scores, title = "L", xlim = c(0.5, 1.5))
 H_weight_scores <- sigmoid(H_w$w)
 H_hist <- histogram(H_weight_scores, title = "H", xlim = c(0.5, 1.5))
 plot <- ggarrange(S_hist, T_hist, M_hist, N_hist, L_hist, H_hist, ncol = 2, nrow = 3)
-plot
 ggsave(plot, filename = 'threshold_free_clustering/figs/weight_scores.png', width = 12, height = 10)
-```
 
-**Compute cluster scores**
-```{r}
+# Compute cluster scores with distance and weight scores
 S_cluster_scores <- get_cluster_scores(distance_scores, S_weight_scores)
 T_cluster_scores <- get_cluster_scores(distance_scores, T_weight_scores)
 M_cluster_scores <- get_cluster_scores(distance_scores, M_weight_scores)
 N_cluster_scores <- get_cluster_scores(distance_scores, N_weight_scores)
 L_cluster_scores <- get_cluster_scores(distance_scores, L_weight_scores)
 H_cluster_scores <- get_cluster_scores(distance_scores, H_weight_scores)
-```
 
-```{r}
-S_permuted <- permute_clusters(distance_scores, S_weight_scores, 1000)
-save(S_permuted, file = "threshold_free_clustering/data/S_permuted.RData")
-T_permuted <- permute_clusters(distance_scores, T_weight_scores, 1000)
-save(T_permuted, file = "threshold_free_clustering/data/T_permuted.RData")
-M_permuted <- permute_clusters(distance_scores, M_weight_scores, 1000)
-save(M_permuted, file = "threshold_free_clustering/data/M_permuted.RData")
-N_permuted <- permute_clusters(distance_scores, N_weight_scores, 1000)
-save(N_permuted, file = "threshold_free_clustering/data/N_permuted.RData")
-L_permuted <- permute_clusters(distance_scores, L_weight_scores, 1000)
-save(L_permuted, file = "threshold_free_clustering/data/L_permuted.RData")
-H_permuted <- permute_clusters(distance_scores, H_weight_scores, 1000)
-save(H_permuted, file = "threshold_free_clustering/data/H_permuted.RData")
-```
+# Permute channel weights
+S_permuted <- permute_clusters(distance_scores, S_weight_scores, 1)
+T_permuted <- permute_clusters(distance_scores, T_weight_scores, 1)
+M_permuted <- permute_clusters(distance_scores, M_weight_scores, 1)
+N_permuted <- permute_clusters(distance_scores, N_weight_scores, 1)
+L_permuted <- permute_clusters(distance_scores, L_weight_scores, 1)
+H_permuted <- permute_clusters(distance_scores, H_weight_scores, 1)
 
-```{r}
+save(S_cluster_scores, T_cluster_scores, M_cluster_scores, N_cluster_scores, L_cluster_scores, H_cluster_scores,
+     S_permuted, T_permuted, M_permuted, N_permuted, L_permuted, H_permuted,
+     file = "threshold_free_clustering/data/one-sample.RData")
+
+
+# Plot permutation test results
 S_hist <- histogram(S_permuted$sum, S_cluster_scores$sum, title = "Same")
-save(S_hist, file = "threshold_free_clustering/figs/S.png")
 T_hist <- histogram(T_permuted$sum, T_cluster_scores$sum, title = "Different")
-save(T_hist, file = "threshold_free_clustering/figs/S.png")
 M_hist <- histogram(M_permuted$sum, M_cluster_scores$sum, title = "Meaningful")
-save(M_hist, file = "threshold_free_clustering/figs/S.png")
 N_hist <- histogram(N_permuted$sum, N_cluster_scores$sum, title = "Nonsense")
-save(N_hist, file = "threshold_free_clustering/figs/S.png")
 L_hist <- histogram(L_permuted$sum, L_cluster_scores$sum, title = "Low constraint")
-save(L_hist, file = "threshold_free_clustering/figs/S.png")
 H_hist <- histogram(H_permuted$sum, H_cluster_scores$sum, title = "High constraint")
-save(H_hist, file = "threshold_free_clustering/figs/S.png")
 plot <- ggarrange(S_hist, T_hist, M_hist, N_hist, L_hist, H_hist, ncol = 2, nrow = 3)
-plot
 ggsave(plot, filename = 'threshold_free_clustering/figs/permutations.png', width = 12, height = 10)
-```
 
-**Two-sample, between levels**
-
-```{r}
+## Between conditions
 # Talker
 talker_weight_scores <- sigmoid(talker_w$w)
 talker_cluster_scores <- get_cluster_scores(distance_scores, talker_weight_scores)
-talker_permuted <- permute_clusters(distance_scores, talker_weight_scores, 1000)
+talker_permuted <- permute_clusters(distance_scores, talker_weight_scores, 1)
 talker_hist <- histogram(talker_permuted$sum, talker_cluster_scores$sum, title = "Talker")
-ggsave(talker_hist, filename = 'threshold_free_clustering/figs/talker.png', width = 8, height = 6)
-```
 
-```{r}
 # Meaning
 meaning_weight_scores <- sigmoid(meaning_w$w)
 meaning_cluster_scores <- get_cluster_scores(distance_scores, meaning_weight_scores)
-meaning_permuted <- permute_clusters(distance_scores, meaning_weight_scores, 1000)
+meaning_permuted <- permute_clusters(distance_scores, meaning_weight_scores, 1)
 meaning_hist <- histogram(meaning_permuted$sum, meaning_cluster_scores$sum, title = "Meaning")
-ggsave(meaning_hist, filename = 'threshold_free_clustering/figs/meaning.png', width = 8, height = 6)
-```
 
-```{r}
 # Constraint
 constraint_weight_scores <- sigmoid(constraint_w$w)
 constraint_cluster_scores <- get_cluster_scores(distance_scores, constraint_weight_scores)
-constraint_permuted <- permute_clusters(distance_scores, constraint_weight_scores, 1000)
+constraint_permuted <- permute_clusters(distance_scores, constraint_weight_scores, 1)
 constraint_hist <- histogram(constraint_permuted$sum, constraint_cluster_scores$sum, title = "Constraint")
-ggsave(constraint_hist, filename = 'threshold_free_clustering/figs/constraint.png', width = 8, height = 6)
-```
+
+condition_hist <- ggarrange(talker_hist, meaning_hist, constraint_hist, ncol = 1, nrow = 3)
+ggsave(condition_hist, filename = 'threshold_free_clustering/figs/compare_conditions_permutations.png', width = 8, height = 10)
+save(talker_cluster_scores, talker_permuted, meaning_cluster_scores, meaning_permuted,
+     constraint_cluster_scores, constraint_permuted, file = "threshold_free_clustering/data/two-sample.RData")
 

@@ -97,7 +97,7 @@ get_cluster_scores <- function(distance_scores, weight_scores) {
 permute_clusters <- function(distance_scores, weight_scores, reps) {
   permuted_scores <- list("max" = c(), "sum" = c())
   for (i in 1:reps) {
-    cat(as.character(i))
+    cat(as.character(i), ", ")
     permuted <- sample(weight_scores)
     cluster_scores <- get_cluster_scores(distance_scores, permuted)
     permuted_scores$max <- c(permuted_scores$max, cluster_scores$max)
