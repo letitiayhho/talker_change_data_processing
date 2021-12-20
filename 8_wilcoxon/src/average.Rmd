@@ -220,7 +220,7 @@ kable(map_df, escape = F, col.names = c("Channel", "L", "H", "L", "H")) %>%
 #### T-tests against difference set by low vs high-constraint sentences
 
 ```{r}
-SML <- subset(xcorr, talker = "S", meaning = "M", constraint = "L", keep_subject_numbers = T)
+SML <- subset(xcorr, talker = "S", meaning = "M", constraint = "L", keepLabels = T)
 SML_means <- aggregate(SML[,2:129], by=list(SML$subject_number), FUN=mean) %>%
   subset(-1)
 ```

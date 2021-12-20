@@ -44,9 +44,9 @@ get_two_sample_t <- function(group1, group2) {
 }
 
 get_two_sample_wilcoxon <- function(group1, group2) {
-  t <- mapply(function(x, y) {wilcox.test(x, y)$statistic}, group1, group2)
+  w <- mapply(function(x, y) {wilcox.test(x, y)$statistic}, group1, group2)
   p <- mapply(function(x, y) {wilcox.test(x, y)$p.value}, group1, group2)
-  return(data.frame("t" = t, "p" = p))
+  return(data.frame("w" = w, "p" = p))
 }
 
 get_lag_distribution <- function(group1, group2, labels, channel) {
