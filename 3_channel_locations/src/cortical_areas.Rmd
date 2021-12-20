@@ -1,0 +1,87 @@
+---
+title: "Talker change data processing"
+author: "Letitia Ho"
+date: "`r format(Sys.time(), '%d %B, %Y, %H:%M')`"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+require("knitr")
+library("dplyr")
+library("ggplot2")
+library("scatterpie")
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE
+) 
+```
+
+```{r fns_load_and_subset_data}
+get_layout <- function() { 
+  fp <- "~/src/talker_change_data_processing/3_channel_locations/data/2d_coordinates"
+  coordinates <- read.delim(fp, header = FALSE)
+  layout <- data.frame(x = coordinates[[1]], y = -coordinates[[2]]+ 2*mean(coordinates[[2]])) # flip y coords
+  return(layout)
+}
+
+get_combined_central <- function(aal) {
+  for (i in 1:length(aal)) {
+    indexes <- grep('central', aal[[i]])
+    aal[[i]][indexes] <- 'Central'
+  }
+  return(aal)
+}
+
+get_main_areas <- function(aal, areas) {
+  # Init a matrix to store tallies of areas labeled
+  tallies = matrix(0, 128, 9) 
+  colnames(tallies) <- areas
+  
+  # Tally
+  for (i in 1:length(aal)) {
+    for (j in 1:length(aal[[i]])) {
+      main_area <- sub("\\_.*", "", aal[[i]][j])
+      tallies[i, grep(main_area, areas)] <- tallies[i, grep(main_area, areas)] + 1
+    }
+    if (sum(tallies[i,]) == 0) {tallies[i, 9] <- 1} # Label other
+    # if (sum(tallies[i,] > 0) == 1) {tallies[i, which(tallies[i,] > 1)] <- 1} # Remove midnight
+  }
+
+  return(as.data.frame(tallies))
+}
+```
+
+```{r identify main cortical areas}
+# Basic graph features
+channels <- as.character(1:128)
+areas <- c("Frontal", "Temporal", "Occipital", "Supp", "Central", "SupraMarginal", "Angular", "Parietal", "Other")
+
+# Load and clean data
+load("~/src/talker_change_data_processing/3_channel_locations/data/mni_coordinates_areas_aal.Rdata")
+aal_cleaned <- get_combined_central(aal)
+aal_reduced <- get_main_areas(aal_cleaned, areas)
+
+# Load coordinates and create data frame for plotting
+layout <- get_layout()
+df <- cbind(channels, layout, aal_reduced)
+
+# Plot
+ggplot() +
+  geom_scatterpie(data = df, cols = areas, aes(x = x, y = y)) +
+  coord_equal() +
+  geom_text(data = df, aes(x = x, y = y, label = channels), vjust = -1.3, size = 2.5) +
+  ylim(0, 900) +
+  xlim(0, 900) +
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.background=element_blank())
+```
+
+
