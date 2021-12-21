@@ -1,4 +1,9 @@
-setwd("/Users/letitiaho/src/talker_change_data_processing/")
+#!/usr/bin/env Rscript
+#SBATCH --time=01:00:00
+#SBATCH --partition=broadwl
+#SBATCH --ntasks=1
+#SBATCH	--mem-per-cpu=2G
+
 library("dplyr")
 library("ggplot2")
 library("ggpubr")
@@ -43,12 +48,12 @@ L_cluster_scores <- get_cluster_scores(distance_scores, L_weight_scores)
 H_cluster_scores <- get_cluster_scores(distance_scores, H_weight_scores)
 
 # Permute channel weights
-S_permuted <- permute_clusters(distance_scores, S_weight_scores, 1)
-T_permuted <- permute_clusters(distance_scores, T_weight_scores, 1)
-M_permuted <- permute_clusters(distance_scores, M_weight_scores, 1)
-N_permuted <- permute_clusters(distance_scores, N_weight_scores, 1)
-L_permuted <- permute_clusters(distance_scores, L_weight_scores, 1)
-H_permuted <- permute_clusters(distance_scores, H_weight_scores, 1)
+S_permuted <- permute_clusters(distance_scores, S_weight_scores, 1000)
+T_permuted <- permute_clusters(distance_scores, T_weight_scores, 1000)
+M_permuted <- permute_clusters(distance_scores, M_weight_scores, 1000)
+N_permuted <- permute_clusters(distance_scores, N_weight_scores, 1000)
+L_permuted <- permute_clusters(distance_scores, L_weight_scores, 1000)
+H_permuted <- permute_clusters(distance_scores, H_weight_scores, 1000)
 
 save(S_cluster_scores, T_cluster_scores, M_cluster_scores, N_cluster_scores, L_cluster_scores, H_cluster_scores,
      S_permuted, T_permuted, M_permuted, N_permuted, L_permuted, H_permuted,
@@ -69,19 +74,19 @@ ggsave(plot, filename = 'threshold_free_clustering/figs/permutations.png', width
 # Talker
 talker_weight_scores <- sigmoid(talker_w$w)
 talker_cluster_scores <- get_cluster_scores(distance_scores, talker_weight_scores)
-talker_permuted <- permute_clusters(distance_scores, talker_weight_scores, 1)
+talker_permuted <- permute_clusters(distance_scores, talker_weight_scores, 1000)
 talker_hist <- histogram(talker_permuted$sum, talker_cluster_scores$sum, title = "Talker")
 
 # Meaning
 meaning_weight_scores <- sigmoid(meaning_w$w)
 meaning_cluster_scores <- get_cluster_scores(distance_scores, meaning_weight_scores)
-meaning_permuted <- permute_clusters(distance_scores, meaning_weight_scores, 1)
+meaning_permuted <- permute_clusters(distance_scores, meaning_weight_scores, 1000)
 meaning_hist <- histogram(meaning_permuted$sum, meaning_cluster_scores$sum, title = "Meaning")
 
 # Constraint
 constraint_weight_scores <- sigmoid(constraint_w$w)
 constraint_cluster_scores <- get_cluster_scores(distance_scores, constraint_weight_scores)
-constraint_permuted <- permute_clusters(distance_scores, constraint_weight_scores, 1)
+constraint_permuted <- permute_clusters(distance_scores, constraint_weight_scores, 1000)
 constraint_hist <- histogram(constraint_permuted$sum, constraint_cluster_scores$sum, title = "Constraint")
 
 condition_hist <- ggarrange(talker_hist, meaning_hist, constraint_hist, ncol = 1, nrow = 3)
