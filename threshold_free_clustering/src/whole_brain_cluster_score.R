@@ -10,7 +10,7 @@ library("ggpubr")
 source("tools/functions.R")
 source("threshold_free_clustering/src/functions.R")
 
-var_names <- load("8_wilcoxon/data/full_wilcoxon_results.RData")
+load("8_wilcoxon/data/full_wilcoxon_results.RData")
 
 # Compute pairwise distances
 coordinates <- get_coordinates()

@@ -1,0 +1,27 @@
+#!/bin/bash
+
+#SBATCH --time=01:15:00
+#SBATCH --partition=broadwl
+#SBATCH --ntasks=1
+#SBATCH --mem-per-cpu=2G
+
+#module load R
+#module load parallel
+
+if [[ $# -ne 1 ]]; then
+    echo "usage: $0 <condition e.g. S, T, talker>" >&2
+    exit 1
+fi
+
+GIT_HOME="$(git rev-parse --show-toplevel)"
+cd "$GIT_HOME" || exit
+
+condition="$1"
+
+job_id="$SLURM_JOB_ID"
+log_file="threshold_free_clustering/data/logs/$job_id.log"
+
+Rscript --vanilla threshold_free_clustering/src/sbatch_permutations.R "$condition" 2>&1 \
+    | tee -a "$log_file"
+
+printf "\n\n permutation complete \n\n"

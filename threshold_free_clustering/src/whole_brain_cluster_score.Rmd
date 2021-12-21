@@ -19,7 +19,7 @@ source("threshold_free_clustering/src/functions.R")
 ```
 
 ```{r}
-(var_names <- load("8_wilcoxon/data/full_wilcoxon_results.RData"))
+load("8_wilcoxon/data/full_wilcoxon_results.RData")
 ```
 
 **Compute distance score**
@@ -35,27 +35,50 @@ ggsave(distances_hist, filename = 'threshold_free_clustering/figs/distances.png'
 distance_scores <- get_distance_score(distances)
 inverse_distances_hist <- get_histogram_of_pairwise_distances(distance_scores, title = "Histogram of inverse and normalized pairwise distances")
 ggsave(inverse_distances_hist, filename = 'threshold_free_clustering/figs/inverse_normed_distances.png', width = 8, height = 6)
-
 ```
 
 **Compute weight**
 ```{r}
-S_weight_scores <- sigmoid(S_w$w)
+# # sd across all conditions (uh oh, I think we might want to go with this)... 
+# # maybe I can't reweight the scores at all
+# # but I can scale them, or maybe just standardize them??????
+# overall_sd <- sd(c(S_w$w, T_w$w, M_w$w, N_w$w, L_w$w, H_w$w))
+# 
+# S_weight_scores <- sigmoid(S_w$w, spread = overall_sd, shift = 0.5)
+# S_hist <- histogram(S_weight_scores, title = "S", xlim = c(0.5, 1.5))
+# T_weight_scores <- sigmoid(T_w$w, spread = overall_sd, shift = 0.5)
+# T_hist <- histogram(T_weight_scores, title = "T", xlim = c(0.5, 1.5))
+# M_weight_scores <- sigmoid(M_w$w, spread = overall_sd, shift = 0.5)
+# M_hist <- histogram(M_weight_scores, title = "M", xlim = c(0.5, 1.5))
+# N_weight_scores <- sigmoid(N_w$w, spread = overall_sd, shift = 0.5)
+# N_hist <- histogram(N_weight_scores, title = "N", xlim = c(0.5, 1.5))
+# L_weight_scores <- sigmoid(L_w$w, spread = overall_sd, shift = 0.5)
+# L_hist <- histogram(L_weight_scores, title = "L", xlim = c(0.5, 1.5))
+# H_weight_scores <- sigmoid(H_w$w, spread = overall_sd, shift = 0.5)
+# H_hist <- histogram(H_weight_scores, title = "H", xlim = c(0.5, 1.5))
+# plot <- ggarrange(S_hist, T_hist, M_hist, N_hist, L_hist, H_hist, ncol = 2, nrow = 3)
+# plot
+# ggsave(plot, filename = 'threshold_free_clustering/figs/weight_scores_overall_sd.png', width = 12, height = 10)
+```
+
+```{r}
+S_weight_scores <- normalize(S_w$w)
 S_hist <- histogram(S_weight_scores, title = "S", xlim = c(0.5, 1.5))
-T_weight_scores <- sigmoid(T_w$w)
+T_weight_scores <- normalize(T_w$w)
 T_hist <- histogram(T_weight_scores, title = "T", xlim = c(0.5, 1.5))
-M_weight_scores <- sigmoid(M_w$w)
+M_weight_scores <- normalize(M_w$w)
 M_hist <- histogram(M_weight_scores, title = "M", xlim = c(0.5, 1.5))
-N_weight_scores <- sigmoid(N_w$w)
+N_weight_scores <- normalize(N_w$w)
 N_hist <- histogram(N_weight_scores, title = "N", xlim = c(0.5, 1.5))
-L_weight_scores <- sigmoid(L_w$w)
+L_weight_scores <- normalize(L_w$w)
 L_hist <- histogram(L_weight_scores, title = "L", xlim = c(0.5, 1.5))
-H_weight_scores <- sigmoid(H_w$w)
+H_weight_scores <- normalize(H_w$w)
 H_hist <- histogram(H_weight_scores, title = "H", xlim = c(0.5, 1.5))
 plot <- ggarrange(S_hist, T_hist, M_hist, N_hist, L_hist, H_hist, ncol = 2, nrow = 3)
 plot
-ggsave(plot, filename = 'threshold_free_clustering/figs/weight_scores.png', width = 12, height = 10)
+ggsave(plot, filename = 'threshold_free_clustering/figs/weight_scores_normalize.png', width = 12, height = 10)
 ```
+
 
 **Compute cluster scores**
 ```{r}
@@ -68,36 +91,36 @@ H_cluster_scores <- get_cluster_scores(distance_scores, H_weight_scores)
 ```
 
 ```{r}
-S_permuted <- permute_clusters(distance_scores, S_weight_scores, 1000)
-save(S_permuted, file = "threshold_free_clustering/data/S_permuted.RData")
-T_permuted <- permute_clusters(distance_scores, T_weight_scores, 1000)
-save(T_permuted, file = "threshold_free_clustering/data/T_permuted.RData")
-M_permuted <- permute_clusters(distance_scores, M_weight_scores, 1000)
-save(M_permuted, file = "threshold_free_clustering/data/M_permuted.RData")
-N_permuted <- permute_clusters(distance_scores, N_weight_scores, 1000)
-save(N_permuted, file = "threshold_free_clustering/data/N_permuted.RData")
-L_permuted <- permute_clusters(distance_scores, L_weight_scores, 1000)
+# S_permuted <- permute_clusters(distance_scores, S_weight_scores, 100)
+# save(S_permuted, file = "threshold_free_clustering/data/S_permuted.RData")
+# T_permuted <- permute_clusters(distance_scores, T_weight_scores, 1000)
+# save(T_permuted, file = "threshold_free_clustering/data/T_permuted.RData")
+# M_permuted <- permute_clusters(distance_scores, M_weight_scores, 1000)
+# save(M_permuted, file = "threshold_free_clustering/data/M_permuted.RData")
+# N_permuted <- permute_clusters(distance_scores, N_weight_scores, 1000)
+# save(N_permuted, file = "threshold_free_clustering/data/N_permuted.RData")
+L_permuted <- permute_clusters(distance_scores, L_weight_scores, 100)
 save(L_permuted, file = "threshold_free_clustering/data/L_permuted.RData")
-H_permuted <- permute_clusters(distance_scores, H_weight_scores, 1000)
-save(H_permuted, file = "threshold_free_clustering/data/H_permuted.RData")
+# H_permuted <- permute_clusters(distance_scores, H_weight_scores, 1000)
+# save(H_permuted, file = "threshold_free_clustering/data/H_permuted.RData")
 ```
 
 ```{r}
-S_hist <- histogram(S_permuted$sum, S_cluster_scores$sum, title = "Same")
-save(S_hist, file = "threshold_free_clustering/figs/S.png")
-T_hist <- histogram(T_permuted$sum, T_cluster_scores$sum, title = "Different")
-save(T_hist, file = "threshold_free_clustering/figs/S.png")
-M_hist <- histogram(M_permuted$sum, M_cluster_scores$sum, title = "Meaningful")
-save(M_hist, file = "threshold_free_clustering/figs/S.png")
-N_hist <- histogram(N_permuted$sum, N_cluster_scores$sum, title = "Nonsense")
-save(N_hist, file = "threshold_free_clustering/figs/S.png")
+# S_hist <- histogram(S_permuted$sum, S_cluster_scores$sum, title = "Same")
+# ggsave(S_hist, filename = "threshold_free_clustering/figs/S_normalize.png")
+# T_hist <- histogram(T_permuted$sum, T_cluster_scores$sum, title = "Different")
+# ggsave(T_hist, filename = "threshold_free_clustering/figs/T.png")
+# M_hist <- histogram(M_permuted$sum, M_cluster_scores$sum, title = "Meaningful")
+# ggsave(M_hist, filename = "threshold_free_clustering/figs/M.png")
+# N_hist <- histogram(N_permuted$sum, N_cluster_scores$sum, title = "Nonsense")
+# ggsave(N_hist, filename = "threshold_free_clustering/figs/N.png")
 L_hist <- histogram(L_permuted$sum, L_cluster_scores$sum, title = "Low constraint")
-save(L_hist, file = "threshold_free_clustering/figs/S.png")
-H_hist <- histogram(H_permuted$sum, H_cluster_scores$sum, title = "High constraint")
-save(H_hist, file = "threshold_free_clustering/figs/S.png")
-plot <- ggarrange(S_hist, T_hist, M_hist, N_hist, L_hist, H_hist, ncol = 2, nrow = 3)
-plot
-ggsave(plot, filename = 'threshold_free_clustering/figs/permutations.png', width = 12, height = 10)
+ggsave(L_hist, filename = "threshold_free_clustering/figs/L.png")
+# H_hist <- histogram(H_permuted$sum, H_cluster_scores$sum, title = "High constraint")
+# ggsave(H_hist, filename = "threshold_free_clustering/figs/H.png")
+# plot <- ggarrange(S_hist, T_hist, M_hist, N_hist, L_hist, H_hist, ncol = 2, nrow = 3)
+# plot
+# ggsave(plot, filename = 'threshold_free_clustering/figs/permutations.png', width = 12, height = 10)
 ```
 
 **Two-sample, between levels**

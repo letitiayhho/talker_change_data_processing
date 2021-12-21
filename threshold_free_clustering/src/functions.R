@@ -32,9 +32,9 @@ get_histogram_of_pairwise_distances <- function(distances, title) {
 }
 
 get_distance_score <- function(distances) {
-  # Standardize score from 0 to 1
-  st_distances <- (distances-min(distances, na.rm = TRUE))/(max(distances, na.rm = TRUE)-min(distances, na.rm = TRUE))
- 
+  # Normalize score from 0 to 1
+  st_distances <- normalize(distances)
+
   # Take inverse
   distance_score <- 1/st_distances
   
@@ -44,8 +44,15 @@ get_distance_score <- function(distances) {
   return(distance_score)
 }
 
-sigmoid <- function(x, spread = sd(x), shift = 0.5) {
+# sigmoid <- function(x, spread = sd(x), shift = 0.5) {
+sigmoid <- function(x, spread = 1, shift = 0) {
   return(1/(1+exp((-x+mean(x))/spread))+shift)
+}
+
+normalize <- function(x, center = 0.5) {
+  normed <- (x-min(x, na.rm = TRUE))/(max(x, na.rm = TRUE)-min(x, na.rm = TRUE))
+  normed_centered <- normed + center
+  return(normed_centered)
 }
 
 standardize <- function(x, new_mean = 0, new_sd = 1) {
@@ -56,7 +63,7 @@ standardize <- function(x, new_mean = 0, new_sd = 1) {
 
 histogram <- function(shuffled_values, original_value = NaN, title = "", xlim = NaN) {
   plot <- ggplot(data.frame(shuffled_values), aes(x = shuffled_values)) +
-    geom_histogram(bins = 10) +
+    geom_histogram(bins = 20) +
     ggtitle(title)
   if (!is.na(original_value)) {
     plot <- plot + geom_vline(xintercept = original_value, color ='firebrick2', size = 2, na.rm = TRUE)
