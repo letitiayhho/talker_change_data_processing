@@ -1,12 +1,13 @@
 #!/bin/bash
-
 #SBATCH --time=01:15:00
 #SBATCH --partition=broadwl
 #SBATCH --ntasks=1
 #SBATCH --mem-per-cpu=2G
 
-#module load R
-#module load parallel
+set -exuo pipefail
+
+module load R
+module load parallel
 
 if [[ $# -ne 1 ]]; then
     echo "usage: $0 <condition e.g. S, T, talker>" >&2
