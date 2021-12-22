@@ -9,7 +9,7 @@ source("threshold_free_clustering/src/functions.R")
 
 # Load w-scores
 
-load("threshold_free_clustering/data/weight_scores/full_wilcoxon_results.RData")
+load("threshold_free_clustering/data/inputs/full_wilcoxon_results.RData")
 
 # Normalize w-score to compute weight scores
 S_weight_scores <- normalize(S_w$w)
