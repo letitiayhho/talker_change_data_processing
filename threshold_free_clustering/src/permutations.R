@@ -33,7 +33,7 @@ weight_scores <- normalize(w$w)
 cluster_scores <- get_cluster_scores(distance_scores, weight_scores)
 
 # Permute channel weights
-permutations <- permute_clusters(distance_scores, weight_scores, 1)
+permutations <- permute_clusters(distance_scores, weight_scores, 1000)
 
 # Plot permutation test results
 hist_plot <- histogram(permutations$sum, cluster_scores$sum, title = condition)
