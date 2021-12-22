@@ -1,48 +1,17 @@
----
-title: "R Notebook"
-output: html_notebook
----
+#!/usr/bin/env Rscript
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
-
-```{r setup, warning=FALSE}
-knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/")
 setwd("/Users/letitiaho/src/talker_change_data_processing/")
 library("dplyr")
 library("ggplot2")
 library("ggpubr")
 source("tools/functions.R")
 source("threshold_free_clustering/src/functions.R")
-```
 
-```{r}
 load("threshold_free_clustering/data/weight_scores/full_wilcoxon_results.RData")
-```
 
-**Compute distance scores**
-
-```{r}
-# Compute pairwise distances
-coordinates <- get_coordinates()
-distances <- get_pairwise_distances(coordinates)
-distances_hist <- get_histogram_of_pairwise_distances(distances, title = "Histogram of pairwise distances")
-ggsave(distances_hist, filename = 'threshold_free_clustering/figs/distances.png', width = 8, height = 6)
-
-# Get distance score by standardizing then taking the inverse of the distance
-distance_scores <- get_distance_score(distances)
-inverse_distances_hist <- get_histogram_of_pairwise_distances(distance_scores, title = "Histogram of inverse and normalized pairwise distances")
-ggsave(inverse_distances_hist, filename = 'threshold_free_clustering/figs/inverse_normed_distances.png', width = 8, height = 6)
-
-# Save variable
-saveRDS(distance_scores, file = 'threshold_free_clustering/data/distance_scores/distance_scores.RDS')
-```
-
-**Compute weight scores**
-
-```{r}
 # Compute weight scores
+  
+# Normalize w-score to compute weight scores
 S_weight_scores <- normalize(S_w$w)
 T_weight_scores <- normalize(T_w$w)
 M_weight_scores <- normalize(M_w$w)
@@ -61,16 +30,13 @@ N_hist <- histogram(N_weight_scores, xlab = "weight scores", title = "N", xlim =
 L_hist <- histogram(L_weight_scores, xlab = "weight scores", title = "L", xlim = c(0.5, 1.5))
 H_hist <- histogram(H_weight_scores, xlab = "weight scores", title = "H", xlim = c(0.5, 1.5))
 plot <- ggarrange(S_hist, T_hist, M_hist, N_hist, L_hist, H_hist, ncol = 2, nrow = 3)
-plot
 ggsave(plot, filename = 'threshold_free_clustering/figs/weight_scores_one_sample.png', width = 12, height = 10)
 
 talker_hist <- histogram(talker_weight_scores, xlab = "weight scores", title = "talker", xlim = c(0.5, 1.5))
 meaning_hist <- histogram(meaning_weight_scores, xlab = "weight scores", title = "meaning", xlim = c(0.5, 1.5))
 constraint_hist <- histogram(constraint_weight_scores, xlab = "weight scores", title = "constraint", xlim = c(0.5, 1.5))
 plot <- ggarrange(talker_hist, meaning_hist, constraint_hist, ncol = 1, nrow = 3)
-plot
 ggsave(plot, filename = 'threshold_free_clustering/figs/weight_scores_two_sample.png', width = 12, height = 10)
-
 
 # Save variables
 saveRDS(S_weight_scores, file = 'threshold_free_clustering/data/weight_scores/S.RDS')
@@ -82,4 +48,3 @@ saveRDS(H_weight_scores, file = 'threshold_free_clustering/data/weight_scores/H.
 saveRDS(talker_weight_scores, file = 'threshold_free_clustering/data/weight_scores/talker.RDS')
 saveRDS(meaning_weight_scores, file = 'threshold_free_clustering/data/weight_scores/meaning.RDS')
 saveRDS(constraint_weight_scores, file = 'threshold_free_clustering/data/weight_scores/constraint.RDS')
-```
