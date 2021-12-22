@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -exuo pipefail
+
+GIT_HOME="$(git rev-parse --show-toplevel)"
+cd "$GIT_HOME" || exit
+
+for condition in T M N L H talker meaning constraint; do
+    ./threshold_free_clustering/scripts/run-permutations-for-condition \
+        "$condition" \
+        &> ./threshold_free_clustering/data/logs/master.log \
+        &
+done

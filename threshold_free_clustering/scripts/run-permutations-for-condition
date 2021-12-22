@@ -20,7 +20,7 @@ condition="$1"
 
 job_id="$(date +%s)_${condition}_"
 #job_id="$PBS_JOBID"
-log_file="threshold_free_clustering/data/logs/$job_id.log"
+log_file="threshold_free_clustering/data/logs/$condition-$job_id.log"
 echo "$log_file"
 
 Rscript --vanilla threshold_free_clustering/src/permutations.R "$condition" 2>&1 \
