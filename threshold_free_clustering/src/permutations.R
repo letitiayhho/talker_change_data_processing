@@ -20,7 +20,7 @@ condition = args[1]
 
 # Get filepath
 filepath <- paste("threshold_free_clustering/data/wilcoxon_results/", condition, ".RDS", sep = "")
-cat(filepath)
+cat(filepath, "\n")
 w <- readRDS(filepath)
 
 # Load distance scores
@@ -33,7 +33,7 @@ weight_scores <- normalize(w$w)
 cluster_scores <- get_cluster_scores(distance_scores, weight_scores)
 
 # Permute channel weights
-permutations <- permute_clusters(distance_scores, weight_scores, 1000)
+permutations <- permute_clusters(distance_scores, weight_scores, 1)
 
 # Plot permutation test results
 hist_plot <- histogram(permutations$sum, cluster_scores$sum, title = condition)
