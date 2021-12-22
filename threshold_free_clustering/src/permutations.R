@@ -1,10 +1,5 @@
 #!/usr/bin/env Rscript
 
-#SBATCH --time=01:00:00
-#SBATCH --partition=broadwl
-#SBATCH --ntasks=1
-#SBATCH	--mem-per-cpu=2G
-
 library("dplyr")
 library("ggplot2")
 library("ggpubr")
@@ -18,30 +13,26 @@ if (length(args) != 1) {
 } 
 condition = args[1]
 
-# Get filepath
-filepath <- paste("threshold_free_clustering/data/wilcoxon_results/", condition, ".RDS", sep = "")
-cat(filepath, "\n")
-w <- readRDS(filepath)
-
 # Load distance scores
-distance_scores <- readRDS("threshold_free_clustering/data/permutations/distance_scores.RDS")
+distance_scores <- readRDS("threshold_free_clustering/data/distance_scores/distance_scores.RDS")
 
-# Compute weight scores
-weight_scores <- normalize(w$w)
+# Load weight scores
+filepath <- paste("threshold_free_clustering/data/weight_scores/", condition, ".RDS", sep = "")
+weight_scores <- readRDS(filepath)
 
-# Compute cluster scores with distance and weight scores
-cluster_scores <- get_cluster_scores(distance_scores, weight_scores)
+# Compute observed cluster scores with distance and weight scores
+observed <- get_cluster_scores(distance_scores, weight_scores)
 
-# Permute channel weights
-permutations <- permute_clusters(distance_scores, weight_scores, 1000)
+# Compute cluster scores with permuted weight scores
+permutations <- permute_clusters(distance_scores, weight_scores, 1)
 
 # Plot permutation test results
-hist_plot <- histogram(permutations$sum, cluster_scores$sum, title = condition)
+hist_plot <- histogram(permutations$sum, observed$sum, title = condition)
 
 # Save data and figures
-observed_filename <- paste("threshold_free_clustering/data/permutations/", condition, "_observed.RDS", sep = "")
-saveRDS(cluster_scores, file = observed_filename)
-permutations_filename <- paste("threshold_free_clustering/data/permutations/", condition, "_permutations.RDS", sep = "")
+observed_filename <- paste("threshold_free_clustering/data/cluster_scores/", condition, "_observed.RDS", sep = "")
+saveRDS(observed, file = observed_filename)
+permutations_filename <- paste("threshold_free_clustering/data/cluster_scores/", condition, "_permutations.RDS", sep = "")
 saveRDS(permutations, file = permutations_filename)
 fig_filename <- paste("threshold_free_clustering/figs/", condition, ".png", sep = "")
 ggsave(hist_plot, filename = fig_filename, width = 8, height = 6)

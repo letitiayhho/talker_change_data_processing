@@ -1,7 +1,5 @@
 get_coordinates <- function() {
-  # setwd("/Users/letitiaho/src/talker_change_data_processing/")
-  # read.delim("3_channel_locations/data/average_channel_locations.sfp")
-  coordinates_fp <- file.path("3_channel_locations/data/average_channel_locations.sfp")
+  coordinates_fp <- file.path("threshold_free_clustering/data/distance_scores/average_channel_locations.sfp")
   coordinates <- read.delim(coordinates_fp, header = FALSE, sep = "", dec = ".") %>%
     .[startsWith(as.character(.$V1), "E"), ] %>%
     .[c("V2", "V3", "V4")]
@@ -61,12 +59,13 @@ standardize <- function(x, new_mean = 0, new_sd = 1) {
   return(x)
 }
 
-histogram <- function(shuffled_values, original_value = NaN, title = "", xlim = NaN) {
-  plot <- ggplot(data.frame(shuffled_values), aes(x = shuffled_values)) +
+histogram <- function(x, observed = NaN, xlab = "", title = "", xlim = NaN) {
+  plot <- ggplot(data.frame(x), aes(x = x)) +
     geom_histogram(bins = 20) +
-    ggtitle(title)
-  if (!is.na(original_value)) {
-    plot <- plot + geom_vline(xintercept = original_value, color ='firebrick2', size = 2, na.rm = TRUE)
+    ggtitle(title) +
+    xlab(xlab)
+  if (!is.na(observed)) {
+    plot <- plot + geom_vline(xintercept = observed, color ='firebrick2', size = 2, na.rm = TRUE)
   }
   if (!is.na(xlim)) {
     plot <- plot + xlim(xlim)
