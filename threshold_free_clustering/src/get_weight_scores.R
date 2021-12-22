@@ -7,10 +7,10 @@ library("ggpubr")
 source("tools/functions.R")
 source("threshold_free_clustering/src/functions.R")
 
+# Load w-scores
+
 load("threshold_free_clustering/data/weight_scores/full_wilcoxon_results.RData")
 
-# Compute weight scores
-  
 # Normalize w-score to compute weight scores
 S_weight_scores <- normalize(S_w$w)
 T_weight_scores <- normalize(T_w$w)
