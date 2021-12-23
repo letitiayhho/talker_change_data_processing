@@ -1,5 +1,5 @@
 get_coordinates <- function() {
-  coordinates_fp <- file.path("threshold_free_clustering/data/inputs/average_channel_locations.sfp")
+  coordinates_fp <- file.path("threshold_free_clustering/data/average_channel_locations.sfp")
   coordinates <- read.delim(coordinates_fp, header = FALSE, sep = "", dec = ".") %>%
     .[startsWith(as.character(.$V1), "E"), ] %>%
     .[c("V2", "V3", "V4")]
@@ -71,6 +71,38 @@ histogram <- function(x, observed = NaN, xlab = "", title = "", xlim = NaN) {
     plot <- plot + xlim(xlim)
   }
   return(plot)
+}
+
+compute_chan_scores <- function(distance_scores, weight_scores) {
+  # Compute score
+  pair_scores <- matrix(NaN, nrow = 128, ncol = 128)
+  # for each channel
+  for (i in 1:128) {
+    # for each channel pair
+    for (j in 1:128) {
+      # get their distance score
+      if (upper.tri(distance_scores)[i, j]) {
+        distance_score <- distance_scores[i, j]
+        
+        # get their combined weights
+        weight <- weight_scores[i] * weight_scores[j]
+        
+        # multiple distance score with combined weights to get their pair score
+        pair_score <- distance_score * weight
+        
+        # sum all the pair scores of the total cluster score
+        pair_scores[i, j] <- pair_score
+      }
+    }
+  }
+  chan_scores <- c()
+  pair_scores[is.na(pair_scores)] <- 0
+  
+  for (i in 128) {
+    chan_scores <- c(chan_scores, pair_scores[i,] + pair_scores[,i])
+  }
+
+  return(chan_scores)
 }
 
 get_cluster_scores <- function(distance_scores, weight_scores) {
