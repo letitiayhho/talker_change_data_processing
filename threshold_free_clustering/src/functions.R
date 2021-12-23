@@ -97,9 +97,9 @@ compute_chan_scores <- function(distance_scores, weight_scores) {
   }
   chan_scores <- c()
   pair_scores[is.na(pair_scores)] <- 0
-  
-  for (i in 128) {
-    chan_scores <- c(chan_scores, pair_scores[i,] + pair_scores[,i])
+
+  for (i in 1:128) {
+    chan_scores <- c(chan_scores, sum(pair_scores[i,], pair_scores[,i])/2)
   }
 
   return(chan_scores)
