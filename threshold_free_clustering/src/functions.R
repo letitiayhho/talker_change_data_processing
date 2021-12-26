@@ -53,6 +53,21 @@ normalize <- function(x, center = 0.5) {
   return(normed_centered)
 }
 
+abs_normalize <- function(x, condition) {
+  if (condition %in% c('S', 'T', 'M', 'N', 'L', 'H')) {
+    abs_max <- 169273
+    abs_min <- 113106
+  } else if (condition %in% c('talker', 'meaning', 'constraint')) {
+    abs_max <- 314537
+    abs_min <- 227216
+  } else if (condition == "overall") {
+    abs_max <- max(x, na.rm = TRUE)
+    abs_min <- min(x, na.rm = TRUE)
+  }
+  normed <- (x-abs_min)/(abs_max-abs_min)
+  return(normed)
+}
+
 standardize <- function(x, new_mean = 0, new_sd = 1) {
   x <- scale(x)
   x <- x*new_sd + new_mean
