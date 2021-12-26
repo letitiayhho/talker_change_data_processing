@@ -53,7 +53,7 @@ normalize <- function(x, center = 0.5) {
   return(normed_centered)
 }
 
-abs_normalize <- function(x, condition) {
+abs_normalize <- function(x, condition, center = 0.5) {
   if (condition %in% c('S', 'T', 'M', 'N', 'L', 'H')) {
     abs_max <- 169273
     abs_min <- 113106
@@ -65,7 +65,8 @@ abs_normalize <- function(x, condition) {
     abs_min <- min(x, na.rm = TRUE)
   }
   normed <- (x-abs_min)/(abs_max-abs_min)
-  return(normed)
+  normed_centered <- normed + center
+  return(normed_centered)
 }
 
 standardize <- function(x, new_mean = 0, new_sd = 1) {

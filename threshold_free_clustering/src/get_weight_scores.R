@@ -23,7 +23,7 @@ w <- readRDS(file = filepath)
 weight_scores <- abs_normalize(w$w, condition)
 
 # Plot
-weight_scores_hist <- histogram(weight_scores, xlab = "weight scores", title = condition, xlim = c(0, 1))
+weight_scores_hist <- histogram(weight_scores, xlab = "weight scores", title = condition, xlim = c(0.5, 1.5))
 fig_fp <- paste('threshold_free_clustering/figs/', condition, '_weight_scores.png')
 ggsave(weight_scores_hist, filename = fig_fp, width = 5, height = 3)
 
