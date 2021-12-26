@@ -24,7 +24,7 @@ weight_scores <- readRDS(filepath)
 observed <- get_cluster_scores(distance_scores, weight_scores)
 
 # Compute cluster scores with permuted weight scores
-permutations <- permute_clusters(distance_scores, weight_scores, 1)
+permutations <- permute_clusters(distance_scores, weight_scores, 1000)
 
 # Plot permutation test results
 hist_plot <- histogram(permutations$sum, observed$sum, title = condition)

@@ -5,12 +5,11 @@ set -exuo pipefail
 GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME" || exit
 
-$log_file=$(date +%s)
+log_file=$(date +%s)
 
-#for condition in overall S T M N L H talker meaning constraint; do
-for condition in overall; do
+for condition in overall S T M N L H talker meaning constraint; do
     ./threshold_free_clustering/scripts/run-permutations-for-one-condition \
         "$condition" \
-        &> ./threshold_free_clustering/data/logs/"$log_file".log \
+        &> ./threshold_free_clustering/data/logs/master_"$log_file".log \
         &
 done
