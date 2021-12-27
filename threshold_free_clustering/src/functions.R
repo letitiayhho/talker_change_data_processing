@@ -60,6 +60,9 @@ abs_normalize <- function(x, condition, center = 0.5) {
   } else if (condition %in% c('talker', 'meaning', 'constraint')) {
     abs_max <- 314537
     abs_min <- 227216
+  } else if (condition %in% c('SL', 'SH', 'TL', 'TH', 'ML', 'MH', 'NL', 'NH')) {
+    abs_max <- 45204
+    abs_min <- 25409
   } else if (condition == "overall") {
     abs_max <- max(x, na.rm = TRUE)
     abs_min <- min(x, na.rm = TRUE)
