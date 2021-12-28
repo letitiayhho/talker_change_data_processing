@@ -53,24 +53,48 @@ normalize <- function(x, center = 0.5) {
   return(normed_centered)
 }
 
-abs_normalize <- function(x, condition, center = 0.5) {
+get_abs_max_and_min <- function(condition) {
   if (condition %in% c('S', 'T', 'M', 'N', 'L', 'H')) {
-    abs_max <- 169273
-    abs_min <- 113106
+    S <- readRDS('threshold_free_clustering/data/wilcoxon/S.RDS')
+    T <- readRDS('threshold_free_clustering/data/wilcoxon/T.RDS')
+    M <- readRDS('threshold_free_clustering/data/wilcoxon/M.RDS')
+    N <- readRDS('threshold_free_clustering/data/wilcoxon/N.RDS')
+    L <- readRDS('threshold_free_clustering/data/wilcoxon/L.RDS')
+    H <- readRDS('threshold_free_clustering/data/wilcoxon/H.RDS')
+    abs_max <- max(S$w, T$w, M$w, N$w, L$w, H$w)
+    abs_min <- min(S$w, T$w, M$w, N$w, L$w, H$w)
   } else if (condition %in% c('talker', 'meaning', 'constraint')) {
-    abs_max <- 314537
-    abs_min <- 227216
+    talker <- readRDS('threshold_free_clustering/data/wilcoxon/talker.RDS')
+    meaning <- readRDS('threshold_free_clustering/data/wilcoxon/meaning.RDS')
+    constraint <- readRDS('threshold_free_clustering/data/wilcoxon/constraint.RDS')
+    abs_max <- max(talker$w, meaning$w, constraint$w)
+    abs_min <- min(talker$w, meaning$w, constraint$w)
   } else if (condition %in% c('SL', 'SH', 'TL', 'TH', 'ML', 'MH', 'NL', 'NH')) {
-    abs_max <- 45204
-    abs_min <- 25409
+    SL <- readRDS('threshold_free_clustering/data/wilcoxon/SL.RDS')
+    SH <- readRDS('threshold_free_clustering/data/wilcoxon/SH.RDS')
+    TL <- readRDS('threshold_free_clustering/data/wilcoxon/TL.RDS')
+    TH <- readRDS('threshold_free_clustering/data/wilcoxon/TH.RDS')
+    ML <- readRDS('threshold_free_clustering/data/wilcoxon/ML.RDS')
+    MH <- readRDS('threshold_free_clustering/data/wilcoxon/MH.RDS')
+    NL <- readRDS('threshold_free_clustering/data/wilcoxon/NL.RDS')
+    NH <- readRDS('threshold_free_clustering/data/wilcoxon/NH.RDS')
+    abs_max <- max(SL$w, SH$w, TL$w, TH$w, ML$w, MH$w, NL$w, NH$w)
+    abs_min <- min(SL$w, SH$w, TL$w, TH$w, ML$w, MH$w, NL$w, NH$w)
   } else if (condition == "overall") {
     abs_max <- max(x, na.rm = TRUE)
     abs_min <- min(x, na.rm = TRUE)
   }
-  normed <- (x-abs_min)/(abs_max-abs_min)
+  return(list("abs_max" = abs_max, "abs_min" = abs_min))
+}
+
+abs_normalize <- function(x, condition, center = 0.5) {
+  extrema <- get_abs_max_and_min(condition)
+  normed <- (x-extrema$abs_min)/(extrema$abs_max-extrema$abs_min)
   normed_centered <- normed + center
   return(normed_centered)
 }
+
+
 
 standardize <- function(x, new_mean = 0, new_sd = 1) {
   x <- scale(x)
