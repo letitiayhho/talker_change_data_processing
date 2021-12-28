@@ -1,4 +1,4 @@
-subset <- function(data, talker = NaN, meaning = NaN, constraint = NaN, keepLabels = FALSE) {
+subset <- function(data, talker = NaN, meaning = NaN, constraint = NaN, keepLabels = FALSE, keepSubjNum = TRUE) {
   channel_columns = paste("X", as.character(1:128), sep = "")
   if (talker == "S") {
     data <- filter(data, talker == "S")
@@ -17,9 +17,20 @@ subset <- function(data, talker = NaN, meaning = NaN, constraint = NaN, keepLabe
   }
   if (keepLabels) {
     data <- select(data, all_of(c("subject_number", "talker", "meaning", "constraint", channel_columns)))
-  } else {
+  } else if (keepSubjNum) {
+    data <- select(data, all_of(c("subject_number", channel_columns)))
+  }  else {
     data <- select(data, all_of(channel_columns))
   }
+  return(data)
+}
+
+get_subject_averages <- function(data) {
+  channel_labels <- paste("X", as.character(1:128), sep = "")
+  data <-  data %>%
+    group_by(subject_number) %>%
+    summarise_at(vars(all_of(channel_labels)), mean) %>%
+    select(all_of(channel_labels))
   return(data)
 }
 
