@@ -81,8 +81,9 @@ get_abs_max_and_min <- function(condition) {
     abs_max <- max(SL$w, SH$w, TL$w, TH$w, ML$w, MH$w, NL$w, NH$w)
     abs_min <- min(SL$w, SH$w, TL$w, TH$w, ML$w, MH$w, NL$w, NH$w)
   } else if (condition == "overall") {
-    abs_max <- max(x, na.rm = TRUE)
-    abs_min <- min(x, na.rm = TRUE)
+    overall <- readRDS('threshold_free_clustering/data/wilcoxon/overall.RDS')
+    abs_max <- max(overall)
+    abs_min <- min(overall)
   }
   return(list("abs_max" = abs_max, "abs_min" = abs_min))
 }
