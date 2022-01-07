@@ -17,7 +17,7 @@ source("tools/functions.R")
 source("8_wilcoxon/src/functions.R")
 
 # Import data
-load("8_wilcoxon/data/wilcoxon_results.RData")
+load("8_wilcoxon/data/abs_average_wilcoxon_results.RData")
 ```
 
 #### One-sample t-tests for overall tracking
@@ -35,7 +35,7 @@ plot <- ggplot() +
                                     alpha = 0.5,
                                     stroke = 0)) + 
   scale_size_continuous(name = "p", 
-                        limits = c(1, 1000),
+                        limits = c(1, 2000),
                         breaks = c(20, 100, 200), 
                         labels = c("0.05", "0.01", "0.005")) +
   guides(alpha = FALSE) +
@@ -53,7 +53,7 @@ plot <- ggplot() +
         panel.grid.minor=element_blank(),
         plot.background=element_blank())
 plot
-ggsave(plot = plot, filename = 'figs/overall.png', width = 6, height = 5)
+# ggsave(plot = plot, filename = 'figs/overall.png', width = 6, height = 5)
 ```
 
 #### One-sample and two-sample wilcoxon for each condition
@@ -164,7 +164,7 @@ talker_df <- data.frame(group1 = same_talker, group2 = different_talker, nodiff_
 # Plot
 plot <- get_map(talker_df, talker_channels, nodiff_talker_channels, c("Different talker", "Same talker"))
 plot
-ggsave(plot = plot, filename = 'figs/talker.png', width = 12, height = 5)
+# ggsave(plot = plot, filename = 'figs/talker.png', width = 12, height = 5)
 ```
 
 **meaning**
@@ -186,7 +186,7 @@ meaning_df <- data.frame(group1 = meaningful, group2 = nonsense, nodiff_group1 =
 # Plot
 plot <- get_map(meaning_df, meaning_channels, nodiff_meaning_channels, c("Nonsense", "Meaningful"))
 plot
-ggsave(plot = plot, filename = 'figs/meaning.png', width = 12, height = 5)
+# ggsave(plot = plot, filename = 'figs/meaning.png', width = 12, height = 5)
 ```
 
 **constraint**
@@ -208,7 +208,7 @@ constraint_df <- data.frame(group1 = low, group2 = high, nodiff_group1 = nodiff_
 # Plot
 plot <- get_map(constraint_df, constraint_channels, nodiff_constraint, c("High constraint", "Low constraint"))
 plot
-ggsave(plot = plot, filename = 'figs/constraint.png', width = 12, height = 5)
+# ggsave(plot = plot, filename = 'figs/constraint.png', width = 12, height = 5)
 ```
 
 **stats**
@@ -257,7 +257,7 @@ talker_L_interaction_df <- data.frame(group1 = SL, group2 = TL, nodiff_group1 = 
 # Plot
 plot <- get_map(talker_L_interaction_df, talker_L_interaction_channels, nodiff_talker_L_interaction_channels, c("Different talker low constraint", "Same-talker low constraint"))
 plot
-ggsave(plot = plot, filename = 'figs/talker_L.png', width = 12, height = 5)
+# ggsave(plot = plot, filename = 'figs/talker_L.png', width = 12, height = 5)
 ```
 
 **Talker and high constraint**
@@ -278,7 +278,7 @@ talker_H_interaction_df <- data.frame(group1 = SH, group2 = TH, nodiff_group1 = 
 # Plot
 plot <- get_map(talker_H_interaction_df, talker_H_interaction_channels, nodiff_talker_H_interaction_channels, c("Different talker high constraint", "Same-talker high constraint"))
 plot
-ggsave(plot = plot, filename = 'figs/talker_H.png', width = 12, height = 5)
+# ggsave(plot = plot, filename = 'figs/talker_H.png', width = 12, height = 5)
 ```
 
 **Meaning and low constraint**
@@ -300,7 +300,7 @@ meaning_L_interaction_df <- data.frame(group1 = ML, group2 = NL, nodiff_group1 =
 # Plot
 plot <- get_map(meaning_L_interaction_df, meaning_L_interaction_channels, nodiff_meaning_L_interaction_channels, c("Nonsense low constraint", "Meaningful low constraint"))
 plot
-ggsave(plot = plot, filename = 'figs/meaning_L.png', width = 12, height = 5)
+# ggsave(plot = plot, filename = 'figs/meaning_L.png', width = 12, height = 5)
 ```
 
 **Meaning and high constraint**
@@ -322,7 +322,7 @@ meaning_H_interaction_df <- data.frame(group1 = MH, group2 = NH, nodiff_group1 =
 # Plot
 plot <- get_map(meaning_H_interaction_df, meaning_H_interaction_channels, nodiff_meaning_H_interaction_channels, c("Nonsense high constraint", "Meaningful high constraint"))
 plot
-ggsave(plot = plot, filename = 'figs/meaning_H.png', width = 12, height = 5)
+# ggsave(plot = plot, filename = 'figs/meaning_H.png', width = 12, height = 5)
 ```
 
 #### T-tests against difference set by low vs high-constraint sentences

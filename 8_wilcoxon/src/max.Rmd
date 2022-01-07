@@ -19,7 +19,7 @@ source("8_wilcoxon/src/functions.R")
 
 ```{r}
 # Import data
-xcorr <- read.csv(file = "2_cross_correlate/data/average.csv")
+xcorr <- read.csv(file = "2_cross_correlate/data/maximum.csv")
 channels <- as.character(1:128)
 ```
 
@@ -269,7 +269,7 @@ kable(map_df, escape = F, col.names = c("Channel", "L", "H", "L", "H")) %>%
 ```
 
 ```{r}
-save(overall_w, one_sample_w, two_sample_w, interaction_w, interaction_two_sample_w, file = "8_wilcoxon/data/wilcoxon_results.RData")
+# save(overall_w, one_sample_w, two_sample_w, interaction_w, interaction_two_sample_w, file = "8_wilcoxon/data/abs_average_wilcoxon_results.RData")
 # save(S_w, T_w, M_w, N_w, L_w, H_w, talker_w, meaning_w, constraint_w, SH_w, SL_w, TH_w, TL_w, file = "8_wilcoxon/data/wilcoxon_results.RData")
 ```
 
