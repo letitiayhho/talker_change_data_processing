@@ -105,13 +105,12 @@ dropOutliers <- function(data) {
 
 # Scaling is relative to each condition, so you can only compare topography, not abs numbers
 S <- subset(coherr, talker = "S", keepSubjNum = FALSE) %>% colMeans() %>% scaleData()
-S[which(S < 0.3)] <- NaN
-T <- subset(coherr, talker = "T", keepSubjNum = FALSE) %>% colMeans() %>% scaleData()
+T <- subset(coherr, talker = "T", keepSubjNum = FALSE) %>% colMeans() %>% scaleData() 
 M <- subset(coherr, meaning = "M", keepSubjNum = FALSE) %>% colMeans() %>% scaleData()
 N <- subset(coherr, meaning = "N", keepSubjNum = FALSE) %>% colMeans() %>% scaleData()
 L <- subset(coherr, constraint = "L", keepSubjNum = FALSE) %>% colMeans() %>% scaleData()
 H <- subset(coherr, constraint = "H", keepSubjNum = FALSE) %>% colMeans() %>% scaleData()
-
+  
 # Creating a table to display all the p-values
 by_condition <- data.frame(channels, S, T, M, N, L, H)
 by_condition_df <- mutate_if(by_condition, is.numeric, function(x) {round(x, digits = 2)}) %>%
