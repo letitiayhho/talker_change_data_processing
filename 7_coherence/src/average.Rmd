@@ -32,16 +32,14 @@ hist(as.double(unlist(data_only)))
 #### Mean max coherence in the F0 frequency range for each channel over all subjects and trials
 
 ```{r}
-scaleData <- function(data, all_min, all_sd) {
-  return (data-all_min)/all_sd
+scaleData <- function(data) {
+  return((data-min(data))/sd(data))
 }
 
 all_min <- min(unlist(data_only))
 all_sd <- sd(unlist(data_only))
 all_trials <- as.double(colMeans(data_only)) # compute channel means
-all_trials <- scaleData(all_trials, all_min, all_sd)
-# all_trials <- all_trials * (1/sd(all_trials)) # set sd to 1
-# all_trials <- all_trials - min(all_trials) # set min value to 0
+all_trials <- scaleData(all_trials)
 
 # Creating a table to display all the p-values
 all_trials_color <- as.data.frame(all_trials) %>%
@@ -73,10 +71,7 @@ plot <- ggplot() +
                                  size = C,
                                  alpha = C,
                                  stroke = 0)) + 
-  scale_size_continuous(name = "C",
-                        limits = c(0, 5)) +
-                        # breaks = c(20, 100, 200),
-                        # labels = c("0.05", "0.01", "0.005")) +
+  scale_size_continuous(name = "C")+ 
   guides(alpha = FALSE) +
   ylim(0, 900) +
   xlim(0, 900) +
@@ -92,7 +87,7 @@ plot <- ggplot() +
         panel.grid.minor=element_blank(),
         plot.background=element_blank())
 plot
-ggsave(plot = plot, filename = '7_coherence/figs/overall.png', width = 6, height = 5)
+ggsave(plot = plot, filename = '7_coherence/figs/avg_overall.png', width = 6, height = 5)
 ```
 
 #### Mean max coherence in the F0 frequency range for each channel for each condition
@@ -109,13 +104,13 @@ dropOutliers <- function(data) {
 }
 
 # Scaling is relative to each condition, so you can only compare topography, not abs numbers
-S <- subset(coherr, condition = "S") %>% colMeans() %>% scaleData()
+S <- subset(coherr, talker = "S", keepSubjNum = FALSE) %>% colMeans() %>% scaleData()
 S[which(S < 0.3)] <- NaN
-T <- subset(coherr, condition = "T") %>% colMeans() %>% scaleData()
-M <- subset(coherr, condition = "M") %>% colMeans() %>% scaleData()
-N <- subset(coherr, condition = "N") %>% colMeans() %>% scaleData()
-L <- subset(coherr, condition = "L") %>% colMeans() %>% scaleData()
-H <- subset(coherr, condition = "H") %>% colMeans() %>% scaleData()
+T <- subset(coherr, talker = "T", keepSubjNum = FALSE) %>% colMeans() %>% scaleData()
+M <- subset(coherr, meaning = "M", keepSubjNum = FALSE) %>% colMeans() %>% scaleData()
+N <- subset(coherr, meaning = "N", keepSubjNum = FALSE) %>% colMeans() %>% scaleData()
+L <- subset(coherr, constraint = "L", keepSubjNum = FALSE) %>% colMeans() %>% scaleData()
+H <- subset(coherr, constraint = "H", keepSubjNum = FALSE) %>% colMeans() %>% scaleData()
 
 # Creating a table to display all the p-values
 by_condition <- data.frame(channels, S, T, M, N, L, H)
@@ -184,7 +179,7 @@ getConditionMap <- function(group1, group2, coordinates, labels) {
 ```{r}
 plot <- getConditionMap(S, T, coordinates, labels = c("T", "S"))
 plot
-ggsave(plot = plot, filename = '7_coherence/figs/talker.png', width = 12, height = 5)
+ggsave(plot = plot, filename = '7_coherence/figs/avg_talker.png', width = 12, height = 5)
 ```
 
 **Meaning**
@@ -192,7 +187,7 @@ ggsave(plot = plot, filename = '7_coherence/figs/talker.png', width = 12, height
 ```{r}
 plot <- getConditionMap(M, N, coordinates, labels = c("N", "M"))
 plot
-ggsave(plot = plot, filename = '7_coherence/figs/meaning.png', width = 12, height = 5)
+ggsave(plot = plot, filename = '7_coherence/figs/avg_meaning.png', width = 12, height = 5)
 ```
 
 **Constraint**
@@ -200,52 +195,52 @@ ggsave(plot = plot, filename = '7_coherence/figs/meaning.png', width = 12, heigh
 ```{r}
 plot <- getConditionMap(L, H, coordinates, labels = c("H", "L"))
 plot
-ggsave(plot = plot, filename = '7_coherence/figs/constraint.png', width = 12, height = 5)
+ggsave(plot = plot, filename = '7_coherence/figs/avg_constraint.png', width = 12, height = 5)
 ```
 
 #### Scaling by Absolute terms
  
 ```{r}
-# Try to scale by absolute terms
-sd_all <- sd(data_only)
-min_all <- min(data_only)
-
-scaleDataAbsolute <- function(data, min_all, sd_all) {
-  return((data-min_all)/sd_all)
-}
-
-S <- subset(coherr, condition = "S") %>% 
-  scaleDataAbsolute(min_all, sd_all) %>%
-  colMeans()
-T <- subset(coherr, condition = "T") %>% 
-  scaleDataAbsolute(min_all, sd_all) %>%
-  colMeans()
-M <- subset(coherr, condition = "M") %>% 
-  scaleDataAbsolute(min_all, sd_all) %>%
-  colMeans()
-N <- subset(coherr, condition = "N") %>% 
-  scaleDataAbsolute(min_all, sd_all) %>%
-  colMeans()
-L <- subset(coherr, condition = "L") %>%
-  scaleDataAbsolute(min_all, sd_all) %>%
-  colMeans()
-H <- subset(coherr, condition = "H") %>%
-  scaleDataAbsolute(min_all, sd_all) %>%
-  colMeans()
-
-# Creating a table to display all the p-values
-by_condition <- data.frame(channels, S, T, M, N, L, H)
-by_condition_df <- mutate_if(by_condition, is.numeric, function(x) {round(x, digits = 2)}) %>%
-  mutate_if(is.numeric, function(x) {cell_spec(x, background = spec_color(x, 
-                                                                          direction = -1,
-                                                                          begin = 0.5,
-                                                                          end = 1,
-                                                                          option = "B",
-                                                                          scale_from = c(0, 6.2)))})
-
-kable(by_condition_df, escape = F, col.names = c("Channel", "S", "T", "M", "N", "S", "G")) %>%
-  add_header_above(c(" " = 1, "Talker" = 2, "Meaning" = 2, "Constraint" = 2)) %>%
-  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+# # Try to scale by absolute terms
+# sd_all <- sd(data_only)
+# min_all <- min(data_only)
+# 
+# scaleDataAbsolute <- function(data, min_all, sd_all) {
+#   return((data-min_all)/sd_all)
+# }
+# 
+# S <- subset(coherr, condition = "S") %>% 
+#   scaleDataAbsolute(min_all, sd_all) %>%
+#   colMeans()
+# T <- subset(coherr, condition = "T") %>% 
+#   scaleDataAbsolute(min_all, sd_all) %>%
+#   colMeans()
+# M <- subset(coherr, condition = "M") %>% 
+#   scaleDataAbsolute(min_all, sd_all) %>%
+#   colMeans()
+# N <- subset(coherr, condition = "N") %>% 
+#   scaleDataAbsolute(min_all, sd_all) %>%
+#   colMeans()
+# L <- subset(coherr, condition = "L") %>%
+#   scaleDataAbsolute(min_all, sd_all) %>%
+#   colMeans()
+# H <- subset(coherr, condition = "H") %>%
+#   scaleDataAbsolute(min_all, sd_all) %>%
+#   colMeans()
+# 
+# # Creating a table to display all the p-values
+# by_condition <- data.frame(channels, S, T, M, N, L, H)
+# by_condition_df <- mutate_if(by_condition, is.numeric, function(x) {round(x, digits = 2)}) %>%
+#   mutate_if(is.numeric, function(x) {cell_spec(x, background = spec_color(x, 
+#                                                                           direction = -1,
+#                                                                           begin = 0.5,
+#                                                                           end = 1,
+#                                                                           option = "B",
+#                                                                           scale_from = c(0, 6.2)))})
+# 
+# kable(by_condition_df, escape = F, col.names = c("Channel", "S", "T", "M", "N", "S", "G")) %>%
+#   add_header_above(c(" " = 1, "Talker" = 2, "Meaning" = 2, "Constraint" = 2)) %>%
+#   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
  
  
