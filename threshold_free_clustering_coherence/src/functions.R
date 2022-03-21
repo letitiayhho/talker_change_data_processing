@@ -1,5 +1,32 @@
+subset <- function(data, talker = NaN, meaning = NaN, constraint = NaN, keepLabels = FALSE, keepSubjNum = TRUE) {
+  channel_columns = paste("X", as.character(1:128), sep = "")
+  if (talker == "S") {
+    data <- filter(data, talker == "S")
+  } else if (talker == "T") {
+    data <- filter(data, talker == "T")
+  }
+  if (meaning == "M") {
+    data <- filter(data, meaning == "M")
+  } else if (meaning == "N") {
+    data <- filter(data, meaning == "N")
+  }
+  if (constraint == "L") {
+    data <- filter(data, constraint == "L")
+  } else if (constraint == "H") {
+    data <- filter(data, constraint == "H")
+  }
+  if (keepLabels) {
+    data <- select(data, all_of(c("subject_number", "talker", "meaning", "constraint", channel_columns)))
+  } else if (keepSubjNum) {
+    data <- select(data, all_of(c("subject_number", channel_columns)))
+  }  else {
+    data <- select(data, all_of(channel_columns))
+  }
+  return(data)
+}
+
 get_coordinates <- function() {
-  coordinates_fp <- file.path("threshold_free_clustering/data/average_channel_locations.sfp")
+  coordinates_fp <- file.path("threshold_free_clustering_coherence/data/average_channel_locations.sfp")
   coordinates <- read.delim(coordinates_fp, header = FALSE, sep = "", dec = ".") %>%
     .[startsWith(as.character(.$V1), "E"), ] %>%
     .[c("V2", "V3", "V4")]
@@ -24,14 +51,14 @@ get_histogram_of_pairwise_distances <- function(distances, title) {
     .[!duplicated(.)] %>%
     sort()
   plot <- ggplot(data.frame(sort_distances), aes(x = sort_distances)) +
-    geom_histogram() +
+    geom_histogram(na.rm = TRUE) +
     ggtitle(title)
   return(plot)
 }
 
 get_distance_score <- function(distances) {
   # Normalize score from 0 to 1
-  st_distances <- normalize(distances)
+  st_distances <- (distances-min(distances))/(max(distances)-min(distances))
 
   # Take inverse
   distance_score <- 1/st_distances
@@ -47,55 +74,10 @@ sigmoid <- function(x, spread = 1, shift = 0) {
   return(1/(1+exp((-x+mean(x))/spread))+shift)
 }
 
-normalize <- function(x, center = 0.5) {
-  normed <- (x-min(x, na.rm = TRUE))/(max(x, na.rm = TRUE)-min(x, na.rm = TRUE))
-  normed_centered <- normed + center
-  return(normed_centered)
+normalize <- function(x) {
+  normed <- (x-mean(x))/(max(x)-min(x))
+  return(normed)
 }
-
-get_abs_max_and_min <- function(condition) {
-  if (condition %in% c('S', 'T', 'M', 'N', 'L', 'H')) {
-    S <- readRDS('threshold_free_clustering/data/wilcoxon/S.RDS')
-    T <- readRDS('threshold_free_clustering/data/wilcoxon/T.RDS')
-    M <- readRDS('threshold_free_clustering/data/wilcoxon/M.RDS')
-    N <- readRDS('threshold_free_clustering/data/wilcoxon/N.RDS')
-    L <- readRDS('threshold_free_clustering/data/wilcoxon/L.RDS')
-    H <- readRDS('threshold_free_clustering/data/wilcoxon/H.RDS')
-    abs_max <- max(S$w, T$w, M$w, N$w, L$w, H$w)
-    abs_min <- min(S$w, T$w, M$w, N$w, L$w, H$w)
-  } else if (condition %in% c('talker', 'meaning', 'constraint')) {
-    talker <- readRDS('threshold_free_clustering/data/wilcoxon/talker.RDS')
-    meaning <- readRDS('threshold_free_clustering/data/wilcoxon/meaning.RDS')
-    constraint <- readRDS('threshold_free_clustering/data/wilcoxon/constraint.RDS')
-    abs_max <- max(talker$w, meaning$w, constraint$w)
-    abs_min <- min(talker$w, meaning$w, constraint$w)
-  } else if (condition %in% c('SL', 'SH', 'TL', 'TH', 'ML', 'MH', 'NL', 'NH')) {
-    SL <- readRDS('threshold_free_clustering/data/wilcoxon/SL.RDS')
-    SH <- readRDS('threshold_free_clustering/data/wilcoxon/SH.RDS')
-    TL <- readRDS('threshold_free_clustering/data/wilcoxon/TL.RDS')
-    TH <- readRDS('threshold_free_clustering/data/wilcoxon/TH.RDS')
-    ML <- readRDS('threshold_free_clustering/data/wilcoxon/ML.RDS')
-    MH <- readRDS('threshold_free_clustering/data/wilcoxon/MH.RDS')
-    NL <- readRDS('threshold_free_clustering/data/wilcoxon/NL.RDS')
-    NH <- readRDS('threshold_free_clustering/data/wilcoxon/NH.RDS')
-    abs_max <- max(SL$w, SH$w, TL$w, TH$w, ML$w, MH$w, NL$w, NH$w)
-    abs_min <- min(SL$w, SH$w, TL$w, TH$w, ML$w, MH$w, NL$w, NH$w)
-  } else if (condition == "overall") {
-    overall <- readRDS('threshold_free_clustering/data/wilcoxon/overall.RDS')
-    abs_max <- max(overall)
-    abs_min <- min(overall)
-  }
-  return(list("abs_max" = abs_max, "abs_min" = abs_min))
-}
-
-abs_normalize <- function(x, condition, center = 0.5) {
-  extrema <- get_abs_max_and_min(condition)
-  normed <- (x-extrema$abs_min)/(extrema$abs_max-extrema$abs_min)
-  normed_centered <- normed + center
-  return(normed_centered)
-}
-
-
 
 standardize <- function(x, new_mean = 0, new_sd = 1) {
   x <- scale(x)

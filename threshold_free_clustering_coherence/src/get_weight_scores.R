@@ -5,23 +5,17 @@ library("dplyr")
 library("ggplot2")
 library("ggpubr")
 source("tools/functions.R")
-source("threshold_free_clustering/src/functions.R")
+source("threshold_free_clustering_coherence/src/functions.R")
 
-# Get command line args
-args = commandArgs(trailingOnly=TRUE)
-if (length(args) != 1) {
-  stop("One argument ('S', 'T', 'talker', 'meaning', etc) must be supplied", call.=FALSE)
-}
-condition = args[1]
-cat(condition)
-
-# Normalize w-score to compute weight scores
-filepath <- paste("threshold_free_clustering/data/wilcoxon/", condition, ".RDS", sep = "")
-w <- readRDS(file = filepath)
-
-# Get weight scores
-weight_scores <- abs_normalize(w$w, condition)
+coherr <- read.csv(file = "7_coherence/data/average.csv")
+S <- subset(coherr, talker = "S", keepSubjNum = FALSE) %>% colMeans() %>% as.double() %>% normalize()
+T <- subset(coherr, talker = "T", keepSubjNum = FALSE) %>% colMeans() %>% as.double() %>% normalize()
+M <- subset(coherr, meaning = "M", keepSubjNum = FALSE) %>% colMeans() %>% as.double() %>% normalize()
+N <- subset(coherr, meaning = "N", keepSubjNum = FALSE) %>% colMeans() %>% as.double() %>% normalize()
+L <- subset(coherr, constraint = "L", keepSubjNum = FALSE) %>% colMeans() %>% as.double() %>% normalize()
+H <- subset(coherr, constraint = "H", keepSubjNum = FALSE) %>% colMeans() %>% as.double() %>% normalize()
+weight_scores <- list("S" = S, "T" = T, "M" = M, "N" = N, "L" = L, "H" = H)
 
 # Save variables
-save_filepath <- paste("threshold_free_clustering/data/weight_scores/", condition, ".RDS", sep = "")
+save_filepath <- paste("threshold_free_clustering_coherence/data/weight_scores/average.RDS", sep = "")
 saveRDS(weight_scores, file = save_filepath)

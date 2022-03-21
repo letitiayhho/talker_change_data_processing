@@ -88,7 +88,7 @@ get_abs_max_and_min <- function(condition) {
   return(list("abs_max" = abs_max, "abs_min" = abs_min))
 }
 
-abs_normalize <- function(x, condition, center = 0.5) {
+abs_normalize <- function(x, condition, center = 0.5) { # FIX THIS THIS IS NOT THE CENTER
   extrema <- get_abs_max_and_min(condition)
   normed <- (x-extrema$abs_min)/(extrema$abs_max-extrema$abs_min)
   normed_centered <- normed + center

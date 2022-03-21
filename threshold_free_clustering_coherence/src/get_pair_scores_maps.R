@@ -35,4 +35,4 @@ plot <- ggplot() +
         panel.grid.minor=element_blank(),
         plot.background=element_blank())
 plot
-ggsave(plot = plot, filename = 'threshold_free_clustering/figs/overall.png', width = 6, height = 5)
+ggsave(plot = plot, filename = 'threshold_free_clustering_coherence/figs/overall.png', width = 6, height = 5)

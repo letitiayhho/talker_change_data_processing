@@ -1,13 +1,40 @@
 ## 1. 
 
-subset <- function(data, channel, level, shuffle_number = NULL) {
-  column_heading <- paste("mean_", channel, sep = "")
-  subset <- data[[column_heading]][data$condition == level]
-  if (is.null(shuffle_number)) {
-    return(data[[column_heading]][data$condition == level])
-  } else {
-    return(data[[column_heading]][(data$condition == level) & (data$shuffle_number == shuffle_number)])
+# subset <- function(data, channel, level, shuffle_number = NULL) {
+#   column_heading <- paste("mean_", channel, sep = "")
+#   subset <- data[[column_heading]][data$condition == level]
+#   if (is.null(shuffle_number)) {
+#     return(data[[column_heading]][data$condition == level])
+#   } else {
+#     return(data[[column_heading]][(data$condition == level) & (data$shuffle_number == shuffle_number)])
+#   }
+# }
+
+subset <- function(data, talker = NaN, meaning = NaN, constraint = NaN, keepLabels = FALSE, keepSubjNum = TRUE) {
+  channel_columns = paste("X", as.character(1:128), sep = "")
+  if (talker == "S") {
+    data <- filter(data, talker == "S")
+  } else if (talker == "T") {
+    data <- filter(data, talker == "T")
   }
+  if (meaning == "M") {
+    data <- filter(data, meaning == "M")
+  } else if (meaning == "N") {
+    data <- filter(data, meaning == "N")
+  }
+  if (constraint == "L") {
+    data <- filter(data, constraint == "L")
+  } else if (constraint == "H") {
+    data <- filter(data, constraint == "H")
+  }
+  if (keepLabels) {
+    data <- select(data, all_of(c("subject_number", "talker", "meaning", "constraint", channel_columns)))
+  } else if (keepSubjNum) {
+    data <- select(data, all_of(c("subject_number", channel_columns)))
+  }  else {
+    data <- select(data, all_of(channel_columns))
+  }
+  return(data)
 }
 
 histogram <- function(shuffled_values, original_value, title) {
