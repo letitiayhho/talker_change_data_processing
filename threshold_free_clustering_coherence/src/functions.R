@@ -1,0 +1,190 @@
+get_coordinates <- function() {
+  coordinates_fp <- file.path("threshold_free_clustering/data/average_channel_locations.sfp")
+  coordinates <- read.delim(coordinates_fp, header = FALSE, sep = "", dec = ".") %>%
+    .[startsWith(as.character(.$V1), "E"), ] %>%
+    .[c("V2", "V3", "V4")]
+  names(coordinates) <- c("x", "y", "z")
+  
+  # Return
+  return(coordinates)
+}
+
+
+get_pairwise_distances <- function(coordinates) {
+  distances <- as.matrix(dist(coordinates))
+  rownames(distances) <- NULL
+  colnames(distances) <- NULL
+  
+  # Return
+  return(distances)
+}
+
+get_histogram_of_pairwise_distances <- function(distances, title) {
+  sort_distances <- as.vector(distances) %>%
+    .[!duplicated(.)] %>%
+    sort()
+  plot <- ggplot(data.frame(sort_distances), aes(x = sort_distances)) +
+    geom_histogram() +
+    ggtitle(title)
+  return(plot)
+}
+
+get_distance_score <- function(distances) {
+  # Normalize score from 0 to 1
+  st_distances <- normalize(distances)
+
+  # Take inverse
+  distance_score <- 1/st_distances
+  
+  # Remove lower triangle
+  distance_score[lower.tri(distance_score, diag = TRUE)] <- NaN
+  
+  return(distance_score)
+}
+
+# sigmoid <- function(x, spread = sd(x), shift = 0.5) {
+sigmoid <- function(x, spread = 1, shift = 0) {
+  return(1/(1+exp((-x+mean(x))/spread))+shift)
+}
+
+normalize <- function(x, center = 0.5) {
+  normed <- (x-min(x, na.rm = TRUE))/(max(x, na.rm = TRUE)-min(x, na.rm = TRUE))
+  normed_centered <- normed + center
+  return(normed_centered)
+}
+
+get_abs_max_and_min <- function(condition) {
+  if (condition %in% c('S', 'T', 'M', 'N', 'L', 'H')) {
+    S <- readRDS('threshold_free_clustering/data/wilcoxon/S.RDS')
+    T <- readRDS('threshold_free_clustering/data/wilcoxon/T.RDS')
+    M <- readRDS('threshold_free_clustering/data/wilcoxon/M.RDS')
+    N <- readRDS('threshold_free_clustering/data/wilcoxon/N.RDS')
+    L <- readRDS('threshold_free_clustering/data/wilcoxon/L.RDS')
+    H <- readRDS('threshold_free_clustering/data/wilcoxon/H.RDS')
+    abs_max <- max(S$w, T$w, M$w, N$w, L$w, H$w)
+    abs_min <- min(S$w, T$w, M$w, N$w, L$w, H$w)
+  } else if (condition %in% c('talker', 'meaning', 'constraint')) {
+    talker <- readRDS('threshold_free_clustering/data/wilcoxon/talker.RDS')
+    meaning <- readRDS('threshold_free_clustering/data/wilcoxon/meaning.RDS')
+    constraint <- readRDS('threshold_free_clustering/data/wilcoxon/constraint.RDS')
+    abs_max <- max(talker$w, meaning$w, constraint$w)
+    abs_min <- min(talker$w, meaning$w, constraint$w)
+  } else if (condition %in% c('SL', 'SH', 'TL', 'TH', 'ML', 'MH', 'NL', 'NH')) {
+    SL <- readRDS('threshold_free_clustering/data/wilcoxon/SL.RDS')
+    SH <- readRDS('threshold_free_clustering/data/wilcoxon/SH.RDS')
+    TL <- readRDS('threshold_free_clustering/data/wilcoxon/TL.RDS')
+    TH <- readRDS('threshold_free_clustering/data/wilcoxon/TH.RDS')
+    ML <- readRDS('threshold_free_clustering/data/wilcoxon/ML.RDS')
+    MH <- readRDS('threshold_free_clustering/data/wilcoxon/MH.RDS')
+    NL <- readRDS('threshold_free_clustering/data/wilcoxon/NL.RDS')
+    NH <- readRDS('threshold_free_clustering/data/wilcoxon/NH.RDS')
+    abs_max <- max(SL$w, SH$w, TL$w, TH$w, ML$w, MH$w, NL$w, NH$w)
+    abs_min <- min(SL$w, SH$w, TL$w, TH$w, ML$w, MH$w, NL$w, NH$w)
+  } else if (condition == "overall") {
+    overall <- readRDS('threshold_free_clustering/data/wilcoxon/overall.RDS')
+    abs_max <- max(overall)
+    abs_min <- min(overall)
+  }
+  return(list("abs_max" = abs_max, "abs_min" = abs_min))
+}
+
+abs_normalize <- function(x, condition, center = 0.5) {
+  extrema <- get_abs_max_and_min(condition)
+  normed <- (x-extrema$abs_min)/(extrema$abs_max-extrema$abs_min)
+  normed_centered <- normed + center
+  return(normed_centered)
+}
+
+
+
+standardize <- function(x, new_mean = 0, new_sd = 1) {
+  x <- scale(x)
+  x <- x*new_sd + new_mean
+  return(x)
+}
+
+histogram <- function(x, observed = NaN, xlab = "", title = "", xlim = NaN) {
+  plot <- ggplot(data.frame(x), aes(x = x)) +
+    geom_histogram(bins = 20) +
+    ggtitle(title) +
+    xlab(xlab)
+  if (!is.na(observed)) {
+    plot <- plot + geom_vline(xintercept = observed, color ='firebrick2', size = 2, na.rm = TRUE)
+  }
+  if (!is.na(xlim)) {
+    plot <- plot + xlim(xlim)
+  }
+  return(plot)
+}
+
+compute_chan_scores <- function(distance_scores, weight_scores) {
+  # Compute score
+  pair_scores <- matrix(NaN, nrow = 128, ncol = 128)
+  # for each channel
+  for (i in 1:128) {
+    # for each channel pair
+    for (j in 1:128) {
+      # get their distance score
+      if (upper.tri(distance_scores)[i, j]) {
+        distance_score <- distance_scores[i, j]
+        
+        # get their combined weights
+        weight <- weight_scores[i] * weight_scores[j]
+        
+        # multiple distance score with combined weights to get their pair score
+        pair_score <- distance_score * weight
+        
+        # sum all the pair scores of the total cluster score
+        pair_scores[i, j] <- pair_score
+      }
+    }
+  }
+  chan_scores <- c()
+  pair_scores[is.na(pair_scores)] <- 0
+
+  for (i in 1:128) {
+    chan_scores <- c(chan_scores, sum(pair_scores[i,], pair_scores[,i])/2)
+  }
+
+  return(chan_scores)
+}
+
+get_cluster_scores <- function(distance_scores, weight_scores) {
+  # Compute score
+  pair_scores <- matrix(NaN, nrow = 128, ncol = 128)
+  # for each channel
+  for (i in 1:128) {
+    # for each channel pair
+    for (j in 1:128) {
+      # get their distance score
+      if (upper.tri(distance_scores)[i, j]) {
+        distance_score <- distance_scores[i, j]
+        
+        # get their combined weights
+        weight <- weight_scores[i] * weight_scores[j]
+        
+        # multiple distance score with combined weights to get their pair score
+        pair_score <- distance_score * weight
+        
+        # sum all the pair scores of the total cluster score
+        pair_scores[i, j] <- pair_score
+      }
+    }
+  }
+  cluster_scores <- list("sum" = sum(pair_scores, na.rm = TRUE),
+                         "max" = max(pair_scores, na.rm = TRUE))
+  return(cluster_scores)
+}
+
+permute_clusters <- function(distance_scores, weight_scores, reps) {
+  permuted_scores <- list("max" = c(), "sum" = c())
+  for (i in 1:reps) {
+    cat(as.character(i), ", ")
+    permuted <- sample(weight_scores)
+    cluster_scores <- get_cluster_scores(distance_scores, permuted)
+    permuted_scores$max <- c(permuted_scores$max, cluster_scores$max)
+    permuted_scores$sum <- c(permuted_scores$sum, cluster_scores$sum)
+  }
+  return(permuted_scores)
+}
+
