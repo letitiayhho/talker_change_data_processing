@@ -5,7 +5,7 @@ function [] = concat_coherence(git_home, stat)
 
 arguments
     git_home char
-    stat char % 'average' or 'average_max'
+    stat char % 'average' or 'max'
 end
 
     %% Main

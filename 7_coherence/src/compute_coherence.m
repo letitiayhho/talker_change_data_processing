@@ -5,7 +5,7 @@ function [] = compute_coherence(git_home, subject_number)
     addpath(fullfile('1_preprocessing/data/', subject_number)) % add subject stim order to path
     addpath(fullfile('2_cross_correlate/data', subject_number)) % add subject data to path
     addpath('7_coherence/data') % add path to stim_pitches
-    addpath('7_coherence/src/chronux/') % add chronux scripts
+    addpath('tools/vendor/chronux') % add chronux scripts
 
     % Import json file for pitch ranges
     fname = 'stim_pitches.json';
@@ -21,8 +21,8 @@ function [] = compute_coherence(git_home, subject_number)
     stim_order = load('stim_order').stim_order;
 
     %% 2. Coherence
-    average_max = zeros(size(eeg_data, 3), size(eeg_data, 1));
-    average = zeros(size(eeg_data, 3), size(eeg_data, 1));
+    max_coher = zeros(size(eeg_data, 3), size(eeg_data, 1));
+    average_coher = zeros(size(eeg_data, 3), size(eeg_data, 1));
 
     % Loop over channels
     fprintf(1, 'Channel #')
@@ -75,8 +75,8 @@ function [] = compute_coherence(git_home, subject_number)
             avg_trial_coherence = mean(avg_coherence_each_syllable);
 
             % Write statistics to data arrays
-            average_max(j, i) = max_trial_coherence;
-            average(j, i) = avg_trial_coherence;
+            max_coher(j, i) = max_trial_coherence;
+            average_coher(j, i) = avg_trial_coherence;
             end
     end
 
@@ -84,8 +84,8 @@ function [] = compute_coherence(git_home, subject_number)
     condition = load('split_conditions.mat').split_conditions;
 
     %% 4. Write data files
-    save_xcorr(subject_number, condition, stim_order, average_max, 'average_max')
-    save_xcorr(subject_number, condition, stim_order, average, 'average')
+    save_xcorr(subject_number, condition, stim_order, max_coher, 'max')
+    save_xcorr(subject_number, condition, stim_order, average_coher, 'average')
     quit
 
         function [] = save_xcorr(subject_number, condition, stim_order, data, stat)

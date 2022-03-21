@@ -19,29 +19,29 @@ source("8_wilcoxon/src/functions.R")
 
 ```{r}
 # Import data
-coherr <- read.csv(file = "7_coherence/data/average_max.csv")
+coherr <- read.csv(file = "7_coherence/data/average.csv")
 ```
 
 ```{r}
 channels <- as.character(1:128)
 channel_labels <- paste("X", channels, sep = "")
 data_only <- select(coherr, all_of(channel_labels))  # keep only data columns
-all_trials <- colMeans(data_only) # compute channel means
-
-# Clean anomalous trial
-
-# all_trials <- all_trials * (1/sd(all_trials)) # set sd to 1
-# all_trials <- all_trials - min(all_trials) # set min value to 0
+hist(as.double(unlist(data_only)))
 ```
 
 #### Mean max coherence in the F0 frequency range for each channel over all subjects and trials
 
 ```{r}
-channel_labels <- paste("X", as.character(1:128), sep = "")
-data_only <- as.matrix(select(coherr, all_of(channel_labels)))  # keep only data columns
-all_trials <- colMeans(data_only) # compute channel means
-all_trials <- all_trials * (1/sd(all_trials)) # set sd to 1
-all_trials <- all_trials - min(all_trials) # set min value to 0
+scaleData <- function(data, all_min, all_sd) {
+  return (data-all_min)/all_sd
+}
+
+all_min <- min(unlist(data_only))
+all_sd <- sd(unlist(data_only))
+all_trials <- as.double(colMeans(data_only)) # compute channel means
+all_trials <- scaleData(all_trials, all_min, all_sd)
+# all_trials <- all_trials * (1/sd(all_trials)) # set sd to 1
+# all_trials <- all_trials - min(all_trials) # set min value to 0
 
 # Creating a table to display all the p-values
 all_trials_color <- as.data.frame(all_trials) %>%
@@ -98,9 +98,6 @@ ggsave(plot = plot, filename = '7_coherence/figs/overall.png', width = 6, height
 #### Mean max coherence in the F0 frequency range for each channel for each condition
 
 ```{r}
-scaleData <- function(data) {
-  return((data-min(data))/sd(data))
-}
 
 dropOutliers <- function(data) {
   iqr <- IQR(data)
