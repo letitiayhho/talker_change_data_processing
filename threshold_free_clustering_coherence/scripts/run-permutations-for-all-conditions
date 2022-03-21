@@ -9,8 +9,8 @@ log_file=$(date +%s)
 
 #for condition in overall S T M N L H talker meaning constraint; do
 for condition in SL SH TL SH ML MH NL NH; do
-    ./threshold_free_clustering/scripts/run-permutations-for-one-condition \
+    ./threshold_free_clustering_coherence/scripts/run-permutations-for-one-condition \
         "$condition" \
-        &> ./threshold_free_clustering/data/logs/master_"$log_file".log \
+        &> ./threshold_free_clustering_coherence/data/logs/master_"$log_file".log \
         &
 done

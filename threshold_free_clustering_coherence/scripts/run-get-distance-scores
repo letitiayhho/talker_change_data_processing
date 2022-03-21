@@ -5,6 +5,6 @@ set -euo pipefail
 GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME" || exit
 
-Rscript --vanilla threshold_free_clustering/src/get_distance_scores.R
+Rscript --vanilla threshold_free_clustering_coherence/src/get_distance_scores.R
 
 printf "distance_scores.RDS created in data/distance_scores"
