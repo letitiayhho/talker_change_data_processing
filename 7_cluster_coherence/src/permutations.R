@@ -27,13 +27,9 @@ observed <- get_cluster_scores(distance_scores, weight_scores)
 # Compute cluster scores with permuted weight scores
 permutations <- permute_clusters(distance_scores, weight_scores, 1000)
 
-# Plot permutation test results
-hist_plot <- histogram(permutations$sum, observed$sum, title = condition)
-
 # Save data and figures
 observed_filename <- paste("7_cluster_coherence/data/cluster_scores/", condition, "_observed.RDS", sep = "")
 saveRDS(observed, file = observed_filename)
 permutations_filename <- paste("7_cluster_coherence/data/cluster_scores/", condition, "_permutations.RDS", sep = "")
 saveRDS(permutations, file = permutations_filename)
-fig_filename <- paste("7_cluster_coherence/figs/", condition, ".png", sep = "")
-ggsave(hist_plot, filename = fig_filename, width = 8, height = 6)
+
