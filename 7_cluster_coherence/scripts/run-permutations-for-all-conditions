@@ -8,9 +8,9 @@ cd "$GIT_HOME" || exit
 job_id=$(date +%s)
 
 for condition in overall S T M N L H; do
-    ./threshold_free_clustering_coherence/scripts/run-permutations-for-one-condition \
+    ./7_cluster_coherence/scripts/run-permutations-for-one-condition \
         "$condition" \
         "$job_id" \
-        &> ./threshold_free_clustering_coherence/data/logs/master_"$job_id".log \
+        &> ./7_cluster_coherence/data/logs/master_"$job_id".log \
         &
 done
