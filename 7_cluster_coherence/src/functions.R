@@ -26,7 +26,7 @@ subset <- function(data, talker = NaN, meaning = NaN, constraint = NaN, keepLabe
 }
 
 get_coordinates <- function() {
-  coordinates_fp <- file.path("threshold_free_clustering_coherence/data/average_channel_locations.sfp")
+  coordinates_fp <- file.path("7_cluster_coherence/data/average_channel_locations.sfp")
   coordinates <- read.delim(coordinates_fp, header = FALSE, sep = "", dec = ".") %>%
     .[startsWith(as.character(.$V1), "E"), ] %>%
     .[c("V2", "V3", "V4")]

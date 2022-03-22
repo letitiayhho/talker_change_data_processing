@@ -5,7 +5,7 @@ library("dplyr")
 library("ggplot2")
 library("ggpubr")
 source("tools/functions.R")
-source("threshold_free_clustering_coherence/src/functions.R")
+source("7_cluster_coherence/src/functions.R")
 
 coherr <- read.csv(file = "7_coherence/data/average.csv")
 S <- subset(coherr, talker = "S", keepSubjNum = FALSE) %>% colMeans() %>% as.double() %>% normalize()
@@ -17,5 +17,5 @@ H <- subset(coherr, constraint = "H", keepSubjNum = FALSE) %>% colMeans() %>% as
 weight_scores <- list("S" = S, "T" = T, "M" = M, "N" = N, "L" = L, "H" = H)
 
 # Save variables
-save_filepath <- paste("threshold_free_clustering_coherence/data/weight_scores/average.RDS", sep = "")
+save_filepath <- paste("7_cluster_coherence/data/weight_scores/average.RDS", sep = "")
 saveRDS(weight_scores, file = save_filepath)
