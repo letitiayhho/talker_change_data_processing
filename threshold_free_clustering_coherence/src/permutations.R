@@ -17,8 +17,9 @@ condition = args[1]
 distance_scores <- readRDS("threshold_free_clustering_coherence/data/distance_scores/distance_scores.RDS")
 
 # Load weight scores
-filepath <- paste("threshold_free_clustering_coherence/data/weight_scores/", condition, ".RDS", sep = "")
-weight_scores <- readRDS(filepath)
+filepath <- paste("threshold_free_clustering_coherence/data/weight_scores/average.RDS", sep = "")
+all_weight_scores <- readRDS(filepath)
+weight_scores <- all_weight_scores[[condition]]
 
 # Compute observed cluster scores with distance and weight scores
 observed <- get_cluster_scores(distance_scores, weight_scores)
