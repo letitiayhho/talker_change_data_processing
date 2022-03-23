@@ -12,7 +12,7 @@ coordinates <- get_coordinates()
 distances <- get_pairwise_distances(coordinates)
 
 # Get distance score by standardizing then taking the inverse of the distance
-distance_scores <- get_distance_score(distances)
+distance_scores <- 1/distances
 
 # Plot
 distances_hist <- get_histogram_of_pairwise_distances(distances, title = "Histogram of pairwise distances")

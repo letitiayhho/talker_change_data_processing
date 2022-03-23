@@ -29,19 +29,6 @@ get_histogram_of_pairwise_distances <- function(distances, title) {
   return(plot)
 }
 
-get_distance_score <- function(distances) {
-  # Normalize score from 0 to 1
-  st_distances <- normalize(distances)
-
-  # Take inverse
-  distance_score <- 1/st_distances
-  
-  # Remove lower triangle
-  distance_score[lower.tri(distance_score, diag = TRUE)] <- NaN
-  
-  return(distance_score)
-}
-
 # sigmoid <- function(x, spread = sd(x), shift = 0.5) {
 sigmoid <- function(x, spread = 1, shift = 0) {
   return(1/(1+exp((-x+mean(x))/spread))+shift)
