@@ -29,3 +29,6 @@ archive/
 
 # ignore notes
 *notes.txt
+
+# ignore tarballs
+*.tar*
