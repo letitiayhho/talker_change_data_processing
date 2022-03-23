@@ -1,27 +1,41 @@
 #!/usr/bin/env Rscript
 
 setwd("/Users/letitiaho/src/talker_change_data_processing/")
-library("dplyr")
-library("ggplot2")
-library("ggpubr")
-source("tools/functions.R")
-source("threshold_free_clustering/src/functions.R")
+source("5_cluster_cross_correlations/src/functions.R")
 
-# Get command line args
-args = commandArgs(trailingOnly=TRUE)
-if (length(args) != 1) {
-  stop("One argument ('S', 'T', 'talker', 'meaning', etc) must be supplied", call.=FALSE)
-}
-condition = args[1]
-cat(condition)
+xcorr <- readRDS(file = "5_cluster_cross_correlations/data/wilcoxon/wilcoxon.RDS")
 
-# Normalize w-score to compute weight scores
-filepath <- paste("threshold_free_clustering/data/wilcoxon/", condition, ".RDS", sep = "")
-w <- readRDS(file = filepath)
+overall <- normalize(xcorr$overall)
+S <- normalize(xcorr$S)
+T <- normalize(xcorr$T)
+M <- normalize(xcorr$M)
+N <- normalize(xcorr$N)
+L <- normalize(xcorr$L)
+H <- normalize(xcorr$H)
+SL <- normalize(xcorr$SL)
+SH <- normalize(xcorr$SH)
+TL <- normalize(xcorr$TL)
+TH <- normalize(xcorr$TH)
+NL <- normalize(xcorr$NL)
+NH <- normalize(xcorr$NH)
+ML <- normalize(xcorr$ML)
+MH <- normalize(xcorr$MH)
 
-# Get weight scores
-weight_scores <- abs_normalize(w$w, condition)
+weight_scores <- list("overall" = overall,
+                      "S" = S,
+                      "T" = T,
+                      "M" = M,
+                      "N" = N,
+                      "L" = L,
+                      "H" = H,
+                      "SL" = SL,
+                      "SH" = SH,
+                      "TL" = TL,
+                      "TH" = TH,
+                      "NL" = NL,
+                      "NH" = NH,
+                      "ML" = ML,
+                      "MH" = MH)
 
-# Save variables
-save_filepath <- paste("threshold_free_clustering/data/weight_scores/", condition, ".RDS", sep = "")
+save_filepath <- paste("5_cluster_cross_correlations/data/weight_scores/weight_scores.RDS", sep = "")
 saveRDS(weight_scores, file = save_filepath)
