@@ -12,6 +12,9 @@ M <- normalize(xcorr$M)
 N <- normalize(xcorr$N)
 L <- normalize(xcorr$L)
 H <- normalize(xcorr$H)
+talker <- normalize(xcorr$talker)
+meaning <- normalize(xcorr$meaning)
+constraint <- normalize(xcorr$constraint)
 SL <- normalize(xcorr$SL)
 SH <- normalize(xcorr$SH)
 TL <- normalize(xcorr$TL)
@@ -28,6 +31,9 @@ weight_scores <- list("overall" = overall,
                       "N" = N,
                       "L" = L,
                       "H" = H,
+                      "talker" = talker,
+                      "meaning" = meaning,
+                      "constraint" = constraint,
                       "SL" = SL,
                       "SH" = SH,
                       "TL" = TL,
