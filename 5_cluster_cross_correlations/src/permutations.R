@@ -14,11 +14,12 @@ if (length(args) != 1) {
 condition = args[1]
 
 # Load distance scores
-distance_scores <- readRDS("threshold_free_clustering/data/distance_scores/distance_scores.RDS")
+distance_scores <- readRDS("5_cluster_cross_correlations/data/distance_scores/distance_scores.RDS")
 
 # Load weight scores
-filepath <- paste("threshold_free_clustering/data/weight_scores/", condition, ".RDS", sep = "")
-weight_scores <- readRDS(filepath)
+filepath <- paste("5_cluster_cross_correlations/data/weight_scores/weight_scores.RDS", sep = "")
+all_weight_scores <- readRDS(filepath)
+weight_scores <- all_weight_scores[[condition]]
 
 # Compute observed cluster scores with distance and weight scores
 observed <- get_cluster_scores(distance_scores, weight_scores)
@@ -30,9 +31,9 @@ permutations <- permute_clusters(distance_scores, weight_scores, 1000)
 hist_plot <- histogram(permutations$sum, observed$sum, title = condition)
 
 # Save data and figures
-observed_filename <- paste("threshold_free_clustering/data/cluster_scores/", condition, "_observed.RDS", sep = "")
+observed_filename <- paste("5_cluster_cross_correlations/data/cluster_scores/", condition, "_observed.RDS", sep = "")
 saveRDS(observed, file = observed_filename)
-permutations_filename <- paste("threshold_free_clustering/data/cluster_scores/", condition, "_permutations.RDS", sep = "")
+permutations_filename <- paste("5_cluster_cross_correlations/data/cluster_scores/", condition, "_permutations.RDS", sep = "")
 saveRDS(permutations, file = permutations_filename)
-fig_filename <- paste("threshold_free_clustering/figs/", condition, ".png", sep = "")
+fig_filename <- paste("5_cluster_cross_correlations/figs/", condition, ".png", sep = "")
 ggsave(hist_plot, filename = fig_filename, width = 8, height = 6)
