@@ -5,6 +5,6 @@ set -exuo pipefail
 GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME" || exit
 
-for condition in S T M N L H; do
+for condition in overall S T M N L H; do
     Rscript --vanilla 7_cluster_coherence/src/plot_permutations.R "$condition"
 done
