@@ -6,15 +6,15 @@ library("ggplot2")
 library("ggpubr")
 library("kableExtra")
 source("tools/functions.R")
-source("8_wilcoxon/src/functions.R")
+source("4_test_cross_correlations/src/functions.R")
 
 # Import data
-xcorr <- read.csv(file = "2_cross_correlate/data/average.csv")
+xcorr <- read.csv(file = "3_cross_correlate/data/average.csv")
 
 #### One-sample t-tests for overall tracking
 
 overall <- get_subject_averages(xcorr)
-w <- get_one_sample_wilcoxon(overall)
+overall_w <- get_one_sample_wilcoxon(overall)
 
 #### One-sample wilcoxon for each condition
 
@@ -70,22 +70,24 @@ talker_H_w <- get_two_sample_wilcoxon(SH, TH)
 meaning_L_w <- get_two_sample_wilcoxon(ML, NL)
 meaning_H_w <- get_two_sample_wilcoxon(MH, NH)
 
-# Save vars
-saveRDS(S_w, "threshold_free_clustering/data/wilcoxon/S.RDS")
-saveRDS(T_w, "threshold_free_clustering/data/wilcoxon/T.RDS")
-saveRDS(M_w, "threshold_free_clustering/data/wilcoxon/M.RDS")
-saveRDS(N_w, "threshold_free_clustering/data/wilcoxon/N.RDS")
-saveRDS(L_w, "threshold_free_clustering/data/wilcoxon/L.RDS")
-saveRDS(H_w, "threshold_free_clustering/data/wilcoxon/H.RDS")
-saveRDS(talker_w, "threshold_free_clustering/data/wilcoxon/talker.RDS")
-saveRDS(meaning_w, "threshold_free_clustering/data/wilcoxon/meaning.RDS")
-saveRDS(constraint_w, "threshold_free_clustering/data/wilcoxon/constraint.RDS")
-saveRDS(SL_w, "threshold_free_clustering/data/wilcoxon/SL.RDS")
-saveRDS(SH_w, "threshold_free_clustering/data/wilcoxon/SH.RDS")
-saveRDS(TL_w, "threshold_free_clustering/data/wilcoxon/TL.RDS")
-saveRDS(TH_w, "threshold_free_clustering/data/wilcoxon/TH.RDS")
-saveRDS(ML_w, "threshold_free_clustering/data/wilcoxon/ML.RDS")
-saveRDS(MH_w, "threshold_free_clustering/data/wilcoxon/MH.RDS")
-saveRDS(NL_w, "threshold_free_clustering/data/wilcoxon/NL.RDS")
-saveRDS(NH_w, "threshold_free_clustering/data/wilcoxon/NH.RDS")
+#### Save vars
 
+ws <- list("overall" = overall_w$w,
+           "S" = S_w$w, 
+           "T" = T_w$w, 
+           "M" = M_w$w, 
+           "N" = N_w$w, 
+           "L" = L_w$w, 
+           "H" = H_w$w, 
+           "talker" = talker_w$w, 
+           "meaning" = meaning_w$w, 
+           "constraint" = constraint_w$w, 
+           "SL" = SL_w$w,
+           "SH" = SH_w$w,
+           "TL" = TL_w$w,
+           "TH" = TH_w$w,
+           "ML" = ML_w$w,
+           "MH" = MH_w$w,
+           "NL" = NL_w$w,
+           "NH" = NH_w$w)
+saveRDS(ws, "5_cluster_cross_correlations/data/wilcoxon/wilcoxon.RDS")
