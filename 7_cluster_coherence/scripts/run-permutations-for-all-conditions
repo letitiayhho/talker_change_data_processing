@@ -5,7 +5,7 @@ set -exuo pipefail
 GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME" || exit
 
-job_id=$(date +%s)
+job_id="$1"
 
 for condition in overall S T M N L H; do
     ./7_cluster_coherence/scripts/run-permutations-for-one-condition \
