@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -exuo pipefail
+
+# Set up directory in cronusx
+ssh cronusx "cd tcdp ; mkdir -p 7_cluster_coherence/figs 7_cluster_coherence/data/logs 7_cluster_coherence/data/distance_scores 7_cluster_coherence/data/weight_scores 7_cluster_coherence/data/cluster_scores"
+
+# Tarball necessary input data files and send to cronusx
+tar cJvf tfce_input.tar.xz 7_cluster_coherence/data/weight_scores/weight_scores.RDS 7_cluster_coherence/data/distance_scores/distance_scores.RDS
+scp tfce_input.tar.xz cronusx:tcdp
+
+# Extract input files
+ssh cronusx "cd tcdp ; tar xJvf tfce_input.tar.xz"
+
+# Run permutations, tail log file
+job_id=$(date +%s)
+ssh cronusx "cd tcdp ; ./7_cluster_coherence/run-permutations-for-all-conditions $job_id ; tail -f ./7_cluster_coherence/data/logs/master_${job_id}.log"
+
+# Retrieve output data files and extract
+ssh cronusx "cd tcdp ; tar cJvf tfce_output.tar.xz 7_cluster_coherence/data/cluster_scores 7_cluster_coherence/data/logs"
+scp cronusx:tcdp/tfce_output.tar.xz .
+tar xJvf tfce_output.tar.x
