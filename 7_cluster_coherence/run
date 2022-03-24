@@ -14,7 +14,7 @@ ssh cronusx "cd tcdp ; tar xJvf tfce_input.tar.xz"
 
 # Run permutations, tail log file
 job_id=$(date +%s)
-ssh cronusx "cd tcdp ; ./7_cluster_coherence/run-permutations-for-all-conditions $job_id ; tail -f ./7_cluster_coherence/data/logs/master_${job_id}.log"
+ssh cronusx "cd tcdp ; ./7_cluster_coherence/scripts/run-permutations-for-all-conditions $job_id ; tail -f ./7_cluster_coherence/data/logs/master_${job_id}.log"
 
 # Retrieve output data files and extract
 ssh cronusx "cd tcdp ; tar cJvf tfce_output.tar.xz 7_cluster_coherence/data/cluster_scores 7_cluster_coherence/data/logs"
