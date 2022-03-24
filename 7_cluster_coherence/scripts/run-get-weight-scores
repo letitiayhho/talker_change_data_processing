@@ -5,9 +5,9 @@ set -exuo pipefail
 GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME" || exit
 
-for condition in overall S T M N L H talker meaning constraint; do
+for condition in overall S T M N L H; do
 #for condition in SL SH TL TH ML MH NL NH; do
-    ./threshold_free_clustering_coherence/src/get_weight_scores.R "$condition"
+    ./7_cluster_coherence/src/get_weight_scores.R "$condition"
 done
 
 printf "weight scores created"
