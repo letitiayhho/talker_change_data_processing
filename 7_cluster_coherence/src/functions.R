@@ -62,7 +62,7 @@ sigmoid <- function(x, spread = 1, shift = 0) {
 }
 
 normalize <- function(x) {
-  normed <- (x-mean(x))/(max(x)-min(x))
+  normed <- (x-min(x))/(max(x)-min(x))
   return(normed)
 }
 
