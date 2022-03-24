@@ -18,5 +18,5 @@ H <- subset(coherr, constraint = "H", keepSubjNum = FALSE) %>% colMeans() %>% as
 weight_scores <- list("overall" = overall, "S" = S, "T" = T, "M" = M, "N" = N, "L" = L, "H" = H)
 
 # Save variables
-save_filepath <- paste("7_cluster_coherence/data/weight_scores/average.RDS", sep = "")
+save_filepath <- paste("7_cluster_coherence/data/weight_scores/weight_scores.RDS", sep = "")
 saveRDS(weight_scores, file = save_filepath)

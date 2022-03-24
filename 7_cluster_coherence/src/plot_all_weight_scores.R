@@ -6,7 +6,7 @@ source("tools/functions.R")
 source("7_cluster_coherence/src/functions.R")
 
 # Load weight scores
-weight_scores <- readRDS('7_cluster_coherence/data/weight_scores/average.RDS')
+weight_scores <- readRDS('7_cluster_coherence/data/weight_scores/weight_scores.RDS')
 
 # Overall plot
 overall_hist <- histogram(weight_scores$overall, title = "Overall", xlim = c(-0.5, 0.5))
