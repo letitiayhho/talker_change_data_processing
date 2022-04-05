@@ -17,7 +17,7 @@ condition = args[1]
 distance_scores <- readRDS("7_cluster_coherence/data/distance_scores/distance_scores.RDS")
 
 # Load weight scores
-filepath <- paste("7_cluster_coherence/data/weight_scores/average.RDS", sep = "")
+filepath <- paste("7_cluster_coherence/data/weight_scores/weight_scores.RDS", sep = "")
 all_weight_scores <- readRDS(filepath)
 weight_scores <- all_weight_scores[[condition]]
 
