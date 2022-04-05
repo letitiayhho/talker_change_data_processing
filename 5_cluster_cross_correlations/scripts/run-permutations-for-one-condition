@@ -8,8 +8,8 @@
 
 set -euo pipefail
 
-if [[ $# -ne 1 ]]; then
-    echo "usage: $0 <condition e.g. S, T, talker>" >&2
+if [[ $# -ne 2 ]]; then
+    echo "usage: $0 <condition e.g. S, T, talker> <job_id>" >&2
     exit 1
 fi
 
@@ -17,6 +17,7 @@ GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME" || exit
 
 condition="$1"
+job_id="$2"
 
 log_file="5_cluster_cross_correlations/data/logs/${condition}_${job_id}.log"
 echo "$log_file"

@@ -5,12 +5,13 @@ set -exuo pipefail
 GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME" || exit
 
-log_file=$(date +%s)
+job_id=$(date +%s)
 
 for condition in overall S T M N L H talker meaning constraint; do
 #for condition in SL SH TL SH ML MH NL NH; do
     ./5_cluster_cross_correlations/scripts/run-permutations-for-one-condition \
         "$condition" \
-        &> ./5_cluster_cross_correlations/data/logs/master_"$log_file".log \
+        "$job_id" \
+        &> ./5_cluster_cross_correlations/data/logs/master_"$job_id".log \
         &
 done
