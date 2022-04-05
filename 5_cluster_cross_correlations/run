@@ -19,4 +19,4 @@ ssh cronusx "cd tcdp ; ./5_cluster_cross_correlations/scripts/run-permutations-f
 # Retrieve output data files and extract
 ssh cronusx "cd tcdp ; tar cJvf tfce_output.tar.xz 5_cluster_cross_correlations/data/cluster_scores 5_cluster_cross_correlations/data/logs"
 scp cronusx:tcdp/tfce_output.tar.xz .
-tar xJvf tfce_output.tar.x
+tar xJvf tfce_output.tar.xz
