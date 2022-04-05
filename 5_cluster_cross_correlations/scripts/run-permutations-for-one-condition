@@ -18,7 +18,7 @@ cd "$GIT_HOME" || exit
 
 condition="$1"
 
-log_file="5_cluster_cross_correlations/data/logs/$condition_$job_id.log"
+log_file="5_cluster_cross_correlations/data/logs/${condition}_${job_id}.log"
 echo "$log_file"
 
 Rscript --vanilla 5_cluster_cross_correlations/src/permutations.R "$condition" 2>&1 \
