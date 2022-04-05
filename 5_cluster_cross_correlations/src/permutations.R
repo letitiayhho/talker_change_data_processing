@@ -4,7 +4,7 @@ library("dplyr")
 library("ggplot2")
 library("ggpubr")
 source("tools/functions.R")
-source("threshold_free_clustering/src/functions.R")
+source("5_cluster_cross_correlations/src/functions.R")
 
 # Get command line args
 args = commandArgs(trailingOnly=TRUE)
