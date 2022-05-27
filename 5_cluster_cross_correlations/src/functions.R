@@ -1,5 +1,5 @@
 get_coordinates <- function() {
-  coordinates_fp <- file.path("5_cluster_cross_correlatinorons/data/average_channel_locations.sfp")
+  coordinates_fp <- file.path("5_cluster_cross_correlations/data/average_channel_locations.sfp")
   coordinates <- read.delim(coordinates_fp, header = FALSE, sep = "", dec = ".") %>%
     .[startsWith(as.character(.$V1), "E"), ] %>%
     .[c("V2", "V3", "V4")]
