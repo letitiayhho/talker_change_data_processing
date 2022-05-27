@@ -12,7 +12,6 @@ coordinates <- get_coordinates()
 distances <- get_pairwise_distances(coordinates)
 
 # Get distance score by normalizing then taking the inverse
-distances <- normalize(distances) + 0.5
 distance_scores <- 1/distances
 
 # Plot
@@ -22,4 +21,4 @@ inverse_distances_hist <- get_histogram_of_pairwise_distances(distance_scores, t
 ggsave(inverse_distances_hist, filename = '5_cluster_cross_correlations/figs/distance_scores.png', width = 8, height = 6)
 
 # Save variable
-# saveRDS(distance_scores, file = '5_cluster_cross_correlations/data/distance_scores/distance_scores.RDS')
+saveRDS(distance_scores, file = '5_cluster_cross_correlations/data/distance_scores/distance_scores.RDS')

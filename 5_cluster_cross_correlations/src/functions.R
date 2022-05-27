@@ -39,6 +39,11 @@ normalize <- function(x) {
   return(normed)
 }
 
+normalize_by <- function(x, max, min) {
+  normed <- (x-min)/(max-min)
+  return(normed)
+}
+
 standardize <- function(x, new_mean = 0, new_sd = 1) {
   x <- scale(x)
   x <- x*new_sd + new_mean
