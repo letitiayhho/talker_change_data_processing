@@ -13,13 +13,4 @@ scp tfce_input.tar.xz cronusx:tcdp
 ssh cronusx "cd tcdp ; tar xJvf tfce_input.tar.xz"
 
 # Run permutations, tail log file
-job_id=$(date +%s)
-ssh cronusx "tmux ; cd tcdp ; ./5_cluster_cross_correlations/scripts/run-permutations-for-all-conditions $job_id ; tail -f ./5_cluster_cross_correlations/data/logs/master_$job_id.log"
-
-# Retrieve output data files and extract
-ssh cronusx "cd tcdp ; tar cJvf tfce_output.tar.xz 5_cluster_cross_correlations/data/cluster_scores 5_cluster_cross_correlations/data/logs"
-scp cronusx:tcdp/tfce_output.tar.xz .
-tar xJvf tfce_output.tar.xz
-
-# Plot permutations
-./5_cluster_cross_correlations/scripts/run-plot-permutations
+ssh cronusx "tmux ; cd tcdp ; ./5_cluster_cross_correlations/scripts/run-permutations-for-all-conditions"
