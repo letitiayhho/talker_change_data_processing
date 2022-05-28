@@ -10,18 +10,18 @@ overall <- normalize_by(xcorr$overall, max(xcorr$overall), min(xcorr$overall))
 
 max_one_sample <- max(xcorr$S, xcorr$T, xcorr$M, xcorr$N, xcorr$L, xcorr$H)
 min_one_sample <- min(xcorr$S, xcorr$T, xcorr$M, xcorr$N, xcorr$L, xcorr$H)
-S <- normalize_by(xcorr$S, max_one_sample, min_one_sample) + 0.5
-T <- normalize_by(xcorr$T, max_one_sample, min_one_sample) + 0.5
-M <- normalize_by(xcorr$M, max_one_sample, min_one_sample) + 0.5
-N <- normalize_by(xcorr$N, max_one_sample, min_one_sample) + 0.5
-L <- normalize_by(xcorr$L, max_one_sample, min_one_sample) + 0.5
-H <- normalize_by(xcorr$H, max_one_sample, min_one_sample) + 0.5
+S <- normalize_by(xcorr$S, max_one_sample, min_one_sample)
+T <- normalize_by(xcorr$T, max_one_sample, min_one_sample)
+M <- normalize_by(xcorr$M, max_one_sample, min_one_sample)
+N <- normalize_by(xcorr$N, max_one_sample, min_one_sample)
+L <- normalize_by(xcorr$L, max_one_sample, min_one_sample)
+H <- normalize_by(xcorr$H, max_one_sample, min_one_sample)
 
 max_two_sample <- max(xcorr$talker, xcorr$meaning, xcorr$constraint)
 min_two_sample <- min(xcorr$talker, xcorr$meaning, xcorr$constraint)
-talker <- normalize_by(xcorr$talker, max_two_sample, min_two_sample) + 0.5
-meaning <- normalize_by(xcorr$meaning, max_two_sample, min_two_sample) + 0.5
-constraint <- normalize_by(xcorr$constraint, max_two_sample, min_two_sample) + 0.5
+talker <- normalize_by(xcorr$talker, max_two_sample, min_two_sample)
+meaning <- normalize_by(xcorr$meaning, max_two_sample, min_two_sample)
+constraint <- normalize_by(xcorr$constraint, max_two_sample, min_two_sample)
 
 # SL <- normalize(xcorr$SL)
 # SH <- normalize(xcorr$SH)
