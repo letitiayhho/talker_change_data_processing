@@ -6,13 +6,10 @@ source("5_cluster_cross_correlations/src/functions.R")
 xcorr <- readRDS(file = "5_cluster_cross_correlations/data/wilcoxon/wilcoxon.RDS")
 
 # Normalize data by max and min of whole data set
-# overall <- normalize_by(xcorr$overall, max(xcorr$overall), min(xcorr$overall))
-overall <- normalize_by(xcorr$overall, max_one_sample, min_one_sample)
+overall <- normalize_by(xcorr$overall, max(xcorr$overall), min(xcorr$overall))
 
-max_one_sample <- max(xcorr$S, xcorr$T, xcorr$M, xcorr$N, xcorr$L, xcorr$H, xcorr$overall)
-min_one_sample <- min(xcorr$S, xcorr$T, xcorr$M, xcorr$N, xcorr$L, xcorr$H, xcorr$overall)
-# max_one_sample <- max(xcorr$S, xcorr$T, xcorr$M, xcorr$N, xcorr$L, xcorr$H)
-# min_one_sample <- min(xcorr$S, xcorr$T, xcorr$M, xcorr$N, xcorr$L, xcorr$H)
+max_one_sample <- max(xcorr$S, xcorr$T, xcorr$M, xcorr$N, xcorr$L, xcorr$H)
+min_one_sample <- min(xcorr$S, xcorr$T, xcorr$M, xcorr$N, xcorr$L, xcorr$H)
 S <- normalize_by(xcorr$S, max_one_sample, min_one_sample) + 0.5
 T <- normalize_by(xcorr$T, max_one_sample, min_one_sample) + 0.5
 M <- normalize_by(xcorr$M, max_one_sample, min_one_sample) + 0.5
@@ -22,9 +19,9 @@ H <- normalize_by(xcorr$H, max_one_sample, min_one_sample) + 0.5
 
 max_two_sample <- max(xcorr$talker, xcorr$meaning, xcorr$constraint)
 min_two_sample <- min(xcorr$talker, xcorr$meaning, xcorr$constraint)
-talker <- normalize_by(xcorr$talker, max_two_sample, min_two_sample)
-meaning <- normalize_by(xcorr$meaning, max_two_sample, min_two_sample)
-constraint <- normalize_by(xcorr$constraint, max_two_sample, min_two_sample)
+talker <- normalize_by(xcorr$talker, max_two_sample, min_two_sample) + 0.5
+meaning <- normalize_by(xcorr$meaning, max_two_sample, min_two_sample) + 0.5
+constraint <- normalize_by(xcorr$constraint, max_two_sample, min_two_sample) + 0.5
 
 # SL <- normalize(xcorr$SL)
 # SH <- normalize(xcorr$SH)
