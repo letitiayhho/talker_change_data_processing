@@ -2,6 +2,9 @@
 
 set -exo pipefail
 
+GIT_HOME="$(git rev-parse --show-toplevel)"
+cd "$GIT_HOME"
+
 # Set up directory in cronusx
 ssh cronusx "cd tcdp ; mkdir -p 5_cluster_cross_correlations/figs 5_cluster_cross_correlations/data/logs 5_cluster_cross_correlations/data/distance_scores 5_cluster_cross_correlations/data/weight_scores 5_cluster_cross_correlations/data/cluster_scores"
 
@@ -12,5 +15,5 @@ scp tfce_input.tar.xz cronusx:tcdp
 # Extract input files
 ssh cronusx "cd tcdp ; tar xJvf tfce_input.tar.xz"
 
-# Run permutations, tail log file
-ssh cronusx "tmux ; cd tcdp ; ./5_cluster_cross_correlations/scripts/run-permutations-for-all-conditions"
+# Run permutations
+ssh cronusx "cd tcdp ; ./5_cluster_cross_correlations/scripts/run-permutations-for-all-conditions"

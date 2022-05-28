@@ -1,3 +1,10 @@
+#!/bin/bash
+
+set -exuo pipefail
+
+GIT_HOME="$(git rev-parse --show-toplevel)"
+cd "$GIT_HOME"
+
 # Retrieve output data files and extract
 ssh cronusx "cd tcdp ; tar cJvf tfce_output.tar.xz 5_cluster_cross_correlations/data/cluster_scores 5_cluster_cross_correlations/data/logs"
 scp cronusx:tcdp/tfce_output.tar.xz .
