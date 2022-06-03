@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript
+
 setwd("/Users/letitiaho/src/talker_change_data_processing/")
 library("dplyr")
 library("ggplot2")
