@@ -1,0 +1,534 @@
+---
+title: "Average"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, warning=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/4_test_cross_correlations/")
+setwd("/Users/letitiaho/src/talker_change_data_processing/")
+library("dplyr")
+library("ggplot2")
+library("ggpubr")
+library("kableExtra")
+source("tools/functions.R")
+source("4_test_cross_correlations/src/functions.R")
+xcorr <- read.csv(file = "3_cross_correlate/data/average.csv")
+```
+
+#### One-sample t-tests for overall tracking
+
+```{r}
+S <- subset(xcorr, talker = "S") %>% get_subject_averages()
+T <- subset(xcorr, talker = "T") %>% get_subject_averages()
+```
+
+```{r}
+c1 <- rgb(173,216,230,max = 255, alpha = 80, names = "lt.blue")
+c2 <- rgb(255,192,203, max = 255, alpha = 80, names = "lt.pink")
+
+# Plot cross correlation values
+Thist <- hist(unlist(T))
+Shist <- hist(unlist(S))
+plot(Thist, col = c1)
+plot(Shist, col = c2, add = TRUE)
+
+# Plot p values
+Tphist <- hist(T_w$p)
+Sphist <- hist(S_w$p)
+plot(Tphist, col = c1)
+plot(Sphist, col = c2, add = TRUE)
+
+# Plot test statistics
+Twhist <- hist(T_w$w)
+Swhist <- hist(S_w$w)
+plot(Twhist, col = c1)
+plot(Swhist, col = c2, add = TRUE)
+```
+###One-sample tests
+
+```{r}
+coordinates <- get_layout()
+S_w <- get_one_sample_wilcoxon(S)
+T_w <- get_one_sample_wilcoxon(T)
+```
+
+```{r}
+same <- data.frame(S_w, coordinates)
+
+plot <- ggplot() +
+  geom_point(data = same, aes(x = x, y = y, 
+                                    size = 1/p, 
+                                    alpha = 0.5,
+                                    stroke = 0)) +
+  geom_point(data = same, aes(x = x, y = y, 
+                                    size = 1,
+                                    alpha = 0.5,
+                                    stroke = 0)) + 
+  scale_size_continuous(name = "p", 
+                        limits = c(1, 1000),
+                        breaks = c(20, 100, 200), 
+                        labels = c("0.05", "0.01", "0.005")) +
+  guides(alpha = FALSE) +
+  ylim(0, 900) +
+  xlim(0, 900) +
+  annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+  annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.background=element_blank())
+plot
+```
+
+```{r}
+different <- data.frame(T_w, coordinates)
+
+plot <- ggplot() +
+  geom_point(data = different, aes(x = x, y = y, 
+                                    size = 1/p, 
+                                    alpha = 0.5,
+                                    stroke = 0)) +
+  geom_point(data = different, aes(x = x, y = y, 
+                                    size = 1,
+                                    alpha = 0.5,
+                                    stroke = 0)) + 
+  scale_size_continuous(name = "p", 
+                        limits = c(1, 1000),
+                        breaks = c(20, 100, 200), 
+                        labels = c("0.05", "0.01", "0.005")) +
+  guides(alpha = FALSE) +
+  ylim(0, 900) +
+  xlim(0, 900) +
+  annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+  annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.background=element_blank())
+plot
+```
+
+###Two-sample tests
+
+```{r}
+talker_w_greater <- get_two_sample_wilcoxon(S, T, "greater")
+talker_w_less <- get_two_sample_wilcoxon(S, T, "less")
+talker_w <- get_two_sample_wilcoxon(S, T, "two.sided")
+```
+
+```{r}
+talker_greater <- data.frame(talker_w_greater, coordinates)
+
+plot <- ggplot() +
+  geom_point(data = talker_greater, aes(x = x, y = y, 
+                                    size = 1/p, 
+                                    alpha = 0.5,
+                                    stroke = 0)) +
+  geom_point(data = talker_greater, aes(x = x, y = y, 
+                                    size = 1,
+                                    alpha = 0.5,
+                                    stroke = 0)) + 
+  scale_size_continuous(name = "p", 
+                        limits = c(1, 1000),
+                        breaks = c(20, 100, 200), 
+                        labels = c("0.05", "0.01", "0.005")) +
+  guides(alpha = FALSE) +
+  ylim(0, 900) +
+  xlim(0, 900) +
+  annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+  annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.background=element_blank())
+plot
+```
+```{r}
+talker_less <- data.frame(talker_w_less, coordinates)
+
+plot <- ggplot() +
+  geom_point(data = talker_less, aes(x = x, y = y, 
+                                    size = 1/p, 
+                                    alpha = 0.5,
+                                    stroke = 0)) +
+  geom_point(data = talker_less, aes(x = x, y = y, 
+                                    size = 1,
+                                    alpha = 0.5,
+                                    stroke = 0)) + 
+  scale_size_continuous(name = "p", 
+                        limits = c(1, 1000),
+                        breaks = c(20, 100, 200), 
+                        labels = c("0.05", "0.01", "0.005")) +
+  guides(alpha = FALSE) +
+  ylim(0, 900) +
+  xlim(0, 900) +
+  annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+  annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.background=element_blank())
+plot
+```
+```{r}
+talker <- data.frame(talker_w, coordinates)
+
+plot <- ggplot() +
+  geom_point(data = talker, aes(x = x, y = y, 
+                                    size = 1/p, 
+                                    alpha = 0.5,
+                                    stroke = 0)) +
+  geom_point(data = talker, aes(x = x, y = y, 
+                                    size = 1,
+                                    alpha = 0.5,
+                                    stroke = 0)) + 
+  scale_size_continuous(name = "p", 
+                        limits = c(1, 1000),
+                        breaks = c(20, 100, 200), 
+                        labels = c("0.05", "0.01", "0.005")) +
+  guides(alpha = FALSE) +
+  ylim(0, 900) +
+  xlim(0, 900) +
+  annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+  annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.background=element_blank())
+plot
+```
+
+
+```{r}
+# coordinates <- get_layout()
+# overall <- data.frame(overall_w, coordinates)
+# plot <- ggplot() +
+#   geom_point(data = overall, aes(x = x, y = y, 
+#                                     size = 1/p, 
+#                                     alpha = 0.5,
+#                                     stroke = 0)) +
+#   geom_point(data = overall, aes(x = x, y = y, 
+#                                     size = 1,
+#                                     alpha = 0.5,
+#                                     stroke = 0)) + 
+#   scale_size_continuous(name = "p", 
+#                         limits = c(1, 1000),
+#                         breaks = c(20, 100, 200), 
+#                         labels = c("0.05", "0.01", "0.005")) +
+#   guides(alpha = FALSE) +
+#   ylim(0, 900) +
+#   xlim(0, 900) +
+#   annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+#   annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+#   theme(axis.line=element_blank(),axis.text.x=element_blank(),
+#         axis.text.y=element_blank(),axis.ticks=element_blank(),
+#         axis.title.x=element_blank(),
+#         axis.title.y=element_blank(),
+#         panel.background=element_blank(),
+#         panel.border=element_blank(),
+#         panel.grid.major=element_blank(),
+#         panel.grid.minor=element_blank(),
+#         plot.background=element_blank())
+# plot
+# ggsave(plot = plot, filename = 'figs/overall.png', width = 6, height = 5)
+```
+
+#### One-sample and two-sample wilcoxon for each condition
+
+```{r}
+# channels <- as.character(c(1:128))
+# 
+# get_inverted_list <- function(channels, list) {
+#   inverted_list <- channels[!channels %in% list]
+#   return(inverted_list)
+# }
+# 
+# get_relevant_coords <- function(x, y, channels) {
+#   x <- x[channels]
+#   y <- y[channels]
+#   return(data.frame(x = x, y = y))
+# }
+# 
+# get_map <- function(df, channels, nodiff_channels, levels_label) {
+#   diff_coordinates <- get_relevant_coords(df$x, df$y, channels)
+#   nodiff_coordinates <- get_relevant_coords(df$x, df$y, nodiff_channels)
+# 
+#   ggplot() +
+#     geom_point(data = df, aes(x = x, y = y,
+#                               size = 1/group1,
+#                               colour = "#B8DE29FF",
+#                               alpha = 0.5,
+#                               stroke = 0)) +
+#     geom_point(data = df, aes(x = x, y = y,
+#                               size = 1/group2,
+#                               colour = "#287D8EFF",
+#                               alpha = 0.5,
+#                               stroke = 0)) +
+#     geom_point(data = df, aes(x = 1000+x, y = y,
+#                               size = 1/nodiff_group1,
+#                               colour = "#B8DE29FF",
+#                               alpha = 0.5,
+#                               stroke = 0)) +
+#     geom_point(data = df, aes(x = 1000+x, y = y,
+#                               size = 1/nodiff_group2,
+#                               colour = "#287D8EFF",
+#                               alpha = 0.5,
+#                               stroke = 0)) +
+#     geom_point(data = diff_coordinates, aes(x = x, y = y,
+#                                             size = 1,
+#                                             alpha = 0.5,
+#                                             stroke = 0)) +
+#     geom_point(data = nodiff_coordinates, aes(x = 1000+x, y = y,
+#                                               size = 1,
+#                                               alpha = 0.5,
+#                                               stroke = 0)) +
+#     scale_color_discrete(name = "Level", labels = levels_label) +
+#     scale_size_continuous(name = "p", 
+#                           limits = c(1, 1000),
+#                           breaks = c(20, 100, 200), 
+#                           labels = c("0.05", "0.01", "0.005")) +
+#     guides(alpha = FALSE) +
+#     annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+#     annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+#     theme(axis.line=element_blank(),axis.text.x=element_blank(),
+#           axis.text.y=element_blank(),axis.ticks=element_blank(),
+#           axis.title.x=element_blank(),
+#           axis.title.y=element_blank(),
+#           panel.background=element_blank(),
+#           panel.border=element_blank(),
+#           panel.grid.major=element_blank(),
+#           panel.grid.minor=element_blank(),
+#           plot.background=element_blank())
+# }
+# 
+# get_ps <- function(data, condition, channels){
+#   recoded_ps <- c()
+#   for (i in 1:128) {
+#     # Get p-value for channel i
+#     p <- data[[condition]][i]
+# 
+#     # Exit early if not in list of significant channels
+#     if (!(i %in% channels)) {recoded_ps[i] = NaN}
+# 
+#     # Recoding values if too small or too large
+#     else {
+#       if (p > 0.05) {recoded_ps[i] <- NaN}
+#       if (p < 0.001) {recoded_ps[i] <- 0.001}
+#       else {recoded_ps[i] <- p}
+#     }
+#   }
+#   return(recoded_ps)
+# }
+# 
+# ```
+# 
+# **talker**
+# 
+# ```{r}
+# # Identify channels that differentiate between same and different talker and channels that don't
+# talker_channels <- get_sig_channels(two_sample_w, "talker")
+# nodiff_talker_channels <- get_inverted_list(channels, talker_channels)
+# 
+# # Get p-values for tracking within each level
+# same_talker <- get_ps(one_sample_w, "S", talker_channels)
+# different_talker <- get_ps(one_sample_w, "T", talker_channels)
+# nodiff_same_talker <- get_ps(one_sample_w, "S", nodiff_talker_channels)
+# nodiff_different_talker <- get_ps(one_sample_w, "T", nodiff_talker_channels)
+# 
+# # Create data frame for bubbles
+# talker_df <- data.frame(group1 = same_talker, group2 = different_talker, nodiff_group1 = nodiff_same_talker, nodiff_group2 = nodiff_different_talker, coordinates)
+# 
+# # Plot
+# plot <- get_map(talker_df, talker_channels, nodiff_talker_channels, c("Different talker", "Same talker"))
+# plot
+# ggsave(plot = plot, filename = 'figs/talker.png', width = 12, height = 5)
+```
+
+**meaning**
+
+```{r}
+# Identify channels that differentiate between same and different talker and channels that don't
+meaning_channels <- get_sig_channels(two_sample_w, "meaning")
+nodiff_meaning_channels <- get_inverted_list(channels, meaning_channels)
+
+# Get p-values for tracking within each level
+meaningful <- get_ps(one_sample_w, "M", meaning_channels)
+nonsense <- get_ps(one_sample_w, "N", meaning_channels)
+nodiff_meaning <- get_ps(one_sample_w, "M", nodiff_meaning_channels)
+nodiff_nonsense <- get_ps(one_sample_w, "N", nodiff_meaning_channels)
+
+# Create data frame for bubbles
+meaning_df <- data.frame(group1 = meaningful, group2 = nonsense, nodiff_group1 = nodiff_meaning, nodiff_group2 = nodiff_nonsense, coordinates)
+
+# Plot
+plot <- get_map(meaning_df, meaning_channels, nodiff_meaning_channels, c("Nonsense", "Meaningful"))
+plot
+ggsave(plot = plot, filename = 'figs/meaning.png', width = 12, height = 5)
+```
+
+**constraint**
+
+```{r}
+# Identify channels that differentiate between same and different talker and channels that don't
+constraint_channels <- get_sig_channels(two_sample_w, "constraint")
+nodiff_constraint <- get_inverted_list(channels, constraint_channels)
+
+# Get p-values for tracking within each level
+low <- get_ps(one_sample_w, "L", constraint_channels)
+high <- get_ps(one_sample_w, "H", constraint_channels)
+nodiff_low <- get_ps(one_sample_w, "L", nodiff_constraint)
+nodiff_high <- get_ps(one_sample_w, "H", nodiff_constraint)
+
+# Create data frame for bubbles
+constraint_df <- data.frame(group1 = low, group2 = high, nodiff_group1 = nodiff_low, nodiff_group2 = nodiff_high, coordinates)
+
+# Plot
+plot <- get_map(constraint_df, constraint_channels, nodiff_constraint, c("High constraint", "Low constraint"))
+plot
+ggsave(plot = plot, filename = 'figs/constraint.png', width = 12, height = 5)
+```
+
+**stats**
+
+```{r}
+# get stats
+print("number of different-talker channels (p < 0.05)")
+sum(!is.na(different_talker))
+sum(different_talker < 0.01, na.rm = TRUE)
+print("number of same-talker channels (p < 0.05)")
+sum(!is.na(same_talker))
+sum(same_talker < 0.01, na.rm = TRUE)
+print("number of meaningful channels (p < 0.05)")
+sum(!is.na(meaningful))
+sum(meaningful < 0.01, na.rm = TRUE)
+print("number of nonsense channels (p < 0.05)")
+sum(!is.na(nonsense))
+sum(nonsense < 0.01, na.rm = TRUE)
+print("number of low-constraint channels (p < 0.05)")
+sum(!is.na(low))
+sum(low < 0.01, na.rm = TRUE)
+print("number of high-constraint channels (p < 0.05)")
+sum(!is.na(high))
+sum(high < 0.01, na.rm = TRUE)
+```
+
+
+#### Wilcoxon with interaction by constraint
+
+**Talker and low constraint**
+
+```{r}
+# Identify channels that differentiate between same and different talker and channels that don't
+talker_L_interaction_channels <- get_sig_channels(interaction_two_sample_w, "talker_L")
+nodiff_talker_L_interaction_channels <- get_inverted_list(channels, talker_L_interaction_channels)
+
+# Get p-values for tracking within each level
+SL <- get_ps(interaction_w, "SL", talker_L_interaction_channels)
+TL <- get_ps(interaction_w, "TL", talker_L_interaction_channels)
+nodiff_SL <- get_ps(interaction_w, "SL", nodiff_talker_L_interaction_channels)
+nodiff_TL <- get_ps(interaction_w, "TL", nodiff_talker_L_interaction_channels)
+
+# Create data frame for bubbles
+talker_L_interaction_df <- data.frame(group1 = SL, group2 = TL, nodiff_group1 = nodiff_SL, nodiff_group2 = nodiff_TL, coordinates)
+
+# Plot
+plot <- get_map(talker_L_interaction_df, talker_L_interaction_channels, nodiff_talker_L_interaction_channels, c("Different talker low constraint", "Same-talker low constraint"))
+plot
+ggsave(plot = plot, filename = 'figs/talker_L.png', width = 12, height = 5)
+```
+
+**Talker and high constraint**
+```{r}
+# Identify channels that differentiate between same and different talker and channels that don't
+talker_H_interaction_channels <- get_sig_channels(interaction_two_sample_w, "talker_H")
+nodiff_talker_H_interaction_channels <- get_inverted_list(channels, talker_H_interaction_channels)
+
+# Get p-values for tracking within each level
+SH <- get_ps(interaction_w, "SH", talker_H_interaction_channels)
+TH <- get_ps(interaction_w, "TH", talker_H_interaction_channels)
+nodiff_SH <- get_ps(interaction_w, "SH", nodiff_talker_H_interaction_channels)
+nodiff_TH <- get_ps(interaction_w, "TH", nodiff_talker_H_interaction_channels)
+
+# Create data frame for bubbles
+talker_H_interaction_df <- data.frame(group1 = SH, group2 = TH, nodiff_group1 = nodiff_SH, nodiff_group2 = nodiff_TH, coordinates)
+
+# Plot
+plot <- get_map(talker_H_interaction_df, talker_H_interaction_channels, nodiff_talker_H_interaction_channels, c("Different talker high constraint", "Same-talker high constraint"))
+plot
+ggsave(plot = plot, filename = 'figs/talker_H.png', width = 12, height = 5)
+```
+
+**Meaning and low constraint**
+
+```{r}
+# Identify channels that differentiate between same and different talker and channels that don't
+meaning_L_interaction_channels <- get_sig_channels(interaction_two_sample_w, "meaning_L")
+nodiff_meaning_L_interaction_channels <- get_inverted_list(channels, meaning_L_interaction_channels)
+
+# Get p-values for tracking within each level
+ML <- get_ps(interaction_w, "ML", meaning_L_interaction_channels)
+NL <- get_ps(interaction_w, "NL", meaning_L_interaction_channels)
+nodiff_ML <- get_ps(interaction_w, "ML", nodiff_meaning_L_interaction_channels)
+nodiff_NL <- get_ps(interaction_w, "NL", nodiff_meaning_L_interaction_channels)
+
+# Create data frame for bubbles
+meaning_L_interaction_df <- data.frame(group1 = ML, group2 = NL, nodiff_group1 = nodiff_ML, nodiff_group2 = nodiff_NL, coordinates)
+
+# Plot
+plot <- get_map(meaning_L_interaction_df, meaning_L_interaction_channels, nodiff_meaning_L_interaction_channels, c("Nonsense low constraint", "Meaningful low constraint"))
+plot
+ggsave(plot = plot, filename = 'figs/meaning_L.png', width = 12, height = 5)
+```
+
+**Meaning and high constraint**
+
+```{r}
+# Identify channels that differentiate between same and different talker and channels that don't
+meaning_H_interaction_channels <- get_sig_channels(interaction_two_sample_w, "meaning_H")
+nodiff_meaning_H_interaction_channels <- get_inverted_list(channels, meaning_H_interaction_channels)
+
+# Get p-values for tracking within each level
+MH <- get_ps(interaction_w, "MH", meaning_H_interaction_channels)
+NH <- get_ps(interaction_w, "NH", meaning_H_interaction_channels)
+nodiff_MH <- get_ps(interaction_w, "MH", nodiff_meaning_H_interaction_channels)
+nodiff_NH <- get_ps(interaction_w, "NH", nodiff_meaning_H_interaction_channels)
+
+# Create data frame for bubbles
+meaning_H_interaction_df <- data.frame(group1 = MH, group2 = NH, nodiff_group1 = nodiff_MH, nodiff_group2 = nodiff_NH, coordinates)
+
+# Plot
+plot <- get_map(meaning_H_interaction_df, meaning_H_interaction_channels, nodiff_meaning_H_interaction_channels, c("Nonsense high constraint", "Meaningful high constraint"))
+plot
+ggsave(plot = plot, filename = 'figs/meaning_H.png', width = 12, height = 5)
+```
+
+#### T-tests against difference set by low vs high-constraint sentences
+

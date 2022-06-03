@@ -14,12 +14,12 @@ library("ggplot2")
 library("ggpubr")
 library("kableExtra")
 source("tools/functions.R")
-source("8_wilcoxon/src/functions.R")
+source("4_test_cross_correlations/src/functions.R")
 ```
 
 ```{r}
 # Import data
-xcorr <- read.csv(file = "2_cross_correlate/data/average.csv")
+xcorr <- read.csv(file = "3_cross_correlate/data/average.csv")
 channels <- as.character(1:128)
 ```
 
@@ -101,14 +101,25 @@ kable(map_df, escape = F, col.names = c("Channel", "S", "T", "M", "N", "S", "G")
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
+
+```{r}
+sum(overall_w$p < 0.05)
+sum(T_w$p < 0.05)
+sum(S_w$p < 0.05)
+sum(M_w$p < 0.05)
+sum(N_w$p < 0.05)
+sum(L_w$p < 0.05)
+sum(H_w$p < 0.05)
+```
+
 #### Two-sample Wilcoxon
 
 Compares cross correlations between the two levels of each condition. 
 
 ```{r}
-talker_w <- get_two_sample_wilcoxon(S, T)
-meaning_w <- get_two_sample_wilcoxon(M, N)
-constraint_w <- get_two_sample_wilcoxon(L, H)
+talker_w <- get_two_sample_wilcoxon(S, T, "two.sided")
+meaning_w <- get_two_sample_wilcoxon(M, N, "two.sided")
+constraint_w <- get_two_sample_wilcoxon(L, H, "two.sided")
 ```
 
 ```{r}
@@ -130,6 +141,13 @@ map_df <-  mutate_if(two_sample_w, is.numeric, function(x) {round(x, digits = 3)
 kable(map_df, escape = F, col.names = c("Channel", "Talker", "Meaning", "Constraint")) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
+
+```{r}
+sum(talker_w$p < 0.05)
+sum(meaning_w$p < 0.05)
+sum(constraint_w$p < 0.05)
+```
+
 
 #### Wilcoxon with interaction by constraint
 
@@ -188,10 +206,10 @@ kable(map_df, escape = F, col.names = c("Channel", "L", "H", "L", "H", "L", "H",
 ```
 
 ```{r}
-talker_L_w <- get_two_sample_wilcoxon(SL, TL)
-talker_H_w <- get_two_sample_wilcoxon(SH, TH)
-meaning_L_w <- get_two_sample_wilcoxon(ML, NL)
-meaning_H_w <- get_two_sample_wilcoxon(MH, NH)
+talker_L_w <- get_two_sample_wilcoxon(SL, TL, "two.sided")
+talker_H_w <- get_two_sample_wilcoxon(SH, TH, "two.sided")
+meaning_L_w <- get_two_sample_wilcoxon(ML, NL, "two.sided")
+meaning_H_w <- get_two_sample_wilcoxon(MH, NH, "two.sided")
 ```
 
 ```{r}
@@ -269,7 +287,7 @@ kable(map_df, escape = F, col.names = c("Channel", "L", "H", "L", "H")) %>%
 ```
 
 ```{r}
-save(overall_w, one_sample_w, two_sample_w, interaction_w, interaction_two_sample_w, file = "8_wilcoxon/data/wilcoxon_results.RData")
-# save(S_w, T_w, M_w, N_w, L_w, H_w, talker_w, meaning_w, constraint_w, SH_w, SL_w, TH_w, TL_w, file = "8_wilcoxon/data/wilcoxon_results.RData")
+# save(overall_w, one_sample_w, two_sample_w, interaction_w, interaction_two_sample_w, file = "8_wilcoxon/data/wilcoxon_results.RData")
+save(S_w, T_w, M_w, N_w, L_w, H_w, talker_w, meaning_w, constraint_w, SH_w, SL_w, TH_w, TL_w, file = "4_test_cross_correlations/data/wilcoxon_results.RData")
 ```
 

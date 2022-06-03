@@ -42,8 +42,8 @@ get_one_sample_t <- function(data) {
 }
 
 get_one_sample_wilcoxon <- function(data) {
-  w <- apply(data, MARGIN = 2, function(channel) {wilcox.test(channel)$statistic})
-  p <- apply(data, MARGIN = 2, function(channel) {wilcox.test(channel)$p.value})
+  w <- apply(data, MARGIN = 2, function(channel) {wilcox.test(channel, alternative = "greater", exact = TRUE)$statistic})
+  p <- apply(data, MARGIN = 2, function(channel) {wilcox.test(channel, alternative = "greater", exact = TRUE)$p.value})
   return(data.frame("w" = w, "p" = p))
 }
 
@@ -54,9 +54,9 @@ get_two_sample_t <- function(group1, group2) {
   return(data.frame("t" = t, "df" = df, "p" = p))
 }
 
-get_two_sample_wilcoxon <- function(group1, group2) {
-  w <- mapply(function(x, y) {wilcox.test(x, y)$statistic}, group1, group2)
-  p <- mapply(function(x, y) {wilcox.test(x, y)$p.value}, group1, group2)
+get_two_sample_wilcoxon <- function(group1, group2, alt) {
+  w <- mapply(function(x, y) {wilcox.test(x, y, alternative = alt, paired = TRUE, exact = TRUE)$statistic}, group1, group2)
+  p <- mapply(function(x, y) {wilcox.test(x, y, alternative = alt, paired = TRUE, exact = TRUE)$p.value}, group1, group2)
   return(data.frame("w" = w, "p" = p))
 }
 

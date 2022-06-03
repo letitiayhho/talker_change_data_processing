@@ -7,17 +7,17 @@ editor_options:
 
 ```{r setup, warning=FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
-knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/8_wilcoxon/")
+knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/4_test_cross_correlations/")
 setwd("/Users/letitiaho/src/talker_change_data_processing/")
 library("dplyr")
 library("ggplot2")
 library("ggpubr")
 library("kableExtra")
 source("tools/functions.R")
-source("8_wilcoxon/src/functions.R")
+source("4_test_cross_correlations/src/functions.R")
 
 # Import data
-load("8_wilcoxon/data/wilcoxon_results.RData")
+load("4_test_cross_correlations/data/wilcoxon_results.RData")
 ```
 
 #### One-sample t-tests for overall tracking
