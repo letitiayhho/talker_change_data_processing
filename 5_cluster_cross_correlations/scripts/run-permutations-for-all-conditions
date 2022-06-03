@@ -6,11 +6,13 @@ GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME" || exit
 
 job_id=$(date +%s)
+echo $job_id
 
 for condition in overall S T M N L H talker meaning constraint; do
 #for condition in SL SH TL SH ML MH NL NH; do
-    qsub ./5_cluster_cross_correlations/scripts/run-permutations-for-one-condition \
+    ./5_cluster_cross_correlations/scripts/run-permutations-for-one-condition \
         "$condition" \
+	"$job_id" \
         &> ./5_cluster_cross_correlations/data/logs/master_"$job_id".log \
-        &
+	&
 done
