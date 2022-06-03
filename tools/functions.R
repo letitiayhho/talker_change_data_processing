@@ -207,7 +207,7 @@ get_all_channel_proportions_differences <- function(shuffled, original) {
 ## MAPS
 
 get_layout <- function() { 
-  fp <- "/Users/letitiaho/src/talker_change_data_processing/3_channel_locations/data/2d_coordinates"
+  fp <- "/Users/letitiaho/src/talker_change_data_processing/2_channel_locations/data/2d_coordinates"
   coordinates <- read.delim(fp, header = FALSE)
   x <- coordinates[[1]]
   y <- -coordinates[[2]]+ 2*mean(coordinates[[2]]) # flip y coords and return to original center
