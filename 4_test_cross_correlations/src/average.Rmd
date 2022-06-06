@@ -206,10 +206,10 @@ kable(map_df, escape = F, col.names = c("Channel", "L", "H", "L", "H", "L", "H",
 ```
 
 ```{r}
-talker_L_w <- get_two_sample_wilcoxon(SL, TL, "two.sided")
-talker_H_w <- get_two_sample_wilcoxon(SH, TH, "two.sided")
-meaning_L_w <- get_two_sample_wilcoxon(ML, NL, "two.sided")
-meaning_H_w <- get_two_sample_wilcoxon(MH, NH, "two.sided")
+talker_L_w <- get_two_sample_wilcoxon(SL, TL)
+talker_H_w <- get_two_sample_wilcoxon(SH, TH)
+meaning_L_w <- get_two_sample_wilcoxon(ML, NL)
+meaning_H_w <- get_two_sample_wilcoxon(MH, NH)
 ```
 
 ```{r}

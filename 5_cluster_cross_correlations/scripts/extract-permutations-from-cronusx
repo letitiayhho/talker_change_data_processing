@@ -11,4 +11,4 @@ scp cronusx:tcdp/tfce_output.tar.xz .
 tar xJvf tfce_output.tar.xz
 
 # Plot permutations
-./5_cluster_cross_correlations/scripts/run-plot-permutations
+./5_cluster_cross_correlations/src/plot_permutations.R
