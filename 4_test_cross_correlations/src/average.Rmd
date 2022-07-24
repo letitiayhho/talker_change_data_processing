@@ -15,6 +15,9 @@ library("ggpubr")
 library("kableExtra")
 source("tools/functions.R")
 source("4_test_cross_correlations/src/functions.R")
+
+# Param
+ALT = 'greater' # 'greater' or 'two.sided'
 ```
 
 ```{r}
@@ -27,7 +30,7 @@ channels <- as.character(1:128)
 
 ```{r}
 overall <- get_subject_averages(xcorr)
-overall_w <- get_one_sample_wilcoxon(overall)
+overall_w <- get_one_sample_wilcoxon(overall, alt = ALT)
 
 # Creating a table to display all the p-values
 spacer <- matrix(" ", 128, 1)
@@ -69,12 +72,12 @@ H <- subset(xcorr, constraint = "H") %>% get_subject_averages()
 ```
 
 ```{r}
-S_w <- get_one_sample_wilcoxon(S)
-T_w <- get_one_sample_wilcoxon(T)
-M_w <- get_one_sample_wilcoxon(M)
-N_w <- get_one_sample_wilcoxon(N)
-L_w <- get_one_sample_wilcoxon(L)
-H_w <- get_one_sample_wilcoxon(H)
+S_w <- get_one_sample_wilcoxon(S, ALT)
+T_w <- get_one_sample_wilcoxon(T, ALT)
+M_w <- get_one_sample_wilcoxon(M, ALT)
+N_w <- get_one_sample_wilcoxon(N, ALT)
+L_w <- get_one_sample_wilcoxon(L, ALT)
+H_w <- get_one_sample_wilcoxon(H, ALT)
 ```
 
 ```{r}
@@ -167,16 +170,16 @@ NH <- subset(xcorr, meaning = "N", constraint = "H") %>% get_subject_averages()
 
 ```{r}
 # One-sample t-tests for talker
-SL_w <- get_one_sample_wilcoxon(SL)
-SH_w <- get_one_sample_wilcoxon(SH)
-TL_w <- get_one_sample_wilcoxon(TL)
-TH_w <- get_one_sample_wilcoxon(TH)
+SL_w <- get_one_sample_wilcoxon(SL, ALT)
+SH_w <- get_one_sample_wilcoxon(SH, ALT)
+TL_w <- get_one_sample_wilcoxon(TL, ALT)
+TH_w <- get_one_sample_wilcoxon(TH, ALT)
 
 # One-sample t-tests for meaning
-ML_w <- get_one_sample_wilcoxon(ML)
-MH_w <- get_one_sample_wilcoxon(MH)
-NL_w <- get_one_sample_wilcoxon(NL)
-NH_w <- get_one_sample_wilcoxon(NH)
+ML_w <- get_one_sample_wilcoxon(ML, ALT)
+MH_w <- get_one_sample_wilcoxon(MH, ALT)
+NL_w <- get_one_sample_wilcoxon(NL, ALT)
+NH_w <- get_one_sample_wilcoxon(NH, ALT)
 ```
 
 ```{r}
@@ -287,7 +290,8 @@ kable(map_df, escape = F, col.names = c("Channel", "L", "H", "L", "H")) %>%
 ```
 
 ```{r}
-# save(overall_w, one_sample_w, two_sample_w, interaction_w, interaction_two_sample_w, file = "8_wilcoxon/data/wilcoxon_results.RData")
-save(S_w, T_w, M_w, N_w, L_w, H_w, talker_w, meaning_w, constraint_w, SH_w, SL_w, TH_w, TL_w, file = "4_test_cross_correlations/data/wilcoxon_results.RData")
+# save(overall_w, one_sample_w, two_sample_w, interaction_w, interaction_two_sample_w, file = "8_wilcoxon/data/one-sided_wilcoxon_results.RData")
+fname = paste("4_test_cross_correlations/data/", ALT, "_wilcoxon_results.RData", sep = "")
+save(overall_w, S_w, T_w, M_w, N_w, L_w, H_w, talker_w, meaning_w, constraint_w, SH_w, SL_w, TH_w, TL_w, file = fname)
 ```
 

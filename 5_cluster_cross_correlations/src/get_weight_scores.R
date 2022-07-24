@@ -3,25 +3,26 @@
 setwd("/Users/letitiaho/src/talker_change_data_processing/")
 source("5_cluster_cross_correlations/src/functions.R")
 
-xcorr <- readRDS(file = "5_cluster_cross_correlations/data/wilcoxon/wilcoxon.RDS")
+wilcoxon_results_fpath = "4_test_cross_correlations/data/wilcoxon/two.sided_wilcoxon_results.RData"
+load(wilcoxon_results_fpath)
 
 # Normalize data by max and min of whole data set
-overall <- normalize_by(xcorr$overall, max(xcorr$overall), min(xcorr$overall))
+overall <- normalize_by(overall_w$w, max(overall_w$w), min(overall_w$w))
 
-max_one_sample <- max(xcorr$S, xcorr$T, xcorr$M, xcorr$N, xcorr$L, xcorr$H)
-min_one_sample <- min(xcorr$S, xcorr$T, xcorr$M, xcorr$N, xcorr$L, xcorr$H)
-S <- normalize_by(xcorr$S, max_one_sample, min_one_sample)
-T <- normalize_by(xcorr$T, max_one_sample, min_one_sample)
-M <- normalize_by(xcorr$M, max_one_sample, min_one_sample)
-N <- normalize_by(xcorr$N, max_one_sample, min_one_sample)
-L <- normalize_by(xcorr$L, max_one_sample, min_one_sample)
-H <- normalize_by(xcorr$H, max_one_sample, min_one_sample)
+max_one_sample <- max(S_w$w, T_w$w, M_w$w, N_w$w, L_w$w, H_w$w)
+min_one_sample <- min(S_w$w, T_w$w, M_w$w, N_w$w, L_w$w, H_w$w)
+S <- normalize_by(S_w$w, max_one_sample, min_one_sample)
+T <- normalize_by(T_w$w, max_one_sample, min_one_sample)
+M <- normalize_by(M_w$w, max_one_sample, min_one_sample)
+N <- normalize_by(N_w$w, max_one_sample, min_one_sample)
+L <- normalize_by(L_w$w, max_one_sample, min_one_sample)
+H <- normalize_by(H_w$w, max_one_sample, min_one_sample)
 
-max_two_sample <- max(xcorr$talker, xcorr$meaning, xcorr$constraint)
-min_two_sample <- min(xcorr$talker, xcorr$meaning, xcorr$constraint)
-talker <- normalize_by(xcorr$talker, max_two_sample, min_two_sample)
-meaning <- normalize_by(xcorr$meaning, max_two_sample, min_two_sample)
-constraint <- normalize_by(xcorr$constraint, max_two_sample, min_two_sample)
+max_two_sample <- max(talker_w$w, meaning_w$w, constraint_w$w)
+min_two_sample <- min(talker_w$w, meaning_w$w, constraint_w$w)
+talker <- normalize_by(talker_w$w, max_two_sample, min_two_sample)
+meaning <- normalize_by(meaning_w$w, max_two_sample, min_two_sample)
+constraint <- normalize_by(constraint_w$w, max_two_sample, min_two_sample)
 
 # SL <- normalize(xcorr$SL)
 # SH <- normalize(xcorr$SH)
@@ -52,5 +53,5 @@ weight_scores <- list("overall" = overall,
                       # "MH" = MH,
                       )
 
-save_filepath <- paste("5_cluster_cross_correlations/data/weight_scores/weight_scores.RDS", sep = "")
+save_filepath <- paste("5_cluster_cross_correlations/data/weight_scores/weight_scores_two.sided.RDS", sep = "")
 saveRDS(weight_scores, file = save_filepath)

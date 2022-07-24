@@ -7,7 +7,7 @@ library("ggpubr")
 source("tools/functions.R")
 source("5_cluster_cross_correlations/src/functions.R")
 
-weight_scores <- readRDS('5_cluster_cross_correlations/data/weight_scores/weight_scores.RDS')
+weight_scores <- readRDS('5_cluster_cross_correlations/data/weight_scores/weight_scores_two.sided.RDS')
 
 # One-sample
 

@@ -214,8 +214,8 @@ get_layout <- function() {
   return(data.frame(x = x, y = y))
 }
 
-get_sig_channels <- function(data, variable) {
-  sig_channels <- which(data[[variable]] < 0.05)
+get_sig_channels <- function(ps) {
+  sig_channels <- which(ps < 0.05)
 }
 
 get_ps <- function(data, channels, condition, permutations) {
