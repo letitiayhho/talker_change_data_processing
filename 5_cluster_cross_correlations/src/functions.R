@@ -35,7 +35,7 @@ sigmoid <- function(x, spread = 1, shift = 0) {
 }
 
 normalize <- function(x) {
-  normed <- (x-min(x))/(max(x)-min(x))
+  normed <- (x-min(x, na.rm = TRUE))/(max(x, na.rm = TRUE)-min(x, na.rm = TRUE))
   return(normed)
 }
 
