@@ -1,0 +1,29 @@
+#!/bin/bash
+set -euo pipefail
+
+usage() {
+    cat <<eof >&2
+usage: $0
+
+    description
+        wrapper script for cross_correlate.m
+        loops over data from all subjects
+        cross correlates eeg signal from each epoch
+        and each channel with its corresponding auditory stimuli
+eof
+    exit 1
+}
+
+if [[ $# -ne 0 ]]; then
+    usage
+fi
+
+GIT_HOME="$(git rev-parse --show-toplevel)"
+cd "$GIT_HOME"
+
+log_file="3_cross_correlate/data/logs/$(date +%s).log"
+
+while read -r subject_number; do
+    matlab -nodisplay -r "addpath('3_cross_correlate/src'); cross_correlate_save_full('$GIT_HOME', '$subject_number'); quit" 2>&1 \
+        | tee -a "$log_file"
+done < 0_set_up_and_raw_data/data/subject_numbers.txt
