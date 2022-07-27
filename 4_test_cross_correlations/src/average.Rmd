@@ -292,6 +292,28 @@ kable(map_df, escape = F, col.names = c("Channel", "L", "H", "L", "H")) %>%
 ```{r}
 # save(overall_w, one_sample_w, two_sample_w, interaction_w, interaction_two_sample_w, file = "8_wilcoxon/data/one-sided_wilcoxon_results.RData")
 fname = paste("4_test_cross_correlations/data/", ALT, "_wilcoxon_results.RData", sep = "")
-save(overall_w, S_w, T_w, M_w, N_w, L_w, H_w, talker_w, meaning_w, constraint_w, SH_w, SL_w, TH_w, TL_w, file = fname)
+save(overall_w, 
+     S_w, 
+     T_w, 
+     M_w, 
+     N_w, 
+     L_w, 
+     H_w, 
+     talker_w, 
+     meaning_w, 
+     constraint_w, 
+     talker_L_w, 
+     talker_H_w, 
+     meaning_L_w,
+     meaning_H_w,
+     SH_w, 
+     SL_w, 
+     TH_w, 
+     TL_w, 
+     MH_w, 
+     ML_w, 
+     NH_w, 
+     NL_w, 
+     file = fname)
 ```
 

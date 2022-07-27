@@ -17,7 +17,7 @@ source("tools/functions.R")
 source("4_test_cross_correlations/src/functions.R")
 
 # Param
-ALT = "greater"
+ALT = "two.sided"
 
 # Import data
 fpath = paste("4_test_cross_correlations/data/", ALT, "_wilcoxon_results.RData", sep = "")
@@ -205,10 +205,10 @@ constraint_channels <- get_sig_channels(constraint_w$p)
 nodiff_constraint <- get_inverted_list(channels, constraint_channels)
 
 # Get p-values for tracking within each level
-low <- get_ps(L_w$p, constraint_channels)
-high <- get_ps(H_w$p, constraint_channels)
-nodiff_low <- get_ps(L_w$p, nodiff_constraint)
-nodiff_high <- get_ps(H_w$p, nodiff_constraint)
+low <- recode_ps(L_w$p, constraint_channels)
+high <- recode_ps(H_w$p, constraint_channels)
+nodiff_low <- recode_ps(L_w$p, nodiff_constraint)
+nodiff_high <- recode_ps(H_w$p, nodiff_constraint)
 
 # Create data frame for bubbles
 constraint_df <- data.frame(group1 = low, group2 = high, nodiff_group1 = nodiff_low, nodiff_group2 = nodiff_high, coordinates)
@@ -222,25 +222,27 @@ ggsave(plot = plot, filename = fname, width = 12, height = 5)
 
 **stats**
 
-```{r}
+```{r, echo = FALSE}
 # get stats
-print("number of different-talker channels (p < 0.05)")
-sum(!is.na(different_talker))
+print("number of talker norm channels")
+length(talker_channels)
+print("number of different-talker channels (p < 0.01)")
 sum(different_talker < 0.01, na.rm = TRUE)
-print("number of same-talker channels (p < 0.05)")
-sum(!is.na(same_talker))
+print("number of same-talker channels (p < 0.01)")
 sum(same_talker < 0.01, na.rm = TRUE)
-print("number of meaningful channels (p < 0.05)")
-sum(!is.na(meaningful))
+
+print("number of meaning channels")
+length(meaning_channels)
+print("number of meaningful channels (p < 0.01)")
 sum(meaningful < 0.01, na.rm = TRUE)
-print("number of nonsense channels (p < 0.05)")
-sum(!is.na(nonsense))
+print("number of nonsense channels (p < 0.01)")
 sum(nonsense < 0.01, na.rm = TRUE)
-print("number of low-constraint channels (p < 0.05)")
-sum(!is.na(low))
+
+print("number of constraint channels")
+length(constraint_channels)
+print("number of low-constraint channels (p < 0.01)")
 sum(low < 0.01, na.rm = TRUE)
-print("number of high-constraint channels (p < 0.05)")
-sum(!is.na(high))
+print("number of high-constraint channels (p < 0.01)")
 sum(high < 0.01, na.rm = TRUE)
 ```
 
@@ -251,14 +253,14 @@ sum(high < 0.01, na.rm = TRUE)
 
 ```{r}
 # Identify channels that differentiate between same and different talker and channels that don't
-talker_L_interaction_channels <- get_sig_channels(interaction_two_sample_w, "talker_L")
+talker_L_interaction_channels <- get_sig_channels(talker_L_w$p)
 nodiff_talker_L_interaction_channels <- get_inverted_list(channels, talker_L_interaction_channels)
 
 # Get p-values for tracking within each level
-SL <- get_ps(interaction_w, "SL", talker_L_interaction_channels)
-TL <- get_ps(interaction_w, "TL", talker_L_interaction_channels)
-nodiff_SL <- get_ps(interaction_w, "SL", nodiff_talker_L_interaction_channels)
-nodiff_TL <- get_ps(interaction_w, "TL", nodiff_talker_L_interaction_channels)
+SL <- recode_ps(SL_w$p, talker_L_interaction_channels)
+TL <- recode_ps(TL_w$p, talker_L_interaction_channels)
+nodiff_SL <- recode_ps(SL_w$p, nodiff_talker_L_interaction_channels)
+nodiff_TL <- recode_ps(TL_w$p, nodiff_talker_L_interaction_channels)
 
 # Create data frame for bubbles
 talker_L_interaction_df <- data.frame(group1 = SL, group2 = TL, nodiff_group1 = nodiff_SL, nodiff_group2 = nodiff_TL, coordinates)
@@ -273,14 +275,14 @@ ggsave(plot = plot, filename = fname, width = 12, height = 5)
 **Talker and high constraint**
 ```{r}
 # Identify channels that differentiate between same and different talker and channels that don't
-talker_H_interaction_channels <- get_sig_channels(interaction_two_sample_w, "talker_H")
+talker_H_interaction_channels <- get_sig_channels(talker_H_w$p)
 nodiff_talker_H_interaction_channels <- get_inverted_list(channels, talker_H_interaction_channels)
 
 # Get p-values for tracking within each level
-SH <- get_ps(interaction_w, "SH", talker_H_interaction_channels)
-TH <- get_ps(interaction_w, "TH", talker_H_interaction_channels)
-nodiff_SH <- get_ps(interaction_w, "SH", nodiff_talker_H_interaction_channels)
-nodiff_TH <- get_ps(interaction_w, "TH", nodiff_talker_H_interaction_channels)
+SH <- recode_ps(SH_w$p, talker_H_interaction_channels)
+TH <- recode_ps(TH_w$p, talker_H_interaction_channels)
+nodiff_SH <- recode_ps(SH_w$p, nodiff_talker_H_interaction_channels)
+nodiff_TH <- recode_ps(TH_w$p, nodiff_talker_H_interaction_channels)
 
 # Create data frame for bubbles
 talker_H_interaction_df <- data.frame(group1 = SH, group2 = TH, nodiff_group1 = nodiff_SH, nodiff_group2 = nodiff_TH, coordinates)
@@ -296,14 +298,14 @@ ggsave(plot = plot, filename = fname, width = 12, height = 5)
 
 ```{r}
 # Identify channels that differentiate between same and different talker and channels that don't
-meaning_L_interaction_channels <- get_sig_channels(interaction_two_sample_w, "meaning_L")
+meaning_L_interaction_channels <- get_sig_channels(meaning_L_w$p)
 nodiff_meaning_L_interaction_channels <- get_inverted_list(channels, meaning_L_interaction_channels)
 
 # Get p-values for tracking within each level
-ML <- get_ps(interaction_w, "ML", meaning_L_interaction_channels)
-NL <- get_ps(interaction_w, "NL", meaning_L_interaction_channels)
-nodiff_ML <- get_ps(interaction_w, "ML", nodiff_meaning_L_interaction_channels)
-nodiff_NL <- get_ps(interaction_w, "NL", nodiff_meaning_L_interaction_channels)
+ML <- recode_ps(ML_w$p, meaning_L_interaction_channels)
+NL <- recode_ps(NL_w$p, meaning_L_interaction_channels)
+nodiff_ML <- recode_ps(ML_w$p, nodiff_meaning_L_interaction_channels)
+nodiff_NL <- recode_ps(NL_w$p, nodiff_meaning_L_interaction_channels)
 
 # Create data frame for bubbles
 meaning_L_interaction_df <- data.frame(group1 = ML, group2 = NL, nodiff_group1 = nodiff_ML, nodiff_group2 = nodiff_NL, coordinates)
@@ -319,14 +321,14 @@ ggsave(plot = plot, filename = fname, width = 12, height = 5)
 
 ```{r}
 # Identify channels that differentiate between same and different talker and channels that don't
-meaning_H_interaction_channels <- get_sig_channels(interaction_two_sample_w, "meaning_H")
+meaning_H_interaction_channels <- get_sig_channels(meaning_H_w$p)
 nodiff_meaning_H_interaction_channels <- get_inverted_list(channels, meaning_H_interaction_channels)
 
 # Get p-values for tracking within each level
-MH <- get_ps(interaction_w, "MH", meaning_H_interaction_channels)
-NH <- get_ps(interaction_w, "NH", meaning_H_interaction_channels)
-nodiff_MH <- get_ps(interaction_w, "MH", nodiff_meaning_H_interaction_channels)
-nodiff_NH <- get_ps(interaction_w, "NH", nodiff_meaning_H_interaction_channels)
+MH <- recode_ps(MH_w$p, meaning_H_interaction_channels)
+NH <- recode_ps(NH_w$p, meaning_H_interaction_channels)
+nodiff_MH <- recode_ps(MH_w$p, nodiff_meaning_H_interaction_channels)
+nodiff_NH <- recode_ps(NH_w$p, nodiff_meaning_H_interaction_channels)
 
 # Create data frame for bubbles
 meaning_H_interaction_df <- data.frame(group1 = MH, group2 = NH, nodiff_group1 = nodiff_MH, nodiff_group2 = nodiff_NH, coordinates)
@@ -337,6 +339,36 @@ plot
 fname = paste('figs/', ALT, '_meaning_H.png', sep = "")
 ggsave(plot = plot, filename = fname, width = 12, height = 5)
 ```
+**stats**
 
-#### T-tests against difference set by low vs high-constraint sentences
+```{r, echo = FALSE}
+# get stats
+print("number of talker norm channels for low constraint")
+length(talker_L_interaction_channels)
+print("number of different-talker channels (p < 0.05)")
+sum(TL_w$p < 0.01, na.rm = TRUE)
+print("number of same-talker channels (p < 0.05)")
+sum(SL_w$p < 0.01, na.rm = TRUE)
 
+print("number of talker norm channels for high constraint")
+length(talker_H_interaction_channels)
+print("number of different-talker channels (p < 0.01)")
+sum(TH_w$p < 0.01, na.rm = TRUE)
+print("number of same-talker channels (p < 0.01)")
+sum(SH_w$p < 0.01, na.rm = TRUE)
+
+
+print("number of meaning channels for low constraint")
+length(meaning_L_interaction_channels)
+print("number of meaningful channels (p < 0.01)")
+sum(ML_w$p < 0.01, na.rm = TRUE)
+print("number of nonsense channels (p < 0.01)")
+sum(NL_w$p < 0.01, na.rm = TRUE)
+
+print("number of meaning channels for high constraint")
+length(meaning_H_interaction_channels)
+print("number of meaningful channels (p < 0.01)")
+sum(MH_w$p < 0.01, na.rm = TRUE)
+print("number of nonsense channels (p < 0.01)")
+sum(NH_w$p < 0.01, na.rm = TRUE)
+```
