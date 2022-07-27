@@ -132,23 +132,20 @@ get_map <- function(df, channels, nodiff_channels, levels_label) {
 recode_ps <- function(ps, channels){
   recoded_ps <- c()
   for (i in 1:128) {
-    # # Get p-value for channel i
+    # Get p-value for channel i
     p <- ps[i]
-    # p <- data[[condition]][i]
 
     # Exit early if not in list of significant channels
     if (!(i %in% channels)) {recoded_ps[i] = NaN}
 
     # Recoding values if too small or too large
     else {
-      if (p > 0.05) {recoded_ps[i] <- NaN}
-      if (p < 0.001) {recoded_ps[i] <- 0.001}
-      else {recoded_ps[i] <- p}
+      if (p < 0.001) {p <- 0.001}
+      recoded_ps[i] <- p
     }
   }
   return(recoded_ps)
 }
-
 ```
 
 **talker**
@@ -223,27 +220,29 @@ ggsave(plot = plot, filename = fname, width = 12, height = 5)
 **stats**
 
 ```{r, echo = FALSE}
-# get stats
+print("number of overall tracking channels")
+sum(overall_w$p < 0.01)
+
 print("number of talker norm channels")
 length(talker_channels)
 print("number of different-talker channels (p < 0.01)")
-sum(different_talker < 0.01, na.rm = TRUE)
+sum(T_w$p < 0.01, na.rm = TRUE)
 print("number of same-talker channels (p < 0.01)")
-sum(same_talker < 0.01, na.rm = TRUE)
+sum(S_w$p < 0.01, na.rm = TRUE)
 
 print("number of meaning channels")
 length(meaning_channels)
 print("number of meaningful channels (p < 0.01)")
-sum(meaningful < 0.01, na.rm = TRUE)
+sum(M_w$p < 0.01, na.rm = TRUE)
 print("number of nonsense channels (p < 0.01)")
-sum(nonsense < 0.01, na.rm = TRUE)
+sum(N_w$p < 0.01, na.rm = TRUE)
 
 print("number of constraint channels")
 length(constraint_channels)
 print("number of low-constraint channels (p < 0.01)")
-sum(low < 0.01, na.rm = TRUE)
+sum(L_w$p < 0.01, na.rm = TRUE)
 print("number of high-constraint channels (p < 0.01)")
-sum(high < 0.01, na.rm = TRUE)
+sum(H_w$p < 0.01, na.rm = TRUE)
 ```
 
 
