@@ -17,7 +17,7 @@ source("tools/functions.R")
 source("4_test_cross_correlations/src/functions.R")
 
 # Param
-ALT = 'greater' # 'greater' or 'two.sided'
+ALT = 'two.sided' # 'greater' or 'two.sided'
 ```
 
 ```{r}
