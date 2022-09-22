@@ -32,3 +32,4 @@ archive/
 
 # ignore tarballs
 *.tar*
+*.zip*
