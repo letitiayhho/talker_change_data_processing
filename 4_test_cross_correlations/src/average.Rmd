@@ -13,24 +13,27 @@ library("dplyr")
 library("ggplot2")
 library("ggpubr")
 library("kableExtra")
+library("tidyr")
 source("tools/functions.R")
 source("4_test_cross_correlations/src/functions.R")
 
 # Param
 ALT = 'two.sided' # 'greater' or 'two.sided'
+NORM = "normalized_" # either "normalized_" or ""
 ```
 
 ```{r}
 # Import data
-xcorr <- read.csv(file = "3_cross_correlate/data/average.csv")
+xcorr <- read.csv(file = paste("3_cross_correlate/data/", NORM, "average.csv", sep = ''))
 channels <- as.character(1:128)
+n <- 11
 ```
 
 #### One-sample t-tests for overall tracking
 
 ```{r}
 overall <- get_subject_averages(xcorr)
-overall_w <- get_one_sample_wilcoxon(overall, alt = ALT)
+overall_w <- get_one_sample_wilcoxon_for_each_channel(overall, alt = ALT)
 
 # Creating a table to display all the p-values
 spacer <- matrix(" ", 128, 1)
@@ -47,8 +50,9 @@ map_df <- mutate_if(overall_ps, is.numeric, function(x) {round(x, digits = 3)}) 
 
 kable(map_df, escape = F, col.names = c("Channel", "p")) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
-```
 
+plot_average_xcorrs(overall, fname = paste('4_test_cross_correlations/figs/', NORM, 'xcorr_overall.png', sep = ''), overall_w$p)
+```
 
 
 #### One-sample wilcoxon for each condition
@@ -71,13 +75,61 @@ L <- subset(xcorr, constraint = "L") %>% get_subject_averages()
 H <- subset(xcorr, constraint = "H") %>% get_subject_averages()
 ```
 
+
 ```{r}
-S_w <- get_one_sample_wilcoxon(S, ALT)
-T_w <- get_one_sample_wilcoxon(T, ALT)
-M_w <- get_one_sample_wilcoxon(M, ALT)
-N_w <- get_one_sample_wilcoxon(N, ALT)
-L_w <- get_one_sample_wilcoxon(L, ALT)
-H_w <- get_one_sample_wilcoxon(H, ALT)
+flatten <- function(df){
+  return(c(as.matrix(df)))
+}
+# df_long <- data.frame(overall = flatten(overall), S = flatten(S), T = flatten(T), M = flatten(M), N = flatten(N), L = flatten(L), H = flatten(H))
+# df_long <- pivot_longer(conds, cols = c('overall', 'S', 'T', 'M', 'N', 'L', 'H'))
+# ggplot(df_long, aes(x = value, fill = name, color = name)) +
+#   geom_histogram(position="identity", alpha=0.5)
+
+df_long <- data.frame(S = flatten(S), T = flatten(T)) %>%
+  pivot_longer(cols = c('S', 'T'))
+ggplot(df_long, aes(x = value, fill = name, color = name)) +
+  geom_histogram(position="identity", alpha=0.5) +
+  xlim(-1, 2.5) +
+  ylim(0, 1200)
+
+df_long <- data.frame(M = flatten(M), N = flatten(N)) %>%
+  pivot_longer(cols = c('M', 'N'))
+ggplot(df_long, aes(x = value, fill = name, color = name)) +
+  geom_histogram(position="identity", alpha=0.5) +
+  xlim(-1, 2.5) +
+  ylim(0, 1200)
+
+df_long <- data.frame(L = flatten(L), H = flatten(H)) %>%
+  pivot_longer(cols = c('L', 'H'))
+ggplot(df_long, aes(x = value, fill = name, color = name)) +
+  geom_histogram(position="identity", alpha=0.5) +
+  xlim(-1, 2.5) +
+  ylim(0, 1200)
+```
+
+```{r}
+talker_w <- get_two_sample_subject_wilcoxon(S, T)
+```
+
+
+```{r}
+S_w <- get_one_sample_wilcoxon_for_each_channel(S, ALT)
+T_w <- get_one_sample_wilcoxon_for_each_channel(T, ALT)
+M_w <- get_one_sample_wilcoxon_for_each_channel(M, ALT)
+N_w <- get_one_sample_wilcoxon_for_each_channel(N, ALT)
+L_w <- get_one_sample_wilcoxon_for_each_channel(L, ALT)
+H_w <- get_one_sample_wilcoxon_for_each_channel(H, ALT)
+```
+
+
+# Plot the xcorrs
+```{r}
+plot_average_xcorrs(S, fname = paste('4_test_cross_correlations/figs/', NORM, 'xcorr_S.png', sep = ''), S_w$p) # ORDER BYY test statistic size
+plot_average_xcorrs(T, fname = paste('4_test_cross_correlations/figs/', NORM, 'xcorr_T.png', sep = ''), T_w$p)
+plot_average_xcorrs(M, fname = paste('4_test_cross_correlations/figs/', NORM, 'xcorr_M.png', sep = ''), M_w$p)
+plot_average_xcorrs(N, fname = paste('4_test_cross_correlations/figs/', NORM, 'xcorr_N.png', sep = ''), N_w$p)
+plot_average_xcorrs(L, fname = paste('4_test_cross_correlations/figs/', NORM, 'xcorr_L.png', sep = ''), L_w$p)
+plot_average_xcorrs(H, fname = paste('4_test_cross_correlations/figs/', NORM, 'xcorr_N.png', sep = ''), H_w$p)
 ```
 
 ```{r}
@@ -120,9 +172,9 @@ sum(H_w$p < 0.05)
 Compares cross correlations between the two levels of each condition. 
 
 ```{r}
-talker_w <- get_two_sample_wilcoxon(S, T)
-meaning_w <- get_two_sample_wilcoxon(M, N)
-constraint_w <- get_two_sample_wilcoxon(L, H)
+talker_w <- get_two_sample_wilcoxon_for_each_channel(S, T)
+meaning_w <- get_two_sample_wilcoxon_for_each_channel(M, N)
+constraint_w <- get_two_sample_wilcoxon_for_each_channel(L, H)
 ```
 
 ```{r}
@@ -170,16 +222,16 @@ NH <- subset(xcorr, meaning = "N", constraint = "H") %>% get_subject_averages()
 
 ```{r}
 # One-sample t-tests for talker
-SL_w <- get_one_sample_wilcoxon(SL, ALT)
-SH_w <- get_one_sample_wilcoxon(SH, ALT)
-TL_w <- get_one_sample_wilcoxon(TL, ALT)
-TH_w <- get_one_sample_wilcoxon(TH, ALT)
+SL_w <- get_one_sample_wilcoxon_for_each_channel(SL, ALT)
+SH_w <- get_one_sample_wilcoxon_for_each_channel(SH, ALT)
+TL_w <- get_one_sample_wilcoxon_for_each_channel(TL, ALT)
+TH_w <- get_one_sample_wilcoxon_for_each_channel(TH, ALT)
 
 # One-sample t-tests for meaning
-ML_w <- get_one_sample_wilcoxon(ML, ALT)
-MH_w <- get_one_sample_wilcoxon(MH, ALT)
-NL_w <- get_one_sample_wilcoxon(NL, ALT)
-NH_w <- get_one_sample_wilcoxon(NH, ALT)
+ML_w <- get_one_sample_wilcoxon_for_each_channel(ML, ALT)
+MH_w <- get_one_sample_wilcoxon_for_each_channel(MH, ALT)
+NL_w <- get_one_sample_wilcoxon_for_each_channel(NL, ALT)
+NH_w <- get_one_sample_wilcoxon_for_each_channel(NH, ALT)
 ```
 
 ```{r}
@@ -209,10 +261,10 @@ kable(map_df, escape = F, col.names = c("Channel", "L", "H", "L", "H", "L", "H",
 ```
 
 ```{r}
-talker_L_w <- get_two_sample_wilcoxon(SL, TL)
-talker_H_w <- get_two_sample_wilcoxon(SH, TH)
-meaning_L_w <- get_two_sample_wilcoxon(ML, NL)
-meaning_H_w <- get_two_sample_wilcoxon(MH, NH)
+talker_L_w <- get_two_sample_wilcoxon_for_each_channel(SL, TL)
+talker_H_w <- get_two_sample_wilcoxon_for_each_channel(SH, TH)
+meaning_L_w <- get_two_sample_wilcoxon_for_each_channel(ML, NL)
+meaning_H_w <- get_two_sample_wilcoxon_for_each_channel(MH, NH)
 ```
 
 ```{r}
@@ -266,8 +318,8 @@ kable(map_df, escape = F, col.names = c("Channel", "L", "H", "L", "H")) %>%
 
 ```{r}
 # t-test by subject
-# talker_compare_w <- get_two_sample_wilcoxon(baseline, talker_compare)
-# meaning_compare_w <- get_two_sample_wilcoxon(baseline, meaning_compare)
+# talker_compare_w <- get_two_sample_wilcoxon_for_each_channel(baseline, talker_compare)
+# meaning_compare_w <- get_two_sample_wilcoxon_for_each_channel(baseline, meaning_compare)
 ```
 
 ```{r}
@@ -291,7 +343,7 @@ kable(map_df, escape = F, col.names = c("Channel", "L", "H", "L", "H")) %>%
 
 ```{r}
 # save(overall_w, one_sample_w, two_sample_w, interaction_w, interaction_two_sample_w, file = "8_wilcoxon/data/one-sided_wilcoxon_results.RData")
-fname = paste("4_test_cross_correlations/data/", ALT, "_wilcoxon_results.RData", sep = "")
+fname = paste("4_test_cross_correlations/data/", NORM, ALT, "_wilcoxon_results.RData", sep = "")
 save(overall_w, 
      S_w, 
      T_w, 
@@ -316,4 +368,183 @@ save(overall_w,
      NL_w, 
      file = fname)
 ```
+
+
+
+
+
+
+
+
+
+#### Histogram of test statistics
+
+```{r}
+S_w$w[104]
+```
+
+
+```{r}
+S_w$w > (n * (n + 1) / 4)
+```
+
+
+```{r}
+print(S_w$w[9])
+print(S_w$w[5])
+```
+
+
+```{r}
+S_w$p
+```
+
+```{r}
+psignrank(47 - 1, n, lower.tail = FALSE) * 2
+```
+
+```{r}
+# from param test statistic cut off
+# psignrank
+# qsignrankw
+# try to get all right p=values
+# then plot test stat
+n = 11
+get_p_sign_rank <- function(n, ws) {
+  ps <- c()
+  for (w in ws) {
+    if(w > (n * (n + 1) / 4)) {
+      p <- psignrank(w - 1, n, lower.tail = FALSE)
+    } else {
+      p <- psignrank(w, n)
+    }
+    p <- min(2*p, 1)
+    ps <- c(ps, p)
+  }
+  return(ps)
+}
+S_p <- get_p_sign_rank(n, S_w$w)
+# S_p <- psignrank(S_w$w, n) * 2
+```
+
+```{r}
+# as w increases, p should decrease?
+w = c(1:10)
+print(psignrank(w, n) * 2)
+print(get_p_sign_rank(n, w))
+```
+
+```{r}
+psignrank(2, n) * 2
+```
+
+```{r}
+# apply(S, MARGIN = 2, function(channel) {print(wilcox.test(channel, exact = TRUE, alternative = 'two.sided'))})
+```
+
+
+```{r}
+print("Test statistics from W sign rank")
+print(S_w$w)
+print("P-values")
+print(round(S_w$p, digits = 3))
+print("Significant at a = 0.05")
+print(S_p < 0.05)
+```
+
+```{r}
+S_w$w
+```
+
+
+```{r}
+set.seed(1234)
+myData = data.frame(
+name = paste0(rep("R_", 10), 1:10),
+weight = round(rnorm(10, 30, 2), 1)
+)
+ 
+weight = round(rnorm(10, 30, 2), 1)
+
+# One-sample wilcoxon test
+result = wilcox.test(weight, mu = 33, exact = TRUE, alternative = 'two.sided')
+print(result)
+
+result = wilcox.test(weight, mu = 28.999, exact = TRUE, alternative = 'two.sided')
+print(result)
+
+result = wilcox.test(S$X9, mu = 0, exact = TRUE, alternative = 'two.sided')
+print(result)
+
+result = wilcox.test(S$X5, mu = 0, exact = TRUE, alternative = 'two.sided')
+print(result)
+
+sample1 <- -S$X9
+result = wilcox.test(-S$X9, mu = 0, exact = TRUE, alternative = 'two.sided')
+print(result)
+
+sample2 <- S$X5*100
+result = wilcox.test(S$X5*100, mu = 0, exact = TRUE, alternative = 'two.sided')
+print(result)
+
+
+```
+
+```{r}
+hist(S_w$p, ylim = c(0,40))
+hist(T_w$p, ylim = c(0,40))
+hist(M_w$p, ylim = c(0,40))
+hist(N_w$p, ylim = c(0,40))
+hist(L_w$p, ylim = c(0,40))
+hist(H_w$p, ylim = c(0,40))
+```
+
+
+```{r}
+# Plot test statistics
+invert_ws <- function(p, w) {
+  i <- which(p == max(p))
+  mid <- w[i]
+  w_adjusted <- abs(w - mid)
+  return(w_adjusted)
+}
+
+get_critical_value <- function(p, w) {
+  c <- min(w[which(p < 0.05)])
+  return(c)
+}
+
+S_w$w_adjusted <- invert_ws(S_w$p, S_w$w)
+T_w$w_adjusted <- invert_ws(T_w$p, T_w$w)
+M_w$w_adjusted <- invert_ws(M_w$p, M_w$w)
+N_w$w_adjusted <- invert_ws(N_w$p, N_w$w)
+L_w$w_adjusted <- invert_ws(L_w$p, L_w$w)
+H_w$w_adjusted <- invert_ws(H_w$p, H_w$w)
+
+c <- get_critical_value(S_w$p, S_w$w_adjusted)
+df_long <- data.frame(S = flatten(S_w$w_adjusted), T = flatten(T_w$w_adjusted)) %>%
+  pivot_longer(cols = c('S', 'T'))
+ggplot(df_long, aes(x = value, fill = name, color = name)) +
+  geom_histogram(position ="identity", alpha=0.5, bins = 15) +
+  geom_vline(xintercept = c)
+
+df_long <- data.frame(M = flatten(M_w$w_adjusted), N = flatten(N_w$w_adjusted)) %>%
+  pivot_longer(cols = c('M', 'N'))
+ggplot(df_long, aes(x = value, fill = name, color = name)) +
+  geom_histogram(position ="identity", alpha=0.5, bins = 15) +
+  geom_vline(xintercept = c)
+
+df_long <- data.frame(L = flatten(L_w$w_adjusted), H = flatten(H_w$w_adjusted)) %>%
+  pivot_longer(cols = c('L', 'H'))
+ggplot(df_long, aes(x = value, fill = name, color = name)) +
+  geom_histogram(position ="identity", alpha=0.5, bins = 15) +
+  geom_vline(xintercept = c)
+```
+
+
+
+```{r}
+# across significant channels, cross correlation of S vs T
+```
+
 
