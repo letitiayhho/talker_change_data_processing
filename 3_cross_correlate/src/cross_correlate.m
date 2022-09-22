@@ -17,7 +17,7 @@ end
     cd(git_home)
     addpath(fullfile('1_preprocessing/data', subject_number)) % add subject data to path
     addpath(fullfile('0_set_up_and_raw_data/data/stim/low_pass_400')) % add audio stimuli directory to path
-    addpath(fullfile('2_cross_correlate/data', subject_number))
+    addpath(fullfile('3_cross_correlate/data', subject_number))
 
     % Import EEG data
     eeg_data = load('eeg_data').eeg_data;
@@ -51,7 +51,7 @@ end
              stim = [stim; pad];
 
              % Compute convolution and cross correlation
-             [cross_correlations, lags] = xcorr(stim, epoch);
+             [cross_correlations, lags] = xcorr(stim, epoch, 'normalized');
 
              % Write statistics to data arrays
              average(j, i) = mean(cross_correlations);
@@ -76,7 +76,7 @@ end
             'constraint', 'meaning', 'talker', 'epoch', 'word', string(1:128)]);
         
         % Save
-        fp = fullfile('2_cross_correlate/data', subject_number, [stat, '.mat']);
+        fp = fullfile('3_cross_correlate/data', subject_number, [stat, '_normalized.mat']);
         fprintf(1, ['\nWriting data to /', fp, '\n'])
         save(fp, 'data_frame')
     end

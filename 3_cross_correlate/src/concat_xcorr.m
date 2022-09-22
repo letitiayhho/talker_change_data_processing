@@ -11,9 +11,9 @@ end
     %% Main
     cd(git_home)    
     addpath('tools/')
-    file_struct = dir(['2_cross_correlate/data/*/', stat, '.mat']);
+    file_struct = dir(['3_cross_correlate/data/*/', stat, '.mat']);
     data = combine_cross_correlations(file_struct);
-    write_fp = ['2_cross_correlate/data/', stat, '.csv'];
+    write_fp = ['3_cross_correlate/data/', stat, '.csv'];
     fprintf(1, ['Writing data to ', write_fp, '\n']);
     writetable(data, write_fp)
     quit
