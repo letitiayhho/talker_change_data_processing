@@ -264,59 +264,6 @@ kable(map_df, escape = F, col.names = c("Channel", "L", "H", "L", "H")) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
-#### T-tests against difference set by low vs high-constraint sentences
-
-```{r}
-# SML <- subset(xcorr, talker = "S", meaning = "M", constraint = "L", keepLabels = TRUE)
-# SML_means <- aggregate(SML[,2:129], by=list(SML$subject_number), FUN=mean) %>%
-#   subset(-1)
-```
-
-```{r}
-# take meaningful and same-talker sentences and compare correlations of low- vs high-constraint sentences
-# compare this difference to meaningful and high-constraint same- vs different-talker sentences
-# compare this difference to same-talker and high-constraint meaningful vs nonsense sentences
-# SML <- subset(xcorr, talker = "S", meaning = "M", constraint = "L", keepLabels = TRUE)
-# SML_means <- aggregate(SML[,5:132], by=list(SML$subject_number), FUN=mean) %>% select(-"Group.1")
-# SMH <- subset(xcorr, talker = "S", meaning = "M", constraint = "H", keepLabels = TRUE)
-# SMH_means <- aggregate(SMH[,5:132], by=list(SMH$subject_number), FUN=mean) %>% select(-"Group.1")
-# baseline <- SMH_means - SML_means
-# 
-# TMH <- subset(xcorr, talker = "T", meaning = "M", constraint = "H", keepLabels = TRUE)
-# TMH_means <- aggregate(TMH[,5:132], by=list(TMH$subject_number), FUN=mean) %>% select(-"Group.1")
-# talker_compare <- TMH_means - SMH_means
-# 
-# SNH <- subset(xcorr, talker = "S", meaning = "N", constraint = "H", keepLabels = TRUE)
-# SNH_means <- aggregate(SNH[,5:132], by=list(SNH$subject_number), FUN=mean) %>% select(-"Group.1")
-# meaning_compare <- SNH_means - SMH_means
-```
-
-```{r}
-# t-test by subject
-# talker_compare_w <- get_two_sample_wilcoxon_for_each_channel(baseline, talker_compare)
-# meaning_compare_w <- get_two_sample_wilcoxon_for_each_channel(baseline, meaning_compare)
-```
-
-```{r}
-# Creating a table to display all the p-values
-# compare_w <- data.frame(channels,
-#                      'talker' = talker_compare_w$p,
-#                      'meaning' = meaning_compare_w$p)
-# map_df <- mutate_if(compare_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
-#   mutate_if(is.numeric, function(x) {ifelse(x > 0.1,
-#                                             cell_spec(x, NULL),
-#                                             cell_spec(x, background = spec_color(x,
-#                                                                                  direction = 1,
-#                                                                                  begin = 0.65,
-#                                                                                  end = 1,
-#                                                                                  option = "B",
-#                                                                                  scale_from = c(0,0.1))))})
-# 
-# kable(map_df, escape = F, col.names = c("Channel", "Talker", "Meaning")) %>%
-#   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
-```
-
-
 #### Plot test statistics
 
 ```{r}
@@ -599,7 +546,6 @@ ggsave(p, filename = '../figs/compare_condition_channel_counts.png', width = 6, 
 #### Save everything
 
 ```{r}
-# save(overall_w, one_sample_w, two_sample_w, interaction_w, interaction_two_sample_w, file = "8_wilcoxon/data/one-sided_wilcoxon_results.RData")
 fname = paste("4_test_cross_correlations/data/", NORM, ALT, "_wilcoxon_results.RData", sep = "")
 save(overall_w, 
      S_w, 
