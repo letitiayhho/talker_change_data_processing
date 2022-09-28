@@ -91,9 +91,9 @@ get_two_sample_t_for_each_channel <- function(group1, group2) {
   return(data.frame("t" = t, "df" = df, "p" = p))
 }
 
-get_two_sample_wilcoxon_for_each_channel <- function(group1, group2) {
-  w <- mapply(function(x, y) {wilcox.test(x, y, paired = TRUE, exact = TRUE)$statistic}, group1, group2)
-  p <- mapply(function(x, y) {wilcox.test(x, y, paired = TRUE, exact = TRUE)$p.value}, group1, group2)
+get_two_sample_wilcoxon_for_each_channel <- function(group1, group2, paired) {
+  w <- mapply(function(x, y) {wilcox.test(x, y, paired = paired, exact = TRUE)$statistic}, group1, group2)
+  p <- mapply(function(x, y) {wilcox.test(x, y, paired = paired, exact = TRUE)$p.value}, group1, group2)
   return(data.frame("w" = w, "p" = p))
 }
 
