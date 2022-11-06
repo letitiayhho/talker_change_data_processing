@@ -18,7 +18,7 @@ source("4_test_cross_correlations/src/functions.R")
 
 # Param
 ALT = "two.sided"
-NORM = "" # either "normalized_" or ""
+NORM = "normalized_" # either "normalized_" or ""
 
 # Import data
 fpath = paste("4_test_cross_correlations/data/", NORM, ALT, "_wilcoxon_results.RData", sep = "")
@@ -34,13 +34,13 @@ plot <- ggplot() +
   geom_point(data = overall, aes(x = x, y = y, 
                                     size = 1/p, 
                                     alpha = 0.5,
-                                    stroke = 0)) +
-  geom_point(data = overall, aes(x = x, y = y, 
+                                    stroke = 1)) +
+  geom_point(data = overall, aes(x = x, y = y,
                                     size = 1,
-                                    alpha = 0.5,
-                                    stroke = 0)) + 
+                                    alpha = 0.5)) +
   scale_size_continuous(name = "p", 
-                        limits = c(1, 1000),
+                        range = c(0, 20),
+                        limits = c(1, 200),
                         breaks = c(20, 100, 200), 
                         labels = c("0.05", "0.01", "0.005")) +
   guides(alpha = FALSE) +
@@ -58,8 +58,8 @@ plot <- ggplot() +
         panel.grid.minor=element_blank(),
         plot.background=element_blank())
 plot
-fname = paste('figs/', NORM, ALT, '_overall.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 6, height = 5)
+fname = paste('figs/', NORM, ALT, '_overall_poster.png', sep = "")
+ggsave(plot = plot, filename = fname, width = 12, height = 10, dpi = 500)
 ```
 
 #### One-sample and two-sample wilcoxon for each condition
@@ -86,35 +86,28 @@ get_map <- function(df, channels, nodiff_channels, levels_label) {
   ggplot() +
     geom_point(data = df, aes(x = x, y = y,
                               size = 1/group1,
-                              colour = "#B8DE29FF",
-                              alpha = 0.5,
-                              stroke = 0)) +
+                              color = "1",
+                              alpha = 0.85,
+                              stroke = 1)) +
     geom_point(data = df, aes(x = x, y = y,
                               size = 1/group2,
-                              colour = "#287D8EFF",
-                              alpha = 0.5,
-                              stroke = 0)) +
+                              color = "2",
+                              alpha = 0.85,
+                              stroke = 1)) +
     geom_point(data = df, aes(x = 1000+x, y = y,
                               size = 1/nodiff_group1,
-                              colour = "#B8DE29FF",
-                              alpha = 0.5,
-                              stroke = 0)) +
+                              color = "1",
+                              alpha = 0.85,
+                              stroke = 1)) +
     geom_point(data = df, aes(x = 1000+x, y = y,
                               size = 1/nodiff_group2,
-                              colour = "#287D8EFF",
-                              alpha = 0.5,
-                              stroke = 0)) +
-    # geom_point(data = diff_coordinates, aes(x = x, y = y,
-    #                                         size = 1,
-    #                                         alpha = 0.5,
-    #                                         stroke = 0)) +
-    # geom_point(data = nodiff_coordinates, aes(x = 1000+x, y = y,
-    #                                           size = 1,
-    #                                           alpha = 0.5,
-    #                                           stroke = 0)) +
+                              color = "2",
+                              alpha = 0.85,
+                              stroke = 1)) +
     scale_color_discrete(name = "Level", labels = levels_label) +
     scale_size_continuous(name = "p", 
-                          limits = c(1, 1000),
+                          range = c(0, 20),
+                          limits = c(1, 200),
                           breaks = c(20, 100, 200), 
                           labels = c("0.05", "0.01", "0.005")) +
     guides(alpha = FALSE) +
@@ -142,7 +135,7 @@ recode_ps <- function(ps, channels){
 
     # Recoding values if too small or too large
     else {
-      if (p < 0.001) {p <- 0.001}
+      if (p < 0.005) {p <- 0.005}
       recoded_ps[i] <- p
     }
   }
@@ -164,13 +157,13 @@ nodiff_same_talker <- recode_ps(S_w$p, nodiff_talker_channels)
 nodiff_different_talker <- recode_ps(T_w$p, nodiff_talker_channels)
 
 # Create data frame for bubbles
-talker_df <- data.frame(group1 = same_talker, group2 = different_talker, nodiff_group1 = nodiff_same_talker, nodiff_group2 = nodiff_different_talker, coordinates)
+talker_df <- data.frame(group1 = different_talker, group2 = same_talker, nodiff_group1 = nodiff_different_talker, nodiff_group2 = nodiff_same_talker, coordinates)
 
 # Plot
 plot <- get_map(talker_df, talker_channels, nodiff_talker_channels, c("Different talker", "Same talker"))
 plot
-fname = paste('figs/', NORM, ALT, '_talker.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 12, height = 5)
+fname = paste('figs/', NORM, ALT, '_talker_poster.png', sep = "")
+ggsave(plot = plot, filename = fname, width = 24, height = 10, dpi = 500)
 ```
 
 **meaning**
@@ -187,13 +180,14 @@ nodiff_meaning <- recode_ps(M_w$p, nodiff_meaning_channels)
 nodiff_nonsense <- recode_ps(N_w$p, nodiff_meaning_channels)
 
 # Create data frame for bubbles
-meaning_df <- data.frame(group1 = meaningful, group2 = nonsense, nodiff_group1 = nodiff_meaning, nodiff_group2 = nodiff_nonsense, coordinates)
+meaning_df <- data.frame(group1 = nonsense, group2 = meaningful, nodiff_group1 = nodiff_nonsense, nodiff_group2 = nodiff_meaning, coordinates)
+# meaning_df <- data.frame(group1 = meaningful, group2 = nonsense, nodiff_group1 = nodiff_meaning, nodiff_group2 = nodiff_nonsense, coordinates)
 
 # Plot
 plot <- get_map(meaning_df, meaning_channels, nodiff_meaning_channels, c("Nonsense", "Meaningful"))
 plot
-fname = paste('figs/', NORM, ALT, '_meaning.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 12, height = 5)
+fname = paste('figs/', NORM, ALT, '_meaning_poster.png', sep = "")
+ggsave(plot = plot, filename = fname, width = 24, height = 10, dpi = 500)
 ```
 
 **constraint**
@@ -210,13 +204,15 @@ nodiff_low <- recode_ps(L_w$p, nodiff_constraint)
 nodiff_high <- recode_ps(H_w$p, nodiff_constraint)
 
 # Create data frame for bubbles
-constraint_df <- data.frame(group1 = low, group2 = high, nodiff_group1 = nodiff_low, nodiff_group2 = nodiff_high, coordinates)
+constraint_df <- data.frame(group1 = high, group2 = low, nodiff_group1 = nodiff_high, nodiff_group2 = nodiff_low, coordinates)
+
+# constraint_df <- data.frame(group1 = low, group2 = high, nodiff_group1 = nodiff_low, nodiff_group2 = nodiff_high, coordinates)
 
 # Plot
 plot <- get_map(constraint_df, constraint_channels, nodiff_constraint, c("High constraint", "Low constraint"))
 plot
-fname = paste('figs/', NORM, ALT, '_constraint.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 12, height = 5)
+fname = paste('figs/', NORM, ALT, '_constraint_poster.png', sep = "")
+ggsave(plot = plot, filename = fname, width = 24, height = 10, dpi = 500)
 ```
 
 **stats**
@@ -277,8 +273,8 @@ talker_L_interaction_df <- data.frame(group1 = SL, group2 = TL, nodiff_group1 = 
 # Plot
 plot <- get_map(talker_L_interaction_df, talker_L_interaction_channels, nodiff_talker_L_interaction_channels, c("Different talker low constraint", "Same-talker low constraint"))
 plot
-fname = paste('figs/', NORM, ALT, '_talker_L.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 12, height = 5)
+fname = paste('figs/', NORM, ALT, '_talker_L_poster.png', sep = "")
+ggsave(plot = plot, filename = fname, width = 24, height = 10, dpi = 500)
 ```
 
 **Talker and high constraint**
@@ -299,8 +295,8 @@ talker_H_interaction_df <- data.frame(group1 = SH, group2 = TH, nodiff_group1 = 
 # Plot
 plot <- get_map(talker_H_interaction_df, talker_H_interaction_channels, nodiff_talker_H_interaction_channels, c("Different talker high constraint", "Same-talker high constraint"))
 plot
-fname = paste('figs/', NORM, ALT, '_talker_H.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 12, height = 5)
+fname = paste('figs/', NORM, ALT, '_talker_H_poster.png', sep = "")
+ggsave(plot = plot, filename = fname, width = 24, height = 10, dpi = 500)
 ```
 
 **Meaning and low constraint**
@@ -322,8 +318,8 @@ meaning_L_interaction_df <- data.frame(group1 = ML, group2 = NL, nodiff_group1 =
 # Plot
 plot <- get_map(meaning_L_interaction_df, meaning_L_interaction_channels, nodiff_meaning_L_interaction_channels, c("Nonsense low constraint", "Meaningful low constraint"))
 plot
-fname = paste('figs/', NORM, ALT, '_meaning_L.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 12, height = 5)
+fname = paste('figs/', NORM, ALT, '_meaning_L_poster.png', sep = "")
+ggsave(plot = plot, filename = fname, width = 24, height = 10, dpi = 500)
 ```
 
 **Meaning and high constraint**
@@ -345,8 +341,8 @@ meaning_H_interaction_df <- data.frame(group1 = MH, group2 = NH, nodiff_group1 =
 # Plot
 plot <- get_map(meaning_H_interaction_df, meaning_H_interaction_channels, nodiff_meaning_H_interaction_channels, c("Nonsense high constraint", "Meaningful high constraint"))
 plot
-fname = paste('figs/', NORM, ALT, '_meaning_H.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 12, height = 5)
+fname = paste('figs/', NORM, ALT, '_meaning_H_poster.png', sep = "")
+ggsave(plot = plot, filename = fname, width = 24, height = 10, dpi = 500)
 ```
 **stats**
 

@@ -302,7 +302,7 @@ plot_ws <- function(w1, w2, labs, c, fname) {
     scale_color_discrete(labels = labs) +
     ylim(c(0, 25)) +
     xlim(c(0, 35))
-  ggsave(p, filename = fname, width = 6, height = 3.5)
+  ggsave(p, filename = fname, width = 12, height = 7)
   return(p)
 }
 
@@ -316,9 +316,9 @@ H_w$w_adjusted <- standardize_ws(H_w$p, H_w$w)
 
 c <- get_critical_value(S_w$p, S_w$w_adjusted)
 
-plot_ws(S_w$w_adjusted, T_w$w_adjusted, c("S", "T"), c, "4_test_cross_correlations/figs/ws_talker.png")
-plot_ws(M_w$w_adjusted, N_w$w_adjusted, c("M", "N"), c, "4_test_cross_correlations/figs/ws_meaning.png")
-plot_ws(L_w$w_adjusted, H_w$w_adjusted, c("L", "H"), c, "4_test_cross_correlations/figs/ws_constraint.png")
+plot_ws(T_w$w_adjusted, S_w$w_adjusted, c("T", "S"), c, "4_test_cross_correlations/figs/ws_talker_poster.png")
+plot_ws(N_w$w_adjusted, M_w$w_adjusted, c("N", "M"), c, "4_test_cross_correlations/figs/ws_meaning_poster.png")
+plot_ws(H_w$w_adjusted, L_w$w_adjusted, c("H", "L"), c, "4_test_cross_correlations/figs/ws_constraint_poster.png")
 ```
 
 ```{r}
@@ -331,7 +331,7 @@ p <- ggplot(overall_w, aes(x = w_adjusted)) +
     xlim(c(0, 35)) +
     xlab("w")
 p 
-ggsave(filename = "../figs/ws_overall.png", plot = p, width = 6, height = 2.5)
+ggsave(filename = "../figs/ws_overall_poster.png", plot = p, width = 6, height = 2.5)
 sum(overall_w$p < 0.05)
 ```
 
@@ -350,10 +350,10 @@ get_sig_xcorrs <- function(xcorr, p) { # get xcorrs from sig channels
   return(sig_xcorr)
 }
 
-get_sig_xcorrs_df <- function(cond, group, sig_xcorr) {
-  cond_col <- rep(cond, length(sig_xcorr))
+get_sig_xcorrs_df <- function(condition, group, sig_xcorr) {
+  condition_col <- rep(condition, length(sig_xcorr))
   group_col <- rep(group, length(sig_xcorr))
-  df <- data.frame(cond, sig_xcorr, group)
+  df <- data.frame(condition, sig_xcorr, group)
 }
 
 remove_outliers <- function(x) {
@@ -368,6 +368,29 @@ N_sig <- get_sig_xcorrs(N, N_w$p)
 L_sig <- get_sig_xcorrs(L, L_w$p)
 H_sig <- get_sig_xcorrs(H, H_w$p)
 
+df <- get_sig_xcorrs_df('1', 'talker', S_sig) %>%
+  rbind(get_sig_xcorrs_df('2', 'talker', T_sig)) %>%
+  rbind(get_sig_xcorrs_df('1', 'meaning', M_sig)) %>%
+  rbind(get_sig_xcorrs_df('2', 'meaning', N_sig)) %>%
+  rbind(get_sig_xcorrs_df('1', 'constraint', L_sig)) %>%
+  rbind(get_sig_xcorrs_df('2', 'constraint', H_sig))
+
+# New facet label names for condition variable
+condition.labs <- c("S", "T", "M", "N", "L", "H")
+
+p <- ggplot(df, aes(x = condition, y = sig_xcorr, fill = group)) +
+  geom_boxplot() +
+  scale_fill_brewer(palette="Greens") +
+  geom_signif(comparisons = list(c("1", "2")), map_signif_level = TRUE) +
+  ylab("cross correlations") +
+  facet_grid(. ~ group)
+  # scale_x_discrete(labels=condition.labs)
+  
+p
+getwd()
+ggsave(p, filename = '4_test_cross_correlations/figs/xcorrs_for_sig_channels_poster_2.png', width = 10, height = 5)
+```
+```{r}
 df <- get_sig_xcorrs_df('S', 'talker', S_sig) %>%
   rbind(get_sig_xcorrs_df('T', 'talker', T_sig)) %>%
   rbind(get_sig_xcorrs_df('M', 'meaning', M_sig)) %>%
@@ -375,14 +398,64 @@ df <- get_sig_xcorrs_df('S', 'talker', S_sig) %>%
   rbind(get_sig_xcorrs_df('L', 'constraint', L_sig)) %>%
   rbind(get_sig_xcorrs_df('H', 'constraint', H_sig))
 
-p <- ggplot(df, aes(x = cond, y = sig_xcorr, fill = group)) + 
+# New facet label names for condition variable
+# condition.labs <- c("S", "T", "M", "N", "L", "H")
+
+p <- ggplot(df, aes(x = condition, y = sig_xcorr, fill = group)) +
   geom_boxplot() +
   scale_fill_brewer(palette="Greens") +
   geom_signif(comparisons = list(c("S", "T"), c("M", "N")), map_signif_level = TRUE) +
   ylab("cross correlations")
+  # facet_grid(. ~ group)
+  # scale_x_discrete(labels=condition.labs)
+  
 p
-ggsave(p, filename = '../figs/xcorrs_for_sig_channels.png', width = 6, height = 3)
+getwd()
+# ggsave(p, filename = '4_test_cross_correlations/figs/xcorrs_for_sig_channels_poster_2.png', width = 10, height = 5)
 ```
+```{r}
+df_talker <- get_sig_xcorrs_df('S', 'talker', S_sig) %>%
+  rbind(get_sig_xcorrs_df('T', 'talker', T_sig))
+df_meaning <- rbind(get_sig_xcorrs_df('M', 'meaning', M_sig)) %>%
+  rbind(get_sig_xcorrs_df('N', 'meaning', N_sig))
+df_constraint <- rbind(get_sig_xcorrs_df('L', 'constraint', L_sig)) %>%
+  rbind(get_sig_xcorrs_df('H', 'constraint', H_sig))
+
+# New facet label names for condition variable
+# condition.labs <- c("S", "T", "M", "N", "L", "H")
+
+p_talker <- ggplot(df_talker, aes(x = condition, y = sig_xcorr, fill = group)) +
+  geom_boxplot(fill = "#09a6ed") +
+  geom_signif(comparisons = list(c("S", "T")), annotations = '*') +
+  ylab("cross correlations") +
+  ylim(c(0.5e-05, 6e-05)) +
+  theme(legend.position = "none") +
+  xlab('Talker')
+p_meaning <- ggplot(df_meaning, aes(x = condition, y = sig_xcorr, fill = group)) +
+  geom_boxplot(fill = "#048fcf") +
+  geom_signif(comparisons = list(c("M", "N")), map_signif_level = TRUE) +
+  theme(axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.title.y =element_blank(),
+        legend.position = "none") +
+  ylim(c(0.5e-05, 6e-05)) +
+  xlab('Meaning')
+p_constraint <- ggplot(df_constraint, aes(x = condition, y = sig_xcorr, fill = group)) +
+  geom_boxplot(fill = "#026fa1") +
+  theme(axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.title.y =element_blank(),
+        legend.position = "none") +
+  ylim(c(0.5e-05, 6e-05)) +
+  xlab('Constraint')
+p <- ggarrange(p_talker, p_meaning, p_constraint, ncol = 3)
+  
+# p
+# getwd()
+ggsave(p, filename = '4_test_cross_correlations/figs/xcorrs_for_sig_channels_poster_3.png', width = 10, height = 5)
+```
+
+
 
 #### Get stats
 
@@ -468,7 +541,7 @@ p <- ggplot(df, aes(x = cond, y = counts, fill = group)) +
   geom_signif(comparisons = list(c("S", "T")), map_signif_level = TRUE) +
   ylab("channels")
 p
-ggsave(p, filename = '../figs/compare_channel_counts.png', width = 6, height = 3)
+ggsave(p, filename = '../figs/compare_channel_counts_poster.png', width = 6, height = 3)
 ```
 ## Count the number of channels tracking each condition
 
@@ -541,11 +614,12 @@ p <- ggplot(df, aes(x = cond, y = counts, fill = cond)) +
                                  annotations = c("*")) +
   ylab("channels")
 p
-ggsave(p, filename = '../figs/compare_condition_channel_counts.png', width = 6, height = 3)
+ggsave(p, filename = '../figs/compare_condition_channel_counts_poster.png', width = 6, height = 3)
 ```
 #### Save everything
 
 ```{r}
+getwd()
 fname = paste("4_test_cross_correlations/data/", NORM, ALT, "_wilcoxon_results.RData", sep = "")
 save(overall_w, 
      S_w, 
