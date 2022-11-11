@@ -21,9 +21,9 @@ fi
 GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME"
 
-log_file="7_coherence/data/logs/$(date +%s).log"
+log_file="6_coherence/data/logs/$(date +%s).log"
 
 while read -r subject_number; do
-    matlab -nodisplay -r "addpath('7_coherence/src'); compute_coherence('$GIT_HOME', '$subject_number'); quit" 2>&1 \
+    matlab -nodisplay -r "addpath('6_coherence/src'); compute_coherence('$GIT_HOME', '$subject_number'); quit" 2>&1 \
         | tee -a "$log_file"
 done < 0_set_up_and_raw_data/data/subject_numbers.txt
