@@ -368,51 +368,9 @@ N_sig <- get_sig_xcorrs(N, N_w$p)
 L_sig <- get_sig_xcorrs(L, L_w$p)
 H_sig <- get_sig_xcorrs(H, H_w$p)
 
-df <- get_sig_xcorrs_df('1', 'talker', S_sig) %>%
-  rbind(get_sig_xcorrs_df('2', 'talker', T_sig)) %>%
-  rbind(get_sig_xcorrs_df('1', 'meaning', M_sig)) %>%
-  rbind(get_sig_xcorrs_df('2', 'meaning', N_sig)) %>%
-  rbind(get_sig_xcorrs_df('1', 'constraint', L_sig)) %>%
-  rbind(get_sig_xcorrs_df('2', 'constraint', H_sig))
-
-# New facet label names for condition variable
-condition.labs <- c("S", "T", "M", "N", "L", "H")
-
-p <- ggplot(df, aes(x = condition, y = sig_xcorr, fill = group)) +
-  geom_boxplot() +
-  scale_fill_brewer(palette="Greens") +
-  geom_signif(comparisons = list(c("1", "2")), map_signif_level = TRUE) +
-  ylab("cross correlations") +
-  facet_grid(. ~ group)
-  # scale_x_discrete(labels=condition.labs)
-  
-p
-getwd()
-ggsave(p, filename = '4_test_cross_correlations/figs/xcorrs_for_sig_channels_poster_2.png', width = 10, height = 5)
-```
-```{r}
-df <- get_sig_xcorrs_df('S', 'talker', S_sig) %>%
-  rbind(get_sig_xcorrs_df('T', 'talker', T_sig)) %>%
-  rbind(get_sig_xcorrs_df('M', 'meaning', M_sig)) %>%
-  rbind(get_sig_xcorrs_df('N', 'meaning', N_sig)) %>%
-  rbind(get_sig_xcorrs_df('L', 'constraint', L_sig)) %>%
-  rbind(get_sig_xcorrs_df('H', 'constraint', H_sig))
-
-# New facet label names for condition variable
-# condition.labs <- c("S", "T", "M", "N", "L", "H")
-
-p <- ggplot(df, aes(x = condition, y = sig_xcorr, fill = group)) +
-  geom_boxplot() +
-  scale_fill_brewer(palette="Greens") +
-  geom_signif(comparisons = list(c("S", "T"), c("M", "N")), map_signif_level = TRUE) +
-  ylab("cross correlations")
-  # facet_grid(. ~ group)
-  # scale_x_discrete(labels=condition.labs)
-  
-p
-getwd()
 # ggsave(p, filename = '4_test_cross_correlations/figs/xcorrs_for_sig_channels_poster_2.png', width = 10, height = 5)
 ```
+
 ```{r}
 df_talker <- get_sig_xcorrs_df('S', 'talker', S_sig) %>%
   rbind(get_sig_xcorrs_df('T', 'talker', T_sig))
@@ -619,29 +577,29 @@ ggsave(p, filename = '../figs/compare_condition_channel_counts_poster.png', widt
 #### Save everything
 
 ```{r}
-getwd()
-fname = paste("4_test_cross_correlations/data/", NORM, ALT, "_wilcoxon_results.RData", sep = "")
-save(overall_w, 
-     S_w, 
-     T_w, 
-     M_w, 
-     N_w, 
-     L_w, 
-     H_w, 
-     talker_w, 
-     meaning_w, 
-     constraint_w, 
-     talker_L_w, 
-     talker_H_w, 
-     meaning_L_w,
-     meaning_H_w,
-     SH_w, 
-     SL_w, 
-     TH_w, 
-     TL_w, 
-     MH_w, 
-     ML_w, 
-     NH_w, 
-     NL_w, 
-     file = fname)
+# getwd()
+# fname = paste("4_test_cross_correlations/data/", NORM, ALT, "_wilcoxon_results.RData", sep = "")
+# save(overall_w, 
+#      S_w, 
+#      T_w, 
+#      M_w, 
+#      N_w, 
+#      L_w, 
+#      H_w, 
+#      talker_w, 
+#      meaning_w, 
+#      constraint_w, 
+#      talker_L_w, 
+#      talker_H_w, 
+#      meaning_L_w,
+#      meaning_H_w,
+#      SH_w, 
+#      SL_w, 
+#      TH_w, 
+#      TL_w, 
+#      MH_w, 
+#      ML_w, 
+#      NH_w, 
+#      NL_w, 
+#      file = fname)
 ```
