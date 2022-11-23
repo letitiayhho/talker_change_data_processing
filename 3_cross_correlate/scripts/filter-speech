@@ -1,0 +1,69 @@
+#!/bin/bash
+
+set -euo pipefail
+
+usage() {
+    cat <<eof >&2
+usage: $0 <band, either "f0", "above_f0" or "below_f0">
+
+    Downsamples audio to 1000 hz with anti-aliasing
+    Filters around specified band
+eof
+    exit 1
+}
+
+GIT_HOME="$(git rev-parse --show-toplevel)"
+echo "Working from $GIT_HOME"
+cd "$GIT_HOME"
+
+band="$1"
+
+for f in 0_set_up_and_raw_data/data/stim/original/*.wav; do
+    base="$(basename "$f")"
+    filtered_f="3_cross_correlate/data/stim/$band/$base"
+
+    # Skip filtered files
+    if test -f "$filtered_f"; then
+        echo "skipping $f"
+        continue
+    fi
+
+    echo "Filtering $f to $filtered_f"
+
+    # Filter around f0
+    if [[ $band == "f0" ]]; then
+        if [[ $f == *"_f.wav" ]]; then
+            high_pass=130
+            low_pass=320
+        elif [[ $f == "word_"* ]]; then
+            high_pass=60
+            low_pass=250
+        fi
+    downsample=1000
+    sox "$f" -r "$downsample" "$filtered_f" highpass "$high_pass" lowpass "$low_pass"
+    fi
+
+    # Filter below f0
+    if [[ $band == "below_f0" ]]; then
+        if [[ $f == *"_f.wav" ]]; then
+            low_pass=130
+        elif [[ $f == "word_"* ]]; then
+            low_pass=60
+        fi
+    downsample=1000
+    sox "$f" -r "$downsample" "$filtered_f" lowpass "$low_pass"
+    fi
+
+    # Filter above f0
+    if [[ $band == "above_f0" ]]; then
+        if [[ $f == *"_f.wav" ]]; then
+            high_pass=320
+        elif [[ $f == "word_"* ]]; then
+            high_pass=250
+        fi
+    downsample=1000
+    sox "$f" -r "$downsample" "$filtered_f" highpass "$high_pass"
+    fi
+done
+
+echo "done :^)"
