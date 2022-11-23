@@ -3,7 +3,8 @@ set -euo pipefail
 
 usage() {
     cat <<eof >&2
-usage: $0 <cross_correlate or cross_correlate_with_f0>
+usage: $0 <cross_correlate, cross_correlate_with_f0,
+    cross_correlate_above_f0, cross_correlate_below_f0>
 
     description
         wrapper script for cross_correlate.m or cross_correlate_with_f0.m

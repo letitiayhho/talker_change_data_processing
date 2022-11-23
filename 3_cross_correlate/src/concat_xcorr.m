@@ -1,21 +1,19 @@
-function [] = concat_xcorr(git_home, stat)
+function [] = concat_xcorr(git_home, fstem)
 % DESCRIPTION:
 %   Computes cross-correlations or convolutions between eeg signal and audio
 %   stimuli across all subjects, channels and trials for each condition
 
 arguments
     git_home char
-    stat char % 'maximum', 'lag' or 'abs_average'
+    fstem char % 'lag_normalized', 'average_below_f0_normalized'
 end
 
     %% Main
     cd(git_home)    
     addpath('tools/')
-    %file_struct = dir(['3_cross_correlate/data/*/', stat, '.mat']);
-    file_struct = dir(['3_cross_correlate/data/*/', stat, '_f0_normalized.mat']);
+    file_struct = dir(['3_cross_correlate/data/*/', fstem, '.mat']);
     data = combine_cross_correlations(file_struct);
-    %write_fp = ['3_cross_correlate/data/', stat, '.csv'];
-    write_fp = ['3_cross_correlate/data/', stat, '_f0_normalized.csv'];
+    write_fp = ['3_cross_correlate/data/', fstem, '.csv'];
     fprintf(1, ['Writing data to ', write_fp, '\n']);
     writetable(data, write_fp)
     quit
