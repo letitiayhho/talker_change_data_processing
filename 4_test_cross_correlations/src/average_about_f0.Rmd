@@ -162,7 +162,7 @@ p <- ggplot(overall_w, aes(x = w_adjusted)) +
     xlim(c(0, 35)) +
     xlab("w")
 p 
-ggsave(filename = paste("../figs/ws_overall_", band, ".png", sep = ''), plot = p, width = 6, height = 2.5)
+ggsave(filename = paste("4_test_cross_correlations/figs/ws_overall_", band, ".png", sep = ''), plot = p, width = 6, height = 2.5)
 sum(overall_w$p < 0.05)
 ```
 
@@ -207,12 +207,10 @@ remove_outliers <- function(x) {
 }
 
 S_sig <- get_sig_xcorrs(S, S_w$p)
-# # S_sig <- 0
 T_sig <- get_sig_xcorrs(T, T_w$p)
 M_sig <- get_sig_xcorrs(M, M_w$p)
 N_sig <- get_sig_xcorrs(N, N_w$p)
 L_sig <- get_sig_xcorrs(L, L_w$p)
-# L_sig <- 0
 H_sig <- get_sig_xcorrs(H, H_w$p)
 ```
 
@@ -244,7 +242,6 @@ p_meaning <- ggplot(df_meaning, aes(x = condition, y = sig_xcorr, fill = group))
   xlab('Meaning')
 p_constraint <- ggplot(df_constraint, aes(x = condition, y = sig_xcorr, fill = group)) +
   geom_boxplot(fill = "#026fa1") +
-  geom_signif(comparisons = list(c("H", "L")), map_signif_level = TRUE) +
   theme(axis.text.y=element_blank(),
         axis.ticks.y=element_blank(),
         axis.title.y =element_blank(),
@@ -254,8 +251,10 @@ p_constraint <- ggplot(df_constraint, aes(x = condition, y = sig_xcorr, fill = g
 p <- ggarrange(p_talker, p_meaning, p_constraint, ncol = 3)
 p
 
-ggsave(p, filename = paste("../figs/xcorrs_for_sig_channels_", band, ".png", sep = ''), width = 10, height = 5)
+ggsave(p, filename = paste("4_test_cross_correlations/figs/xcorrs_for_sig_channels_", band, ".png", sep = ''), width = 10, height = 5)
 ```
+
+
 
 #### Get stats
 
@@ -267,7 +266,7 @@ t.test(overall_sig)
 # t-tests between levels 
 t.test(T_sig, S_sig)
 t.test(M_sig, N_sig)
-t.test(H_sig)
+t.test(H_sig, L_sig)
 ```
 
 #### Save everything

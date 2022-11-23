@@ -408,9 +408,9 @@ p_constraint <- ggplot(df_constraint, aes(x = condition, y = sig_xcorr, fill = g
   xlab('Constraint')
 p <- ggarrange(p_talker, p_meaning, p_constraint, ncol = 3)
   
-# p
+p
 # getwd()
-ggsave(p, filename = '4_test_cross_correlations/figs/xcorrs_for_sig_channels_poster_3.png', width = 10, height = 5)
+# ggsave(p, filename = '4_test_cross_correlations/figs/xcorrs_for_sig_channels_poster_3.png', width = 10, height = 5)
 ```
 
 
