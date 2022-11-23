@@ -58,8 +58,8 @@ plot <- ggplot() +
         panel.grid.minor=element_blank(),
         plot.background=element_blank())
 plot
-fname = paste('figs/', NORM, ALT, '_overall_poster.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 12, height = 10, dpi = 500)
+fname = paste('figs/', NORM, ALT, '_overall.png', sep = "")
+ggsave(plot = plot, filename = fname, width = 6, height = 5)
 ```
 
 #### One-sample and two-sample wilcoxon for each condition
@@ -162,8 +162,8 @@ talker_df <- data.frame(group1 = different_talker, group2 = same_talker, nodiff_
 # Plot
 plot <- get_map(talker_df, talker_channels, nodiff_talker_channels, c("Different talker", "Same talker"))
 plot
-fname = paste('figs/', NORM, ALT, '_talker_poster.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 24, height = 10, dpi = 500)
+fname = paste('figs/', NORM, ALT, '_talker.png', sep = "")
+ggsave(plot = plot, filename = fname, width = 12, height = 5)
 ```
 
 **meaning**
@@ -186,8 +186,8 @@ meaning_df <- data.frame(group1 = nonsense, group2 = meaningful, nodiff_group1 =
 # Plot
 plot <- get_map(meaning_df, meaning_channels, nodiff_meaning_channels, c("Nonsense", "Meaningful"))
 plot
-fname = paste('figs/', NORM, ALT, '_meaning_poster.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 24, height = 10, dpi = 500)
+fname = paste('figs/', NORM, ALT, '_meaning.png', sep = "")
+ggsave(plot = plot, filename = fname, width = 12, height = 5)
 ```
 
 **constraint**
@@ -211,8 +211,8 @@ constraint_df <- data.frame(group1 = high, group2 = low, nodiff_group1 = nodiff_
 # Plot
 plot <- get_map(constraint_df, constraint_channels, nodiff_constraint, c("High constraint", "Low constraint"))
 plot
-fname = paste('figs/', NORM, ALT, '_constraint_poster.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 24, height = 10, dpi = 500)
+fname = paste('figs/', NORM, ALT, '_constraint.png', sep = "")
+ggsave(plot = plot, filename = fname, width = 12, height = 5)
 ```
 
 **stats**
@@ -273,8 +273,8 @@ talker_L_interaction_df <- data.frame(group1 = SL, group2 = TL, nodiff_group1 = 
 # Plot
 plot <- get_map(talker_L_interaction_df, talker_L_interaction_channels, nodiff_talker_L_interaction_channels, c("Different talker low constraint", "Same-talker low constraint"))
 plot
-fname = paste('figs/', NORM, ALT, '_talker_L_poster.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 24, height = 10, dpi = 500)
+fname = paste('figs/', NORM, ALT, '_talker_L.png', sep = "")
+ggsave(plot = plot, filename = fname, width = 12, height = 5)
 ```
 
 **Talker and high constraint**
@@ -295,8 +295,8 @@ talker_H_interaction_df <- data.frame(group1 = SH, group2 = TH, nodiff_group1 = 
 # Plot
 plot <- get_map(talker_H_interaction_df, talker_H_interaction_channels, nodiff_talker_H_interaction_channels, c("Different talker high constraint", "Same-talker high constraint"))
 plot
-fname = paste('figs/', NORM, ALT, '_talker_H_poster.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 24, height = 10, dpi = 500)
+fname = paste('figs/', NORM, ALT, '_talker_H.png', sep = "")
+ggsave(plot = plot, filename = fname, width = 12, height = 5)
 ```
 
 **Meaning and low constraint**
@@ -318,8 +318,8 @@ meaning_L_interaction_df <- data.frame(group1 = ML, group2 = NL, nodiff_group1 =
 # Plot
 plot <- get_map(meaning_L_interaction_df, meaning_L_interaction_channels, nodiff_meaning_L_interaction_channels, c("Nonsense low constraint", "Meaningful low constraint"))
 plot
-fname = paste('figs/', NORM, ALT, '_meaning_L_poster.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 24, height = 10, dpi = 500)
+fname = paste('figs/', NORM, ALT, '_meaning_L.png', sep = "")
+ggsave(plot = plot, filename = fname, width = 12, height = 5)
 ```
 
 **Meaning and high constraint**
@@ -341,8 +341,8 @@ meaning_H_interaction_df <- data.frame(group1 = MH, group2 = NH, nodiff_group1 =
 # Plot
 plot <- get_map(meaning_H_interaction_df, meaning_H_interaction_channels, nodiff_meaning_H_interaction_channels, c("Nonsense high constraint", "Meaningful high constraint"))
 plot
-fname = paste('figs/', NORM, ALT, '_meaning_H_poster.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 24, height = 10, dpi = 500)
+fname = paste('figs/', NORM, ALT, '_meaning_H.png', sep = "")
+ggsave(plot = plot, filename = fname, width = 12, height = 5)
 ```
 **stats**
 
