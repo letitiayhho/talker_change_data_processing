@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
     cat <<eof >&2
-usage: $0 <average or max_average>
+usage: $0 <fstem, e.g. average, max, or coherence for full>
 
     description
         wrapper script for combining coherence values from 
@@ -12,6 +12,8 @@ eof
     exit 1
 }
 
+fstem="$1"
+
 if [[ $# -ne 1 ]]; then
     usage
 fi
@@ -19,6 +21,4 @@ fi
 GIT_HOME="$(git rev-parse --show-toplevel)"
 cd "$GIT_HOME"
 
-stat="$1"
-
-matlab -nodisplay -r "addpath('7_coherence/src'); concat_coherence('$GIT_HOME', '$stat')"
+matlab -nodisplay -r "addpath('6_coherence/src'); concat_coherence('$GIT_HOME', '$fstem')"

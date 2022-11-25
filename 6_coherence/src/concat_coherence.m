@@ -1,19 +1,19 @@
-function [] = concat_coherence(git_home, stat)
+function [] = concat_coherence(git_home, fstem)
 % DESCRIPTION:
 %   Computes cross-correlations or convolutions between eeg signal and audio
 %   stimuli across all subjects, channels and trials for each condition
 
 arguments
     git_home char
-    stat char % 'average' or 'max'
+    fstem char % 'average.mat', 'max.mat', or 'coherence.mat'
 end
 
     %% Main
     cd(git_home)    
     addpath('tools/')
-    file_struct = dir(['7_coherence/data/*/', stat, '.mat']);
+    file_struct = dir(['6_coherence/data/*/', fstem, '.mat']);
     data = combine_cross_correlations(file_struct);
-    write_fp = ['7_coherence/data/', stat, '.csv'];
+    write_fp = ['6_coherence/data/', fstem, '.csv'];
     fprintf(1, ['Writing data to ', write_fp, '\n']);
     writetable(data, write_fp)
     quit
