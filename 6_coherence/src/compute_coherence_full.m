@@ -11,7 +11,7 @@ function [] = compute_coherence_full(git_home, subject_number)
     eeg_data = load('eeg_data').eeg_data;
 
     % Import pruned epoch order
-%     stim_order = load('stim_order').stim_order;
+    stim_order = load('stim_order').stim_order;
 
     %% 2. Coherence
     n_trials = size(eeg_data, 3);
@@ -47,23 +47,20 @@ function [] = compute_coherence_full(git_home, subject_number)
     
     coher = reshape(coher, [n_trials * n_chans, n_freqs]);
     condition = load('split_conditions.mat').split_conditions;
-    condition = repmat(condition, [n_chans, 1]); 
+    condition = repmat(condition, [n_chans, 1]);
     
     data_frame = [
         table(repmat(subject_number, [n_trials * n_chans, 1]), 'VariableNames', {'subject_number'}),...
         table(repelem((1:128), n_trials).', 'VariableNames', {'channel'}),...
         condition,...
-%         table(repmat(stim_order.epoch, [n_chans, 1]), 'VariableNames', {'epoch'}),...
-%         table(repmat(stim_order.word, [n_chans, 1]), 'VariableNames', {'word'}),...
         array2table(coher)];
-%     data_frame.Properties.VariableNames = cellstr(['subject_number', 'channel',...
-%         'constraint', 'meaning', 'talker', 'epoch', 'word', string(1:1025)]);
     data_frame.Properties.VariableNames = cellstr(['subject_number', 'channel',...
         'constraint', 'meaning', 'talker', string(1:1025)]);
     
-   % Average by condition
-   data_frame = grpstats(data_frame, ["subject_number", "channel", "constraint", "meaning", "talker"], 'mean');
-
+    % Average by condition
+    data_frame = grpstats(data_frame, ["subject_number", "channel", "constraint", "meaning", "talker"], 'mean');
+    data_frame.Properties.RowNames = {};
+    
     fp = fullfile('6_coherence/data', subject_number, 'coherence.mat');
     fprintf(1, ['\nWriting data to /', fp, '\n'])
     save(fp, 'data_frame')
