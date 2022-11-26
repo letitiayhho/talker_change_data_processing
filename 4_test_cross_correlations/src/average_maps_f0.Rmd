@@ -16,12 +16,9 @@ library("kableExtra")
 source("tools/functions.R")
 source("4_test_cross_correlations/src/functions.R")
 
-# Param
-ALT = "two.sided"
-NORM = "normalized_" # either "normalized_" or ""
-
 # Import data
-fpath = paste("4_test_cross_correlations/data/", NORM, ALT, "_wilcoxon_results_f0.RData", sep = "")
+BAND = "above_f0"
+fpath = paste("4_test_cross_correlations/data/wilcoxon_results_", BAND, '.RData', sep = "")
 load(fpath) 
 ```
 
@@ -58,7 +55,7 @@ plot <- ggplot() +
         panel.grid.minor=element_blank(),
         plot.background=element_blank())
 plot
-fname = paste('figs/', NORM, ALT, '_overall_f0.png', sep = "")
+fname = paste('figs/', BAND, '_overall.png', sep = "")
 ggsave(plot = plot, filename = fname, width = 6, height = 5)
 ```
 
@@ -162,7 +159,7 @@ talker_df <- data.frame(group1 = different_talker, group2 = same_talker, nodiff_
 # Plot
 plot <- get_map(talker_df, talker_channels, nodiff_talker_channels, c("Different talker", "Same talker"))
 plot
-fname = paste('figs/', NORM, ALT, '_talker_f0.png', sep = "")
+fname = paste('figs/', BAND, '_talker.png', sep = "")
 ggsave(plot = plot, filename = fname, width = 12, height = 5)
 ```
 
@@ -186,7 +183,7 @@ meaning_df <- data.frame(group1 = nonsense, group2 = meaningful, nodiff_group1 =
 # Plot
 plot <- get_map(meaning_df, meaning_channels, nodiff_meaning_channels, c("Nonsense", "Meaningful"))
 plot
-fname = paste('figs/', NORM, ALT, '_meaning_f0.png', sep = "")
+fname = paste('figs/', BAND, '_meaning.png', sep = "")
 ggsave(plot = plot, filename = fname, width = 12, height = 5)
 ```
 
@@ -211,7 +208,7 @@ constraint_df <- data.frame(group1 = high, group2 = low, nodiff_group1 = nodiff_
 # Plot
 plot <- get_map(constraint_df, constraint_channels, nodiff_constraint, c("High constraint", "Low constraint"))
 plot
-fname = paste('figs/', NORM, ALT, '_constraint_f0.png', sep = "")
+fname = paste('figs/', BAND, '_constraint.png', sep = "")
 ggsave(plot = plot, filename = fname, width = 12, height = 5)
 ```
 
@@ -273,7 +270,7 @@ sum(H_w$p < 0.05, na.rm = TRUE)
 # # Plot
 # plot <- get_map(talker_L_interaction_df, talker_L_interaction_channels, nodiff_talker_L_interaction_channels, c("Different talker low constraint", "Same-talker low constraint"))
 # plot
-# fname = paste('figs/', NORM, ALT, '_talker_L_poster.png', sep = "")
+# fname = paste('figs/', BAND, '_talker_L_poster.png', sep = "")
 # ggsave(plot = plot, filename = fname, width = 12, height = 5)
 ```
 
@@ -295,7 +292,7 @@ sum(H_w$p < 0.05, na.rm = TRUE)
 # # Plot
 # plot <- get_map(talker_H_interaction_df, talker_H_interaction_channels, nodiff_talker_H_interaction_channels, c("Different talker high constraint", "Same-talker high constraint"))
 # plot
-# fname = paste('figs/', NORM, ALT, '_talker_H_poster.png', sep = "")
+# fname = paste('figs/', BAND, '_talker_H_poster.png', sep = "")
 # ggsave(plot = plot, filename = fname, width = 12, height = 5)
 ```
 
@@ -318,7 +315,7 @@ sum(H_w$p < 0.05, na.rm = TRUE)
 # # Plot
 # plot <- get_map(meaning_L_interaction_df, meaning_L_interaction_channels, nodiff_meaning_L_interaction_channels, c("Nonsense low constraint", "Meaningful low constraint"))
 # plot
-# fname = paste('figs/', NORM, ALT, '_meaning_L_poster.png', sep = "")
+# fname = paste('figs/', BAND, '_meaning_L_poster.png', sep = "")
 # ggsave(plot = plot, filename = fname, width = 12, height = 5)
 ```
 
@@ -341,39 +338,39 @@ sum(H_w$p < 0.05, na.rm = TRUE)
 # # Plot
 # plot <- get_map(meaning_H_interaction_df, meaning_H_interaction_channels, nodiff_meaning_H_interaction_channels, c("Nonsense high constraint", "Meaningful high constraint"))
 # plot
-# fname = paste('figs/', NORM, ALT, '_meaning_H_poster.png', sep = "")
+# fname = paste('figs/', BAND, '_meaning_H_poster.png', sep = "")
 # ggsave(plot = plot, filename = fname, width = 12, height = 5)
 ```
 **stats**
 
 ```{r, echo = FALSE}
-# get stats
-print("number of talker norm channels for low constraint")
-length(talker_L_interaction_channels)
-print("number of different-talker channels (p < 0.05)")
-sum(TL_w$p < 0.05, na.rm = TRUE)
-print("number of same-talker channels (p < 0.05)")
-sum(SL_w$p < 0.05, na.rm = TRUE)
-
-print("number of talker norm channels for high constraint")
-length(talker_H_interaction_channels)
-print("number of different-talker channels (p < 0.05)")
-sum(TH_w$p < 0.05, na.rm = TRUE)
-print("number of same-talker channels (p < 0.05)")
-sum(SH_w$p < 0.05, na.rm = TRUE)
-
-
-print("number of meaning channels for low constraint")
-length(meaning_L_interaction_channels)
-print("number of meaningful channels (p < 0.05)")
-sum(ML_w$p < 0.05, na.rm = TRUE)
-print("number of nonsense channels (p < 0.05)")
-sum(NL_w$p < 0.05, na.rm = TRUE)
-
-print("number of meaning channels for high constraint")
-length(meaning_H_interaction_channels)
-print("number of meaningful channels (p < 0.05)")
-sum(MH_w$p < 0.05, na.rm = TRUE)
-print("number of nonsense channels (p < 0.05)")
-sum(NH_w$p < 0.05, na.rm = TRUE)
+# # get stats
+# print("number of talker norm channels for low constraint")
+# length(talker_L_interaction_channels)
+# print("number of different-talker channels (p < 0.05)")
+# sum(TL_w$p < 0.05, na.rm = TRUE)
+# print("number of same-talker channels (p < 0.05)")
+# sum(SL_w$p < 0.05, na.rm = TRUE)
+# 
+# print("number of talker norm channels for high constraint")
+# length(talker_H_interaction_channels)
+# print("number of different-talker channels (p < 0.05)")
+# sum(TH_w$p < 0.05, na.rm = TRUE)
+# print("number of same-talker channels (p < 0.05)")
+# sum(SH_w$p < 0.05, na.rm = TRUE)
+# 
+# 
+# print("number of meaning channels for low constraint")
+# length(meaning_L_interaction_channels)
+# print("number of meaningful channels (p < 0.05)")
+# sum(ML_w$p < 0.05, na.rm = TRUE)
+# print("number of nonsense channels (p < 0.05)")
+# sum(NL_w$p < 0.05, na.rm = TRUE)
+# 
+# print("number of meaning channels for high constraint")
+# length(meaning_H_interaction_channels)
+# print("number of meaningful channels (p < 0.05)")
+# sum(MH_w$p < 0.05, na.rm = TRUE)
+# print("number of nonsense channels (p < 0.05)")
+# sum(NH_w$p < 0.05, na.rm = TRUE)
 ```

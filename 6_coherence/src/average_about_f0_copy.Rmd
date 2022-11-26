@@ -20,6 +20,7 @@ source("4_test_cross_correlations/src/functions.R")
 
 ```{r}
 band = "above_f0"
+
 # Import data
 xcorr <- read.csv(file = paste("3_cross_correlate/data/average_", band, "_normalized.csv", sep = ''))
 channels <- as.character(1:128)
@@ -83,10 +84,12 @@ standardize_ws <- function(p, w) {
   w_adjusted <- abs(w - mid)
   return(w_adjusted)
 }
+
 get_critical_value <- function(p, w) {
   c <- min(w[which(p < 0.05)])
   return(c)
 }
+
 plot_ws <- function(w1, w2, labs, c, fname) {
   df_long <- data.frame(w1 = unlist(w1), w2 = unlist(w2)) %>%
     pivot_longer(cols = c("w1", "w2"),
@@ -102,9 +105,11 @@ plot_ws <- function(w1, w2, labs, c, fname) {
   # ggsave(p, filename = fname, width = 12, height = 7)
   return(p)
 }
+
 talker_w <- get_two_sample_wilcoxon_for_each_channel(S, T, paired = TRUE)
 meaning_w <- get_two_sample_wilcoxon_for_each_channel(M, N, paired = TRUE)
 constraint_w <- get_two_sample_wilcoxon_for_each_channel(L, H, paired = TRUE)
+
 talker_w$w_adjusted <-standardize_ws(talker_w$p, talker_w$w)
 meaning_w$w_adjusted <-standardize_ws(meaning_w$p, meaning_w$w)
 constraint_w$w_adjusted <-standardize_ws(constraint_w$p, constraint_w$w)
@@ -139,7 +144,9 @@ M_w$w_adjusted <- standardize_ws(M_w$p, M_w$w)
 N_w$w_adjusted <- standardize_ws(N_w$p, N_w$w)
 L_w$w_adjusted <- standardize_ws(L_w$p, L_w$w)
 H_w$w_adjusted <- standardize_ws(H_w$p, H_w$w)
+
 c <- get_critical_value(S_w$p, S_w$w_adjusted)
+
 plot_ws(T_w$w_adjusted, S_w$w_adjusted, c("T", "S"), c, "4_test_cross_correlations/figs/ws_talker_poster.png")
 plot_ws(N_w$w_adjusted, M_w$w_adjusted, c("N", "M"), c, "4_test_cross_correlations/figs/ws_meaning_poster.png")
 plot_ws(H_w$w_adjusted, L_w$w_adjusted, c("H", "L"), c, "4_test_cross_correlations/figs/ws_constraint_poster.png")
@@ -164,11 +171,13 @@ sum(overall_w$p < 0.05)
 
 ```{r}
 # Plot cross correlations for channels with significant cross correlations
+
 get_sig_xcorrs <- function(xcorr, p) { # get xcorrs from sig channels
   sig_xcorr <- as.matrix(xcorr) %>%
    .[, which(p < 0.05)] %>%
     abs()
   print(dim(sig_xcorr))
+
   # Catch cases in which there is only one significant channels
   if (class(sig_xcorr) == 'numeric') {
     print("Only one significant channel")
@@ -180,19 +189,23 @@ get_sig_xcorrs <- function(xcorr, p) { # get xcorrs from sig channels
     print("No significant channels")
     return(0)
   }
+
   sig_xcorr <- rowMeans(sig_xcorr) %>% # colMeans() compares channels, rowMeans() compares subs
     remove_outliers()
   return(sig_xcorr)
 }
+
 get_sig_xcorrs_df <- function(condition, group, sig_xcorr) {
   condition_col <- rep(condition, length(sig_xcorr))
   group_col <- rep(group, length(sig_xcorr))
   df <- data.frame(condition, sig_xcorr, group)
 }
+
 remove_outliers <- function(x) {
   x <- x[!x %in% boxplot.stats(x)$out]
   return(x)
 }
+
 S_sig <- get_sig_xcorrs(S, S_w$p)
 T_sig <- get_sig_xcorrs(T, T_w$p)
 M_sig <- get_sig_xcorrs(M, M_w$p)
@@ -208,8 +221,10 @@ df_meaning <- rbind(get_sig_xcorrs_df('M', 'meaning', M_sig)) %>%
   rbind(get_sig_xcorrs_df('N', 'meaning', N_sig))
 df_constraint <- rbind(get_sig_xcorrs_df('L', 'constraint', L_sig)) %>%
   rbind(get_sig_xcorrs_df('H', 'constraint', H_sig))
+
 # New facet label names for condition variable
 # condition.labs <- c("S", "T", "M", "N", "L", "H")
+
 p_talker <- ggplot(df_talker, aes(x = condition, y = sig_xcorr, fill = group)) +
   geom_boxplot(fill = "#09a6ed") +
   geom_signif(comparisons = list(c("S", "T")), map_signif_level = TRUE) +
@@ -235,6 +250,7 @@ p_constraint <- ggplot(df_constraint, aes(x = condition, y = sig_xcorr, fill = g
   xlab('Constraint')
 p <- ggarrange(p_talker, p_meaning, p_constraint, ncol = 3)
 p
+
 ggsave(p, filename = paste("4_test_cross_correlations/figs/xcorrs_for_sig_channels_", band, ".png", sep = ''), width = 10, height = 5)
 ```
 
@@ -246,6 +262,7 @@ ggsave(p, filename = paste("4_test_cross_correlations/figs/xcorrs_for_sig_channe
 # one-sample t-test
 overall_sig <- get_sig_xcorrs(overall, overall_w$p)
 t.test(overall_sig)
+
 # t-tests between levels 
 t.test(T_sig, S_sig)
 t.test(M_sig, N_sig)
