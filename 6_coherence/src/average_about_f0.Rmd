@@ -6,241 +6,406 @@ editor_options:
 ---
 
 ```{r setup, warning=FALSE}
-knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE) 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
 knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/")
 setwd("/Users/letitiaho/src/talker_change_data_processing/")
 library("dplyr")
 library("ggplot2")
 library("ggpubr")
 library("kableExtra")
+library("tidyr")
 source("tools/functions.R")
-source("8_wilcoxon/src/functions.R")
+source("4_test_cross_correlations/src/functions.R")
 ```
 
 ```{r}
+# band = "f0"
+
 # Import data
-coherr <- read.csv(file = "7_coherence/data/average.csv")
-```
+coher <- read.csv("6_coherence/data/coherence.csv")
+freq <- as.matrix(read.csv("6_coherence/data/freq.csv"))
 
-```{r}
+# Get some constants
 channels <- as.character(1:128)
-channel_labels <- paste("X", channels, sep = "")
-data_only <- select(coherr, all_of(channel_labels))  # keep only data columns
-hist(as.double(unlist(data_only)))
+subs <- as.character(unique(coher$subject_number))
+n <- length(subs)
+conds <- unique(c(coher$constraint, coher$meaning, coher$talker))
 ```
 
-#### Mean max coherence in the F0 frequency range for each channel over all subjects and trials
+### Get indexes for each frequency band
 
 ```{r}
-scaleData <- function(data) {
-  return((data-min(data))/sd(data))
+S_f0_min <- tail(which(freq < 130), 1)
+S_f0_max <- head(which(freq > 320), 1)
+T_f0_min <- tail(which(freq < 60), 1)
+T_f0_max <- head(which(freq > 250), 1)
+```
+
+```{r}
+below_S_f0_windows <- paste("mean_", as.character(1:S_f0_min), sep = "")
+S_f0_windows <- paste("mean_", as.character(S_f0_min:S_f0_max), sep = "")
+above_S_f0_windows <- paste("mean_", as.character(S_f0_max:1024), sep = "")
+below_T_f0_windows <- paste("mean_", as.character(1:T_f0_min), sep = "")
+T_f0_windows <- paste("mean_", as.character(T_f0_min:S_f0_max), sep = "")
+above_T_f0_windows <- paste("mean_", as.character(T_f0_max:1024), sep = "")
+```
+
+```{r}
+means <- coher[, c('subject_number', 'channel', 'talker', 'meaning', 'constraint')]
+```
+
+```{r}
+means$below_S_f0 <- coher[, below_S_f0_windows] %>% rowMeans()
+means$S_f0 <- coher[, S_f0_windows] %>% rowMeans()
+means$above_S_f0 <- coher[, above_S_f0_windows] %>% rowMeans()
+means$below_T_f0 <- coher[, below_T_f0_windows] %>% rowMeans()
+means$T_f0 <- coher[, T_f0_windows] %>% rowMeans()
+means$above_T_f0 <- coher[, above_T_f0_windows] %>% rowMeans()
+```
+
+```{r}
+talker <- means %>%
+  group_by(subject_number, channel, talker) %>%
+  summarise(below_S_f0 = mean(below_S_f0), 
+            S_f0 = mean(S_f0), 
+            above_S_f0 = mean(above_S_f0),
+            below_T_f0 = mean(below_T_f0),
+            T_f0 = mean(T_f0),
+            above_T_f0 = mean(above_T_f0))
+
+meaning <- means %>%
+  group_by(subject_number, channel, meaning) %>%
+  summarise(below_S_f0 = mean(below_S_f0), 
+            S_f0 = mean(S_f0), 
+            above_S_f0 = mean(above_S_f0),
+            below_T_f0 = mean(below_T_f0),
+            T_f0 = mean(T_f0),
+            above_T_f0 = mean(above_T_f0))
+
+constraint <- means %>%
+  group_by(subject_number, channel, constraint) %>%
+  summarise(below_S_f0 = mean(below_S_f0), 
+            S_f0 = mean(S_f0), 
+            above_S_f0 = mean(above_S_f0),
+            below_T_f0 = mean(below_T_f0),
+            T_f0 = mean(T_f0),
+            above_T_f0 = mean(above_T_f0))
+```
+
+```{r}
+c1 <- rgb(173,216,230,max = 255, alpha = 80, names = "lt.blue")
+c2 <- rgb(255,192,203, max = 255, alpha = 80, names = "lt.pink")
+```
+
+```{r}
+# compare coherence at S_below_f0_S when talker = S against all other conditions
+comp <- hist(means$below_S_f0[means$talker != 'S'], plot = FALSE)
+test <- hist(means$below_S_f0[means$talker == 'S'], plot = FALSE)
+
+plot(comp, col = c1, xlim = c(0.24, 0.32), ylim = c(0, 2000))
+plot(test, col = c2, add = TRUE)
+
+comp <- hist(means$S_f0[means$talker != 'S'], plot = FALSE)
+test <- hist(means$S_f0[means$talker == 'S'], plot = FALSE)
+
+plot(comp, col = c1, xlim = c(0.24, 0.32), ylim = c(0, 2000))
+plot(test, col = c2, add = TRUE)
+
+comp <- hist(means$above_S_f0[means$talker != 'S'], plot = FALSE)
+test <- hist(means$above_S_f0[means$talker == 'S'], plot = FALSE)
+
+plot(comp, col = c1, xlim = c(0.24, 0.32), ylim = c(0, 2000))
+plot(test, col = c2, add = TRUE)
+```
+
+
+```{r}
+comp <- hist(means$below_T_f0[means$talker != 'T'], plot = FALSE)
+test <- hist(means$below_T_f0[means$talker == 'T'], plot = FALSE)
+
+plot(comp, col = c1, xlim = c(0.24, 0.32), ylim = c(0, 2000))
+plot(test, col = c2, add = TRUE)
+
+comp <- hist(means$T_f0[means$talker != 'T'], plot = FALSE)
+test <- hist(means$T_f0[means$talker == 'T'], plot = FALSE)
+
+plot(comp, col = c1, xlim = c(0.24, 0.32), ylim = c(0, 2000))
+plot(test, col = c2, add = TRUE)
+
+comp <- hist(means$above_T_f0[means$talker != 'T'], plot = FALSE)
+test <- hist(means$above_T_f0[means$talker == 'T'], plot = FALSE)
+
+plot(comp, col = c1, xlim = c(0.24, 0.32), ylim = c(0, 2000))
+plot(test, col = c2, add = TRUE)
+```
+
+```{r}
+# PLOT THOSE TABLES??
+
+# FOR TALKER
+
+# new naming scheme
+#cond-S_band-S1
+
+shape_data_for_vectorized_tests <- function(data, 
+                                            band, 
+                                            condition,
+                                            level) {
+  shaped_data <- data %>%
+    .[data[[condition]] == level,] %>%
+    select(all_of(c("subject_number", "channel", band))) %>%
+    pivot_wider(names_from = channel, values_from = band) %>%
+    ungroup() %>%
+    select(-c("subject_number"))
+  return(shaped_data)
 }
 
-all_min <- min(unlist(data_only))
-all_sd <- sd(unlist(data_only))
-all_trials <- as.double(colMeans(data_only)) # compute channel means
-all_trials <- scaleData(all_trials)
+# So some channel based differences at each band for specified condition
+get_two_ttest_for_each_channel <- function(group1, group2, paired, ALT) {
+  w <- mapply(function(x, y) {t.test(x, 
+                                          y, 
+                                          paired = paired, 
+                                          exact = TRUE, 
+                                          alternative = ALT)$statistic}, 
+              group1, 
+              group2)
+  p <- mapply(function(x, y) {t.test(x, 
+                                          y, 
+                                          paired = paired, 
+                                          exact = TRUE, 
+                                          alternative = ALT)$p.value}, 
+              group1, 
+              group2)
+  return(data.frame("w" = w, "p" = p))
+}
 
+S_S_f0 <- shape_data_for_vectorized_tests(talker, band = 'S_f0', condition = 'talker', level = 'S')
+S_above_S_f0 <- shape_data_for_vectorized_tests(talker, band = 'above_S_f0', condition = 'talker', level = 'S')
+S_below_S_f0 <- shape_data_for_vectorized_tests(talker, band = 'below_S_f0', condition = 'talker', level = 'S')
+
+T_S_f0 <- shape_data_for_vectorized_tests(talker, band = 'S_f0', condition = 'talker', level = 'T')
+T_above_S_f0 <- shape_data_for_vectorized_tests(talker, band = 'above_S_f0', condition = 'talker', level = 'T')
+T_below_S_f0 <- shape_data_for_vectorized_tests(talker, band = 'below_S_f0', condition = 'talker', level = 'T')
+
+S_T_f0 <- shape_data_for_vectorized_tests(talker, band = 'T_f0', condition = 'talker', level = 'S')
+S_above_T_f0 <- shape_data_for_vectorized_tests(talker, band = 'above_T_f0', condition = 'talker', level = 'S')
+S_below_T_f0 <- shape_data_for_vectorized_tests(talker, band = 'below_T_f0', condition = 'talker', level = 'S')
+
+T_T_f0 <- shape_data_for_vectorized_tests(talker, band = 'T_f0', condition = 'talker', level = 'T')
+T_above_T_f0 <- shape_data_for_vectorized_tests(talker, band = 'above_T_f0', condition = 'talker', level = 'T')
+T_below_T_f0 <- shape_data_for_vectorized_tests(talker, band = 'below_T_f0', condition = 'talker', level = 'T')
+
+```
+
+Whether there is *difference in* coherence at the specified frequency band when the talker stays the same
+
+```{r}
+talker_S_f0 <- get_two_ttest_for_each_channel(S_S_f0, T_S_f0, TRUE, 'two.sided')
+talker_above_S_f0 <- get_two_ttest_for_each_channel(S_above_S_f0, T_above_S_f0, TRUE, 'two.sided')
+talker_below_S_f0 <- get_two_ttest_for_each_channel(S_below_S_f0, T_below_S_f0, TRUE, 'two.sided')
+
+t.test(S_below_S_f0$'40', T_below_S_f0$'40', paired = TRUE, alternative = 'two.sided')
+```
+
+```{r}
 # Creating a table to display all the p-values
-all_trials_color <- as.data.frame(all_trials) %>%
-  round(digits = 2) %>%
-  mutate_all(function(x) {cell_spec(x, background = spec_color(x,
-                                                               direction = -1,
-                                                               begin = 0.5,
-                                                               end = 1,
-                                                               option = "B",
-                                                               scale_from = c(0,5)))})
-all_trials_df <- data.frame(channels, 'C' = all_trials_color) # change to a df
-kable(all_trials_df, escape = F, col.names = c("Channel", "C")) %>%
+one_sample_w <- data.frame(channels, 
+                     'below_S_f0' = talker_below_S_f0$p,
+                     'S_f0' = talker_S_f0$p, 
+                     'above_S_f0' = talker_above_S_f0$p)
+map_df <- mutate_if(one_sample_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
+  mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
+                                            cell_spec(x, NULL),
+                                            cell_spec(x, background = spec_color(x, 
+                                                                                 direction = 1, 
+                                                                                 begin = 0.65, 
+                                                                                 end = 1, 
+                                                                                 option = "B", 
+                                                                                 scale_from = c(0,0.1))))})
+
+kable(map_df, escape = F, col.names = c("Channel", "below_S_f0", "S_f0", "above_S_f0")) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
-#### Map
+Whether there is *difference in* coherence at the specified frequency band when there is a change in talker
 
 ```{r}
-coordinates <- get_layout()
-overall <- data.frame('C'= all_trials, coordinates)
-plot <- ggplot() +
-  geom_point(data = overall, aes(x = x, 
-                                 y = y, 
-                                 size = C, 
-                                 alpha = C,
-                                 stroke = 0)) +
-  geom_point(data = overall, aes(x = x, 
-                                 y = y, 
-                                 size = C,
-                                 alpha = C,
-                                 stroke = 0)) + 
-  scale_size_continuous(name = "C")+ 
-  guides(alpha = FALSE) +
-  ylim(0, 900) +
-  xlim(0, 900) +
-  annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
-  annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
-  theme(axis.line=element_blank(),axis.text.x=element_blank(),
-        axis.text.y=element_blank(),axis.ticks=element_blank(),
-        axis.title.x=element_blank(),
-        axis.title.y=element_blank(),
-        panel.background=element_blank(),
-        panel.border=element_blank(),
-        panel.grid.major=element_blank(),
-        panel.grid.minor=element_blank(),
-        plot.background=element_blank())
-plot
-ggsave(plot = plot, filename = '7_coherence/figs/avg_overall.png', width = 6, height = 5)
+talker_T_f0 <-get_two_ttest_for_each_channel(S_T_f0, T_T_f0, TRUE, 'two.sided')
+talker_above_T_f0 <-get_two_ttest_for_each_channel(S_above_T_f0, T_above_T_f0, TRUE, 'two.sided')
+talker_below_T_f0 <-get_two_ttest_for_each_channel(S_below_T_f0, T_below_T_f0, TRUE, 'two.sided')
 ```
 
-#### Mean max coherence in the F0 frequency range for each channel for each condition
-
 ```{r}
-
-dropOutliers <- function(data) {
-  iqr <- IQR(data)
-  Q <- quantile(data)
-  up <-  Q[2]+1.5*iqr # Upper Range  
-  low <- Q[1]-1.5*iqr # Lower Range
-  data <- data[-which(data < low & data > high),]
-  return(low, high)
-}
-
-# Scaling is relative to each condition, so you can only compare topography, not abs numbers
-S <- subset(coherr, talker = "S", keepSubjNum = FALSE) %>% colMeans() %>% scaleData()
-S[which(S < 0.3)] <- NaN
-T <- subset(coherr, talker = "T", keepSubjNum = FALSE) %>% colMeans() %>% scaleData()
-M <- subset(coherr, meaning = "M", keepSubjNum = FALSE) %>% colMeans() %>% scaleData()
-N <- subset(coherr, meaning = "N", keepSubjNum = FALSE) %>% colMeans() %>% scaleData()
-L <- subset(coherr, constraint = "L", keepSubjNum = FALSE) %>% colMeans() %>% scaleData()
-H <- subset(coherr, constraint = "H", keepSubjNum = FALSE) %>% colMeans() %>% scaleData()
-
 # Creating a table to display all the p-values
-by_condition <- data.frame(channels, S, T, M, N, L, H)
-by_condition_df <- mutate_if(by_condition, is.numeric, function(x) {round(x, digits = 2)}) %>%
-  mutate_if(is.numeric, function(x) {cell_spec(x, background = spec_color(x, 
-                                                                          direction = -1,
-                                                                          begin = 0.5,
-                                                                          end = 1,
-                                                                          option = "B",
-                                                                          scale_from = c(0, 6.2)))})
+one_sample_w <- data.frame(channels, 
+                     'below_T_f0' = talker_below_T_f0$w,
+                     'T_f0' = talker_T_f0$w, 
+                     'above_T_f0' = talker_above_T_f0$w)
+map_df <- mutate_if(one_sample_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
+  mutate_if(is.numeric, function(x) {ifelse(x > 1.8,
+                                            cell_spec(x, background = spec_color(x, 
+                                                                                 direction = -1, 
+                                                                                 begin = 0.7, 
+                                                                                 end = 1, 
+                                                                                 option = "B", 
+                                                                                 # scale_from = c(1.8,5),
+                                            )),
+                                            cell_spec(x, NULL))}) %>%
+  mutate_if(is.numeric, function(x) {ifelse(x < -1.8,
+                                            cell_spec(x, NULL),
+                                            cell_spec(x, background = spec_color(x,
+                                                                                 direction = -1,
+                                                                                 begin = 0.3,
+                                                                                 end = 0,
+                                                                                 option = "B",
+                                                                                 scale_from = c(-5,-1.8),
+                                            )),
+                                            cell_spec(x, NULL))})
 
-kable(by_condition_df, escape = F, col.names = c("Channel", "S", "T", "M", "N", "S", "G")) %>%
-  add_header_above(c(" " = 1, "Talker" = 2, "Meaning" = 2, "Constraint" = 2)) %>%
+kable(map_df, escape = F, col.names = c("Channel", "below_T_f0", "T_f0", "above_T_f0")) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
-```
-
-#### Maps
-
-``` {r}
-getConditionMap <- function(group1, group2, coordinates, labels) {
-  condition_df <- data.frame(group1, group2, coordinates)
-  head(condition_df)
-  plot <- ggplot() +
-    geom_point(data = condition_df, aes(x = x, 
-                                        y = y,
-                                        size = group1,
-                                        colour = "#B8DE29FF",
-                                        alpha = group1,
-                                        stroke = 0)) +
-    geom_point(data = condition_df, aes(1000+x,
-                                        y = y,
-                                        size = group2,
-                                        colour = "#287D8EFF",
-                                        alpha = group2,
-                                        stroke = 0)) +
-    geom_point(data = coordinates, aes(x = x,
-                                       y = y,
-                                       size = 1,
-                                       alpha = 0.5,
-                                       stroke = 0)) +
-    geom_point(data = coordinates, aes(x = 1000+x,
-                                       y = y,
-                                       size = 1,
-                                       alpha = 0.5,
-                                       stroke = 0)) +
-    scale_color_discrete(name = "Level", labels = labels) +
-    scale_size_continuous(limits = c(1, 6.2)) +
-    guides(alpha = FALSE) +
-    annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
-    annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
-    theme(axis.line=element_blank(),axis.text.x=element_blank(),
-          axis.text.y=element_blank(),axis.ticks=element_blank(),
-          axis.title.x=element_blank(),
-          axis.title.y=element_blank(),
-          panel.background=element_blank(),
-          panel.border=element_blank(),
-          panel.grid.major=element_blank(),
-          panel.grid.minor=element_blank(),
-          plot.background=element_blank())
-  plot
-}
-```
-
-**Talker**
-
-```{r}
-plot <- getConditionMap(S, T, coordinates, labels = c("T", "S"))
-plot
-ggsave(plot = plot, filename = '7_coherence/figs/avg_talker.png', width = 12, height = 5)
-```
-
-**Meaning**
- 
-```{r}
-plot <- getConditionMap(M, N, coordinates, labels = c("N", "M"))
-plot
-ggsave(plot = plot, filename = '7_coherence/figs/avg_meaning.png', width = 12, height = 5)
-```
-
-**Constraint**
-
-```{r}
-plot <- getConditionMap(L, H, coordinates, labels = c("H", "L"))
-plot
-ggsave(plot = plot, filename = '7_coherence/figs/avg_constraint.png', width = 12, height = 5)
-```
-
-#### Scaling by Absolute terms
- 
-```{r}
-# # Try to scale by absolute terms
-# sd_all <- sd(data_only)
-# min_all <- min(data_only)
+# one_sample_w <- data.frame(channels, 
+#                      'below_T_f0' = talker_below_T_f0$p,
+#                      'T_f0' = talker_T_f0$p, 
+#                      'above_T_f0' = talker_above_T_f0$p)
+# map_df <- mutate_if(one_sample_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
+#   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
+#                                             cell_spec(x, NULL),
+#                                             cell_spec(x, background = spec_color(x, 
+#                                                                                  direction = 1, 
+#                                                                                  begin = 0.65, 
+#                                                                                  end = 1, 
+#                                                                                  option = "B", 
+#                                                                                  scale_from = c(0,0.1))))})
 # 
-# scaleDataAbsolute <- function(data, min_all, sd_all) {
-#   return((data-min_all)/sd_all)
-# }
-# 
-# S <- subset(coherr, condition = "S") %>% 
-#   scaleDataAbsolute(min_all, sd_all) %>%
-#   colMeans()
-# T <- subset(coherr, condition = "T") %>% 
-#   scaleDataAbsolute(min_all, sd_all) %>%
-#   colMeans()
-# M <- subset(coherr, condition = "M") %>% 
-#   scaleDataAbsolute(min_all, sd_all) %>%
-#   colMeans()
-# N <- subset(coherr, condition = "N") %>% 
-#   scaleDataAbsolute(min_all, sd_all) %>%
-#   colMeans()
-# L <- subset(coherr, condition = "L") %>%
-#   scaleDataAbsolute(min_all, sd_all) %>%
-#   colMeans()
-# H <- subset(coherr, condition = "H") %>%
-#   scaleDataAbsolute(min_all, sd_all) %>%
-#   colMeans()
-# 
-# # Creating a table to display all the p-values
-# by_condition <- data.frame(channels, S, T, M, N, L, H)
-# by_condition_df <- mutate_if(by_condition, is.numeric, function(x) {round(x, digits = 2)}) %>%
-#   mutate_if(is.numeric, function(x) {cell_spec(x, background = spec_color(x, 
-#                                                                           direction = -1,
-#                                                                           begin = 0.5,
-#                                                                           end = 1,
-#                                                                           option = "B",
-#                                                                           scale_from = c(0, 6.2)))})
-# 
-# kable(by_condition_df, escape = F, col.names = c("Channel", "S", "T", "M", "N", "S", "G")) %>%
-#   add_header_above(c(" " = 1, "Talker" = 2, "Meaning" = 2, "Constraint" = 2)) %>%
+# kable(map_df, escape = F, col.names = c("Channel", "below_T_f0", "T_f0", "above_T_f0")) %>%
 #   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
- 
- 
+
+```{r}
+# e.g. for channel 1 compare coherence values at S_below_f0 when talker = S vs when talker = T
+chan <- talker[talker$channel == 40,]
+chan_S <- chan$below_S_f0[chan$talker == 'S']
+chan_T <- chan$below_S_f0[chan$talker == 'T']
+t.test(chan_S, chan_T, paired = TRUE, alternative = 'two.sided')
+
+t.test(S_below_S_f0$'40', T_below_S_f0$'40', paired = TRUE, alternative = 'two.sided')
+
+T_below_S_f0 <- talker %>%
+  filter(talker == "T") %>%
+  select(all_of(c("subject_number", "channel", "below_S_f0"))) %>%
+  pivot_wider(names_from = channel, values_from = below_S_f0) %>%
+  ungroup() %>%
+  select(-c("subject_number"))
+t.test(T_below_S_f0$'40', S_below_S_f0$'40', paired = TRUE, alternative = 'two.sided')
+            
+t.test(S_below_S_f0$'40', T_below_S_f0$'40', paired = TRUE, alternative = 'two.sided')
+t.test(S_below_S_f0$'40', T_below_S_f0$'40', paired = TRUE, alternative = 'two.sided') # THIS IS RIGHT?
+```
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+S_below_f0 <- hist(talker$below_S_f0, plot = FALSE, breaks = 20) 
+S_f0 <- hist(talker$S_f0, plot = FALSE)
+S_above_f0 <- hist(talker$above_S_f0, plot = FALSE)
+
+plot(S_below_f0, col = 'lightskyblue', xlim = c(0.25, 0.3), ylim = c(0, 1200)) 
+plot(S_f0, col = 'lemonchiffon', add = TRUE, xlim = c(0.25, 0.3), ylim = c(0, 1200))
+plot(S_above_f0, col = '#FF7F50', add = TRUE, xlim = c(0.25, 0.3), ylim = c(0, 1200))
+```
+
+```{r}
+T_below_f0 <- hist(talker$below_T_f0, plot = FALSE, breaks = 20) 
+T_f0 <- hist(talker$T_f0, plot = FALSE) 
+T_above_f0 <- hist(talker$above_T_f0, plot = FALSE)
+
+plot(T_below_f0, col = 'lightskyblue', xlim = c(0.25, 0.3), ylim = c(0, 1200)) 
+plot(T_f0, col = 'lemonchiffon', add = TRUE, xlim = c(0.25, 0.3), ylim = c(0, 1200))
+plot(T_above_f0, col = '#FF7F50', add = TRUE, xlim = c(0.25, 0.3), ylim = c(0, 1200))
+```
+
+```{r}
+S_below_f0 <- hist(meaning$below_S_f0, plot = FALSE, breaks = 20) 
+S_f0 <- hist(meaning$S_f0, plot = FALSE) 
+S_above_f0 <- hist(meaning$above_S_f0, plot = FALSE)
+
+plot(S_below_f0, col = 'lightskyblue', xlim = c(0.25, 0.3), ylim = c(0, 1200)) 
+plot(S_f0, col = 'lemonchiffon', add = TRUE, xlim = c(0.25, 0.3), ylim = c(0, 1200)) 
+plot(S_above_f0, col = '#FF7F50', add = TRUE, xlim = c(0.25, 0.3), ylim = c(0, 1200))
+```
+
+
+```{r}
+T_below_f0 <- hist(meaning$below_T_f0, plot = FALSE, breaks = 20)
+T_f0 <- hist(meaning$T_f0, plot = FALSE)
+T_above_f0 <- hist(meaning$above_T_f0, plot = FALSE)
+
+plot(T_below_f0, col = 'lightskyblue', xlim = c(0.25, 0.3), ylim = c(0, 1200)) 
+plot(T_f0, col = 'lemonchiffon', add = TRUE, xlim = c(0.25, 0.3), ylim = c(0, 1200))
+plot(T_above_f0, col = '#FF7F50', add = TRUE, xlim = c(0.25, 0.3), ylim = c(0, 1200))
+```
+```{r}
+S_below_f0 <- hist(constraint$below_S_f0, plot = FALSE, breaks = 20) 
+S_f0 <- hist(constraint$S_f0, plot = FALSE) 
+S_above_f0 <- hist(constraint$above_S_f0, plot = FALSE)
+
+plot(S_below_f0, col = 'lightskyblue', xlim = c(0.25, 0.3), ylim = c(0, 1200)) 
+plot(S_f0, col = 'lemonchiffon', add = TRUE, xlim = c(0.25, 0.3), ylim = c(0, 1200)) 
+plot(S_above_f0, col = '#FF7F50', add = TRUE, xlim = c(0.25, 0.3), ylim = c(0, 1200))
+```
+
+```{r}
+T_below_f0 <- hist(constraint$below_T_f0, plot = FALSE, breaks = 20)
+T_f0 <- hist(constraint$T_f0, plot = FALSE)
+T_above_f0 <- hist(constraint$above_T_f0, plot = FALSE)
+
+plot(T_below_f0, col = 'lightskyblue', xlim = c(0.25, 0.3), ylim = c(0, 1200)) 
+plot(T_f0, col = 'lemonchiffon', add = TRUE, xlim = c(0.25, 0.3), ylim = c(0, 1200))
+plot(T_above_f0, col = '#FF7F50', add = TRUE, xlim = c(0.25, 0.3), ylim = c(0, 1200))
+```
+
+```{r}
+talker_subs <- means %>%
+  group_by(subject_number, talker) %>%
+  summarise(below_S_f0 = mean(below_S_f0), 
+            S_f0 = mean(S_f0), 
+            above_S_f0 = mean(above_S_f0),
+            below_T_f0 = mean(below_T_f0),
+            T_f0 = mean(T_f0),
+            above_T_f0 = mean(above_T_f0))
+
+meaning_subs <- means %>%
+  group_by(subject_number, meaning) %>%
+  summarise(below_S_f0 = mean(below_S_f0), 
+            S_f0 = mean(S_f0), 
+            above_S_f0 = mean(above_S_f0),
+            below_T_f0 = mean(below_T_f0),
+            T_f0 = mean(T_f0),
+            above_T_f0 = mean(above_T_f0))
+
+constraint_subs <- means %>%
+  group_by(subject_number, constraint) %>%
+  summarise(below_S_f0 = mean(below_S_f0), 
+            S_f0 = mean(S_f0), 
+            above_S_f0 = mean(above_S_f0),
+            below_T_f0 = mean(below_T_f0),
+            T_f0 = mean(T_f0),
+            above_T_f0 = mean(above_T_f0))
+```
+
+```{r}
+t.test(talker_subs$below_S_f0)
+```
+
+
+
+
