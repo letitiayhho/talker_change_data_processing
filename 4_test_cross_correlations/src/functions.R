@@ -78,9 +78,15 @@ get_one_sample_t_for_each_channel <- function(data) {
   return(data.frame("t" = t, "df" = df, "p" = p))
 }
 
-get_one_sample_wilcoxon_for_each_channel <- function(data, alt = 'two.sided') {
-  w <- apply(data, MARGIN = 2, function(channel) {wilcox.test(channel, exact = TRUE, alternative = c(alt))$statistic})
-  p <- apply(data, MARGIN = 2, function(channel) {wilcox.test(channel, exact = TRUE, alternative = c(alt))$p.value})
+get_one_sample_wilcoxon_for_each_channel <- function(data, alt = 'two.sided', MU = 0) {
+  w <- apply(data, MARGIN = 2, function(channel) {wilcox.test(channel, 
+                                                              exact = TRUE,
+                                                              mu = MU,
+                                                              alternative = c(alt))$statistic})
+  p <- apply(data, MARGIN = 2, function(channel) {wilcox.test(channel, 
+                                                              exact = TRUE, 
+                                                              mu = MU,
+                                                              alternative = c(alt))$p.value})
   return(data.frame("w" = w, "p" = p))
 }
 

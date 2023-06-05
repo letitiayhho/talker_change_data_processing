@@ -1,0 +1,329 @@
+
+
+```{r}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/")
+setwd("/Users/letitiaho/src/talker_change_data_processing/")
+library("dplyr")
+library("ggplot2")
+library("ggpubr")
+library("kableExtra")
+library("tidyr")
+source("tools/functions.R")
+source("4_test_cross_correlations/src/functions.R")
+
+# Import data
+xcorr <- read.csv(file = paste("3_cross_correlate/data/", NORM, "average.csv", sep = ''))
+channels <- as.character(1:128)
+subs <- as.character(unique(xcorr$subject_number))
+n <- length(subs)
+conds <- unique(c(xcorr$constraint, xcorr$meaning, xcorr$talker))
+```
+
+```{r}
+standardize_ws <- function(p, w) {
+  i <- which(p == max(p))
+  mid <- w[i]
+  w_adjusted <- abs(w - mid)
+  return(w_adjusted)
+}
+
+get_critical_value <- function(p, w) {
+  c <- min(w[which(p < 0.05)])
+  return(c)
+}
+
+plot_ws <- function(w1, w2, labs, c, fname) {
+  df_long <- data.frame(w1 = unlist(w1), w2 = unlist(w2)) %>%
+    pivot_longer(cols = c("w1", "w2"),
+                 names_to = "condition",
+                 values_to = "W")
+  p <- ggplot(df_long, aes(x = W, fill = condition)) +
+    geom_histogram(position ="identity", alpha=0.65, bins = 15) +
+    geom_vline(xintercept = c) +
+    scale_fill_discrete(labels = labs) +
+    scale_color_discrete(labels = labs) +
+    ylim(c(0, 25)) +
+    xlim(c(0, 35))
+  ggsave(p, filename = fname, width = 12, height = 7)
+  return(p)
+}
+
+get_sig_xcorrs <- function(xcorr, p) { # get xcorrs from sig channels
+  sig_xcorr <- as.matrix(xcorr) %>%
+   .[, which(p < 0.05)] %>%
+    abs() %>%
+    rowMeans() %>% # colMeans() compares channels, rowMeans() compares subs
+    remove_outliers()
+  return(sig_xcorr)
+}
+
+get_sig_xcorrs_df <- function(condition, group, sig_xcorr) {
+  condition_col <- rep(condition, length(sig_xcorr))
+  group_col <- rep(group, length(sig_xcorr))
+  df <- data.frame(condition, sig_xcorr, group)
+}
+
+remove_outliers <- function(x) {
+  x <- x[!x %in% boxplot.stats(x)$out]
+  return(x)
+}
+```
+
+```{r}
+overall <- get_subject_averages(xcorr)
+overall_w <- get_one_sample_wilcoxon_for_each_channel(overall, alt = ALT)
+overall_sig <- overall[, overall_w$p < 0.05]
+mean(as.matrix(overall_sig, na.rm = TRUE))
+```
+
+```{r}
+S <- subset(xcorr, talker = "S") %>% get_subject_averages()
+T <- subset(xcorr, talker = "T") %>% get_subject_averages()
+M <- subset(xcorr, meaning = "M") %>% get_subject_averages()
+N <- subset(xcorr, meaning = "N") %>% get_subject_averages()
+L <- subset(xcorr, constraint = "L") %>% get_subject_averages()
+H <- subset(xcorr, constraint = "H") %>% get_subject_averages()
+
+S_w <- get_one_sample_wilcoxon_for_each_channel(S, ALT)
+T_w <- get_one_sample_wilcoxon_for_each_channel(T, ALT)
+M_w <- get_one_sample_wilcoxon_for_each_channel(M, ALT)
+N_w <- get_one_sample_wilcoxon_for_each_channel(N, ALT)
+L_w <- get_one_sample_wilcoxon_for_each_channel(L, ALT)
+H_w <- get_one_sample_wilcoxon_for_each_channel(H, ALT)
+```
+
+```{r}
+S_sig <- as.matrix(S[, S_w$p < 0.05])
+print('S')
+mean(S_sig)
+sd(S_sig)
+T_sig <- as.matrix(T[, T_w$p < 0.05])
+print('T')
+mean(T_sig)
+sd(T_sig)
+M_sig <- as.matrix(M[, M_w$p < 0.05])
+print("M")
+mean(M_sig)
+sd(M_sig)
+N_sig <- as.matrix(N[, N_w$p < 0.05])
+print("N")
+mean(N_sig)
+sd(N_sig)
+L_sig <- as.matrix(L[, L_w$p < 0.05])
+print("L")
+mean(L_sig)
+sd(L_sig)
+H_sig <- as.matrix(H[, H_w$p < 0.05])
+print("H")
+mean(H_sig)
+sd(H_sig)
+```
+
+```{r}
+talker_w <- get_two_sample_wilcoxon_for_each_channel(S, T, paired = TRUE)
+meaning_w <- get_two_sample_wilcoxon_for_each_channel(M, N, paired = TRUE)
+constraint_w <- get_two_sample_wilcoxon_for_each_channel(L, H, paired = TRUE)
+```
+
+```{r}
+S_sig_change <- as.matrix(S[,talker_w$p < 0.05])
+print("S_sig_change")
+mean(S_sig_change)
+sd(S_sig_change)
+
+T_sig_change <- as.matrix(T[,talker_w$p < 0.05])
+print("T_sig_change")
+mean(T_sig_change)
+sd(T_sig_change)
+
+S_nosig_change <- as.matrix(S[,talker_w$p > 0.05])
+print("S_nosig_change")
+mean(S_nosig_change)
+sd(S_nosig_change)
+
+T_nosig_change <- as.matrix(T[,talker_w$p > 0.05])
+print("T_nosig_change")
+mean(T_nosig_change)
+sd(T_nosig_change)
+
+M_sig_change <- as.matrix(M[, meaning_w$p < 0.05])
+print("M_sig_change")
+mean(M_sig_change)
+sd(M_sig_change)
+
+N_sig_change <- as.matrix(N[, meaning_w$p < 0.05])
+print("N_sig_change")
+mean(N_sig_change)
+sd(N_sig_change)
+
+M_nosig_change <- as.matrix(M[, meaning_w$p > 0.05])
+print("M_nosig_change")
+mean(M_nosig_change)
+sd(M_nosig_change)
+
+N_nosig_change <- as.matrix(N[, meaning_w$p > 0.05])
+print("N_nosig_change")
+mean(N_nosig_change)
+sd(N_nosig_change)
+
+L_sig_change <- as.matrix(L[, meaning_w$p < 0.05])
+print("L_sig_change")
+mean(L_sig_change)
+sd(L_sig_change)
+
+H_sig_change <- as.matrix(H[, meaning_w$p < 0.05])
+print("H_sig_change")
+mean(H_sig_change)
+sd(H_sig_change)
+
+L_nosig_change <- as.matrix(L[, meaning_w$p > 0.05])
+print("L_nosig_change")
+mean(L_nosig_change)
+sd(L_nosig_change)
+
+H_nosig_change <- as.matrix(H[, meaning_w$p > 0.05])
+print("H_nosig_change")
+mean(H_nosig_change)
+sd(H_nosig_change)
+```
+ 
+
+```{r}
+S_L <- subset(xcorr, talker = "S", constraint = "L") %>% get_subject_averages()
+S_H <- subset(xcorr, talker = "S", constraint = "H") %>% get_subject_averages()
+T_L <- subset(xcorr, talker = "T", constraint = "L") %>% get_subject_averages()
+T_H <- subset(xcorr, talker = "T", constraint = "H") %>% get_subject_averages()
+M_L <- subset(xcorr, meaning = "M", constraint = "L") %>% get_subject_averages()
+M_H <- subset(xcorr, meaning = "M", constraint = "H") %>% get_subject_averages()
+N_L <- subset(xcorr, meaning = "N", constraint = "L") %>% get_subject_averages()
+N_H <- subset(xcorr, meaning = "N", constraint = "H") %>% get_subject_averages()
+```
+
+```{r}
+S_L_w <- get_one_sample_wilcoxon_for_each_channel(S_L, ALT)
+S_H_w <- get_one_sample_wilcoxon_for_each_channel(S_H, ALT)
+T_L_w <- get_one_sample_wilcoxon_for_each_channel(T_L, ALT)
+T_H_w <- get_one_sample_wilcoxon_for_each_channel(T_H, ALT)
+M_L_w <- get_one_sample_wilcoxon_for_each_channel(M_L, ALT)
+M_H_w <- get_one_sample_wilcoxon_for_each_channel(M_H, ALT)
+N_L_w <- get_one_sample_wilcoxon_for_each_channel(N_L, ALT)
+N_H_w <- get_one_sample_wilcoxon_for_each_channel(N_H, ALT)
+```
+
+```{r}
+sum(S_L_w$p < 0.05)
+sum(S_H_w$p < 0.05)
+sum(T_L_w$p < 0.05)
+sum(T_H_w$p < 0.05)
+sum(M_L_w$p < 0.05)
+sum(M_H_w$p < 0.05)
+sum(N_L_w$p < 0.05)
+sum(N_H_w$p < 0.05)
+```
+
+```{r}
+# S_L_sig <- as.matrix(S_L[S_L_w$p < 0.05])
+S_L_sig <- get_sig_xcorrs(S_L, S_L_w$p)
+print("S_L_sig")
+mean(S_L_sig)
+sd(S_L_sig)
+# S_H_sig <- as.matrix(S_H[S_H_w$p < 0.05])
+S_H_sig <- get_sig_xcorrs(S_H, S_H_w$p)
+print("S_H_sig")
+mean(S_H_sig)
+sd(S_H_sig)
+# T_L_sig <- as.matrix(T_L[T_L_w$p < 0.05])
+T_L_sig <- get_sig_xcorrs(T_L, T_L_w$p)
+print("T_L_sig")
+mean(T_L_sig)
+sd(T_L_sig)
+# T_H_sig <- as.matrix(T_H[T_H_w$p < 0.05])
+T_H_sig <- get_sig_xcorrs(T_H, T_H_w$p)
+print("T_H_sig")
+mean(T_H_sig)
+sd(T_H_sig)
+# M_L_sig <- as.matrix(M_L[M_L_w$p < 0.05])
+M_L_sig <- get_sig_xcorrs(M_L, M_L_w$p)
+print("M_L_sig")
+mean(M_L_sig)
+sd(M_L_sig)
+# M_H_sig <- as.matrix(M_H[M_H_w$p < 0.05])
+M_H_sig <- get_sig_xcorrs(M_H, M_H_w$p)
+print("M_H_sig")
+mean(M_H_sig)
+sd(M_H_sig)
+# N_L_sig <- as.matrix(N_L[N_L_w$p < 0.05])
+N_L_sig <- get_sig_xcorrs(N_L, N_L_w$p)
+print("N_L_sig")
+mean(N_L_sig)
+sd(N_L_sig)
+# N_H_sig <- as.matrix(N_H[N_H_w$p < 0.05])
+N_H_sig <- get_sig_xcorrs(N_H, N_H_w$p)
+print("N_H_sig")
+mean(N_H_sig)
+sd(N_H_sig)
+```
+
+```{r}
+# Comparing sigs
+t.test(S_L_sig, T_L_sig)
+t.test(S_H_sig, T_H_sig)
+t.test(M_L_sig, N_L_sig)
+t.test(M_H_sig, N_H_sig)
+```
+
+
+```{r}
+# count_sig_chans <- function(xcorr, subs, ALT, talker = NaN, meaning = NaN, constraint = NaN) {
+#   cond_xcorr <- subset(xcorr,  talker = talker, meaning = meaning, constraint = constraint)
+#   counts <- c()
+#   for (sub in subs) {
+#     sub_xcorr <- cond_xcorr[cond_xcorr$subject_number == sub,]
+#     ws <- get_one_sample_wilcoxon_for_each_channel(sub_xcorr, alt = ALT)
+#     count <- sum(ws$p < 0.05)
+#     counts <- c(counts, count)
+#   }
+#   counts <- remove_outliers(counts)
+#   return(counts)
+# }
+# 
+# S_L_counts <- count_sig_chans(xcorr, subs, ALT, talker = "S", meaning = "L")
+# S_H_counts <- count_sig_chans(xcorr, subs, ALT, talker = "S", meaning = "H")
+# T_counts <- count_sig_chans(xcorr, subs, ALT, talker = "T")
+# M_counts <- count_sig_chans(xcorr, subs, ALT, meaning = "M")
+# N_counts <- count_sig_chans(xcorr, subs, ALT, meaning = "N")
+# L_counts <- count_sig_chans(xcorr, subs, ALT, constraint = "L")
+# H_counts <- count_sig_chans(xcorr, subs, ALT, constraint = "H")
+```
+
+```{r}
+# Comparing counts
+count_sig_chans <- function(xcorr, subs, ALT, talker = NaN, meaning = NaN, constraint = NaN) {
+  cond_xcorr <- subset(xcorr,  talker = talker, meaning = meaning, constraint = constraint)
+  counts <- c()
+  for (sub in subs) {
+    sub_xcorr <- cond_xcorr[cond_xcorr$subject_number == sub,]
+    ws <- get_one_sample_wilcoxon_for_each_channel(sub_xcorr, alt = ALT)
+    count <- sum(ws$p < 0.05)
+    counts <- c(counts, count)
+  }
+  counts <- remove_outliers(counts)
+  return(counts)
+}
+
+S_L_counts <- count_sig_chans(xcorr, subs, ALT, talker = "S", constraint = "L")
+S_H_counts <- count_sig_chans(xcorr, subs, ALT, talker = "S", constraint = "H")
+T_L_counts <- count_sig_chans(xcorr, subs, ALT, talker = "T", constraint = "L")
+T_H_counts <- count_sig_chans(xcorr, subs, ALT, talker = "T", constraint = "H")
+M_L_counts <- count_sig_chans(xcorr, subs, ALT, meaning = "M", constraint = "L")
+M_H_counts <- count_sig_chans(xcorr, subs, ALT, meaning = "M", constraint = "H")
+N_L_counts <- count_sig_chans(xcorr, subs, ALT, meaning = "N", constraint = "L")
+N_H_counts <- count_sig_chans(xcorr, subs, ALT, meaning = "N", constraint = "H")
+
+t.test(S_L_counts, T_L_counts)
+t.test(S_H_counts, T_H_counts)
+t.test(M_L_counts, N_L_counts)
+t.test(M_H_counts, N_H_counts)
+```
+

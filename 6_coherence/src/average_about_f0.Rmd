@@ -35,7 +35,7 @@ conds <- unique(c(coher$constraint, coher$meaning, coher$talker))
 ### Get indexes for each frequency band
 
 ```{r}
-S_f0_min <- tail(which(freq < 130), 1)
+S_f0_min <- tail(which(freq < 130), 1) # split coherence into bands about f0
 S_f0_max <- head(which(freq > 320), 1)
 T_f0_min <- tail(which(freq < 60), 1)
 T_f0_max <- head(which(freq > 250), 1)
@@ -66,12 +66,18 @@ means$above_T_f0 <- coher[, above_T_f0_windows] %>% rowMeans()
 ```{r}
 talker <- means %>%
   group_by(subject_number, channel, talker) %>%
-  summarise(below_S_f0 = mean(below_S_f0), 
-            S_f0 = mean(S_f0), 
-            above_S_f0 = mean(above_S_f0),
-            below_T_f0 = mean(below_T_f0),
+  summarise(S_f0 = mean(S_f0), 
             T_f0 = mean(T_f0),
-            above_T_f0 = mean(above_T_f0))
+            )
+
+# talker <- means %>%
+#   group_by(subject_number, channel, talker) %>%
+#   summarise(below_S_f0 = mean(below_S_f0), 
+#             S_f0 = mean(S_f0), 
+#             above_S_f0 = mean(above_S_f0),
+#             below_T_f0 = mean(below_T_f0),
+#             T_f0 = mean(T_f0),
+#             above_T_f0 = mean(above_T_f0))
 
 meaning <- means %>%
   group_by(subject_number, channel, meaning) %>%
@@ -98,24 +104,43 @@ c2 <- rgb(255,192,203, max = 255, alpha = 80, names = "lt.pink")
 ```
 
 ```{r}
-# compare coherence at S_below_f0_S when talker = S against all other conditions
-comp <- hist(means$below_S_f0[means$talker != 'S'], plot = FALSE)
-test <- hist(means$below_S_f0[means$talker == 'S'], plot = FALSE)
+# Talker change always in blue
+T_hist <- hist(means$T_f0[means$talker == 'T'], plot = FALSE)
+S_hist <- hist(means$S_f0[means$talker == 'S'], plot = FALSE)
 
-plot(comp, col = c1, xlim = c(0.24, 0.32), ylim = c(0, 2000))
-plot(test, col = c2, add = TRUE)
+plot(T_hist, col = c1, xlim = c(0.24, 0.32), ylim = c(0, 2000), )
+plot(S_hist, col = c2, add = TRUE)
 
-comp <- hist(means$S_f0[means$talker != 'S'], plot = FALSE)
+test <- hist(means$T_f0[means$talker == 'T'], plot = FALSE)
+comp <- hist(means$T_f0[means$talker == 'S'], plot = FALSE)
+
+plot(test, col = c1, xlim = c(0.24, 0.32), ylim = c(0, 2000))
+plot(comp, col = c2, add = TRUE)
+
 test <- hist(means$S_f0[means$talker == 'S'], plot = FALSE)
+comp <- hist(means$S_f0[means$talker == 'T'], plot = FALSE)
 
 plot(comp, col = c1, xlim = c(0.24, 0.32), ylim = c(0, 2000))
 plot(test, col = c2, add = TRUE)
 
-comp <- hist(means$above_S_f0[means$talker != 'S'], plot = FALSE)
-test <- hist(means$above_S_f0[means$talker == 'S'], plot = FALSE)
-
-plot(comp, col = c1, xlim = c(0.24, 0.32), ylim = c(0, 2000))
-plot(test, col = c2, add = TRUE)
+# compare coherence at S_below_f0_S when talker = S against all other conditions
+# comp <- hist(means$below_S_f0[means$talker != 'S'], plot = FALSE)
+# test <- hist(means$below_S_f0[means$talker == 'S'], plot = FALSE)
+# 
+# plot(comp, col = c1, xlim = c(0.24, 0.32), ylim = c(0, 2000))
+# plot(test, col = c2, add = TRUE)
+# 
+# comp <- hist(means$S_f0[means$talker != 'S'], plot = FALSE)
+# test <- hist(means$S_f0[means$talker == 'S'], plot = FALSE)
+# 
+# plot(comp, col = c1, xlim = c(0.24, 0.32), ylim = c(0, 2000))
+# plot(test, col = c2, add = TRUE)
+# 
+# comp <- hist(means$above_S_f0[means$talker != 'S'], plot = FALSE)
+# test <- hist(means$above_S_f0[means$talker == 'S'], plot = FALSE)
+# 
+# plot(comp, col = c1, xlim = c(0.24, 0.32), ylim = c(0, 2000))
+# plot(test, col = c2, add = TRUE)
 ```
 
 
@@ -162,21 +187,21 @@ shape_data_for_vectorized_tests <- function(data,
 
 # So some channel based differences at each band for specified condition
 get_two_ttest_for_each_channel <- function(group1, group2, paired, ALT) {
-  w <- mapply(function(x, y) {t.test(x, 
+  t <- mapply(function(x, y) {t.test(x, 
                                           y, 
                                           paired = paired, 
-                                          exact = TRUE, 
+                                          exact = TRUE,
                                           alternative = ALT)$statistic}, 
               group1, 
               group2)
   p <- mapply(function(x, y) {t.test(x, 
                                           y, 
                                           paired = paired, 
-                                          exact = TRUE, 
+                                          exact = TRUE,
                                           alternative = ALT)$p.value}, 
               group1, 
               group2)
-  return(data.frame("w" = w, "p" = p))
+  return(data.frame("t" = t, "p" = p))
 }
 
 S_S_f0 <- shape_data_for_vectorized_tests(talker, band = 'S_f0', condition = 'talker', level = 'S')
@@ -204,43 +229,16 @@ talker_S_f0 <- get_two_ttest_for_each_channel(S_S_f0, T_S_f0, TRUE, 'two.sided')
 talker_above_S_f0 <- get_two_ttest_for_each_channel(S_above_S_f0, T_above_S_f0, TRUE, 'two.sided')
 talker_below_S_f0 <- get_two_ttest_for_each_channel(S_below_S_f0, T_below_S_f0, TRUE, 'two.sided')
 
+# Sanity check
 t.test(S_below_S_f0$'40', T_below_S_f0$'40', paired = TRUE, alternative = 'two.sided')
 ```
 
 ```{r}
 # Creating a table to display all the p-values
 one_sample_w <- data.frame(channels, 
-                     'below_S_f0' = talker_below_S_f0$p,
-                     'S_f0' = talker_S_f0$p, 
-                     'above_S_f0' = talker_above_S_f0$p)
-map_df <- mutate_if(one_sample_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
-  mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
-                                            cell_spec(x, NULL),
-                                            cell_spec(x, background = spec_color(x, 
-                                                                                 direction = 1, 
-                                                                                 begin = 0.65, 
-                                                                                 end = 1, 
-                                                                                 option = "B", 
-                                                                                 scale_from = c(0,0.1))))})
-
-kable(map_df, escape = F, col.names = c("Channel", "below_S_f0", "S_f0", "above_S_f0")) %>%
-  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
-```
-
-Whether there is *difference in* coherence at the specified frequency band when there is a change in talker
-
-```{r}
-talker_T_f0 <-get_two_ttest_for_each_channel(S_T_f0, T_T_f0, TRUE, 'two.sided')
-talker_above_T_f0 <-get_two_ttest_for_each_channel(S_above_T_f0, T_above_T_f0, TRUE, 'two.sided')
-talker_below_T_f0 <-get_two_ttest_for_each_channel(S_below_T_f0, T_below_T_f0, TRUE, 'two.sided')
-```
-
-```{r}
-# Creating a table to display all the p-values
-one_sample_w <- data.frame(channels, 
-                     'below_T_f0' = talker_below_T_f0$w,
-                     'T_f0' = talker_T_f0$w, 
-                     'above_T_f0' = talker_above_T_f0$w)
+                     'below_S_f0' = talker_below_S_f0$t,
+                     'S_f0' = talker_S_f0$t, 
+                     'above_S_f0' = talker_above_S_f0$t)
 map_df <- mutate_if(one_sample_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 1.8,
                                             cell_spec(x, background = spec_color(x, 
@@ -250,61 +248,121 @@ map_df <- mutate_if(one_sample_w, is.numeric, function(x) {round(x, digits = 3)}
                                                                                  option = "B", 
                                                                                  # scale_from = c(1.8,5),
                                             )),
-                                            cell_spec(x, NULL))}) %>%
-  mutate_if(is.numeric, function(x) {ifelse(x < -1.8,
-                                            cell_spec(x, NULL),
-                                            cell_spec(x, background = spec_color(x,
+                                            ifelse(x < -1.8,
+                                                   cell_spec(x, background = spec_color(x,
                                                                                  direction = -1,
-                                                                                 begin = 0.3,
-                                                                                 end = 0,
-                                                                                 option = "B",
-                                                                                 scale_from = c(-5,-1.8),
+                                                                                 begin = 0.8,
+                                                                                 end = 0.4,
+                                                                                 option = "D",
+                                                                                 scale_from = c(-2.4,-1.8),
                                             )),
-                                            cell_spec(x, NULL))})
+                                            cell_spec(x, NULL)))})
 
-kable(map_df, escape = F, col.names = c("Channel", "below_T_f0", "T_f0", "above_T_f0")) %>%
+kable(map_df, escape = F, col.names = c("Channel", "below_S_f0", "S_f0", "above_S_f0")) %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
-# one_sample_w <- data.frame(channels, 
-#                      'below_T_f0' = talker_below_T_f0$p,
-#                      'T_f0' = talker_T_f0$p, 
-#                      'above_T_f0' = talker_above_T_f0$p)
-# map_df <- mutate_if(one_sample_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
-#   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
-#                                             cell_spec(x, NULL),
-#                                             cell_spec(x, background = spec_color(x, 
-#                                                                                  direction = 1, 
-#                                                                                  begin = 0.65, 
-#                                                                                  end = 1, 
-#                                                                                  option = "B", 
-#                                                                                  scale_from = c(0,0.1))))})
-# 
-# kable(map_df, escape = F, col.names = c("Channel", "below_T_f0", "T_f0", "above_T_f0")) %>%
-#   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
+
+Whether there is *difference in* coherence at the specified frequency band when there is a change in talker
+
+```{r}
+talker_T_f0 <-get_two_ttest_for_each_channel(T_T_f0, S_T_f0, TRUE, 'two.sided')
+talker_above_T_f0 <-get_two_ttest_for_each_channel(T_above_T_f0, S_above_T_f0, TRUE, 'two.sided')
+talker_below_T_f0 <-get_two_ttest_for_each_channel(T_below_T_f0, S_below_T_f0, TRUE, 'two.sided')
 ```
 
 ```{r}
-# e.g. for channel 1 compare coherence values at S_below_f0 when talker = S vs when talker = T
-chan <- talker[talker$channel == 40,]
-chan_S <- chan$below_S_f0[chan$talker == 'S']
-chan_T <- chan$below_S_f0[chan$talker == 'T']
-t.test(chan_S, chan_T, paired = TRUE, alternative = 'two.sided')
+# Creating a table to display all the p-values
+one_sample_w <- data.frame(channels, 
+                     'below_T_f0' = talker_below_T_f0$t,
+                     'T_f0' = talker_T_f0$t, 
+                     'above_T_f0' = talker_above_T_f0$t)
+map_df <- mutate_if(one_sample_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
+  mutate_if(is.numeric, function(x) {ifelse(x > 1.8,
+                                            cell_spec(x, background = spec_color(x, 
+                                                                                 direction = -1, 
+                                                                                 begin = 0.7, 
+                                                                                 end = 1, 
+                                                                                 option = "B", 
+                                                                                 # scale_from = c(1.8,5),
+                                            )),
+                                            ifelse(x < -1.8,
+                                                   cell_spec(x, background = spec_color(x,
+                                                                                 direction = -1,
+                                                                                 begin = 0.8,
+                                                                                 end = 0.4,
+                                                                                 option = "D",
+                                                                                 scale_from = c(-5,-1.8),
+                                            )),
+                                            cell_spec(x, NULL)))})
 
-t.test(S_below_S_f0$'40', T_below_S_f0$'40', paired = TRUE, alternative = 'two.sided')
+# look at chan 57 and 64
+kable(map_df, escape = F, col.names = c("Channel", "below_T_f0", "T_f0", "above_T_f0")) %>%
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
 
-T_below_S_f0 <- talker %>%
-  filter(talker == "T") %>%
-  select(all_of(c("subject_number", "channel", "below_S_f0"))) %>%
-  pivot_wider(names_from = channel, values_from = below_S_f0) %>%
-  ungroup() %>%
-  select(-c("subject_number"))
-t.test(T_below_S_f0$'40', S_below_S_f0$'40', paired = TRUE, alternative = 'two.sided')
-            
-t.test(S_below_S_f0$'40', T_below_S_f0$'40', paired = TRUE, alternative = 'two.sided')
-t.test(S_below_S_f0$'40', T_below_S_f0$'40', paired = TRUE, alternative = 'two.sided') # THIS IS RIGHT?
+### Maps
+
+```{r}
+coords <- get_layout()
+
+#plot maps, size by p, color by w
+get_map <- function(df, x, y) {
+  plot <- ggplot() +
+    geom_point(data = df, aes(x = x, y = y, 
+                                   size = 1/p, 
+                                   colour = t,
+                                   stroke = 1)) +
+    scale_colour_gradient2(low = 'blue',
+                           high = 'red',
+                           midpoint = 0,
+                           ) +
+    scale_size_continuous(name = "p", 
+                          range = c(0, 20),
+                          limits = c(1, 200),
+                          breaks = c(20, 100, 200), 
+                          labels = c("0.05", "0.01", "0.005")) +
+    # guides(alpha = FALSE) +
+    ylim(0, 900) +
+    xlim(0, 900) +
+    annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+    annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+    theme(axis.line=element_blank(),axis.text.x=element_blank(),
+          axis.text.y=element_blank(),axis.ticks=element_blank(),
+          axis.title.x=element_blank(),
+          axis.title.y=element_blank(),
+          panel.background=element_blank(),
+          panel.border=element_blank(),
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
+          plot.background=element_blank())
+  return(plot)
+}
+```
+###Same talker
+
+```{r}
+get_map(talker_below_S_f0, coords$x, coords$y)
+plot <- get_map(talker_S_f0, coords$x, coords$y)
+get_map(talker_above_S_f0, coords$x, coords$y)
+fname = '6_coherence/figs/S_f0.png'
+ggsave(plot = plot, filename = fname, width = 8, height = 5)
+```
+
+```{r}
+get_map(talker_below_T_f0, coords$x, coords$y)
+plot <- get_map(talker_T_f0, coords$x, coords$y)
+get_map(talker_above_T_f0, coords$x, coords$y)
+fname = '6_coherence/figs/T_f0.png'
+ggsave(plot = plot, filename = fname, width = 8, height = 5)
 ```
 
 
-
+```{r}
+talker_f0 <-get_two_ttest_for_each_channel(S_S_f0, T_T_f0, TRUE, 'two.sided')
+plot <- get_map(talker_f0, coords$x, coords$y)
+fname = '../figs/Talker_f0.png'
+ggsave(plot = plot, filename = fname, width = 8, height = 5)
+```
 
 
 

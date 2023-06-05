@@ -26,7 +26,8 @@ end
     stim_order = load('stim_order').stim_order;
 
     %% 2. Cross correlate
-    average = zeros(size(eeg_data, 3), size(eeg_data, 1));
+    abs_average = zeros(size(eeg_data, 3), size(eeg_data, 1));
+%     average = zeros(size(eeg_data, 3), size(eeg_data, 1));
     maximum = zeros(size(eeg_data, 3), size(eeg_data, 1));
     lag = zeros(size(eeg_data, 3), size(eeg_data, 1));
 
@@ -54,7 +55,8 @@ end
              [cross_correlations, lags] = xcorr(stim, epoch, 'normalized');
 
              % Write statistics to data arrays
-             average(j, i) = mean(cross_correlations);
+             abs_average(j, i) = mean(abs(cross_correlations));
+%              average(j, i) = mean(cross_correlations);
              [maximum(j, i), I] = max(cross_correlations);
              lag(j, i) = lags(I);
          end
@@ -80,9 +82,10 @@ end
         fprintf(1, ['\nWriting data to /', fp, '\n'])
         save(fp, 'data_frame')
     end
-
-    save_xcorr(subject_number, condition, stim_order, maximum, 'maximum')
-    save_xcorr(subject_number, condition, stim_order, lag, 'lag')
-    save_xcorr(subject_number, condition, stim_order, average, 'average')
+% 
+%     save_xcorr(subject_number, condition, stim_order, maximum, 'maximum')
+%     save_xcorr(subject_number, condition, stim_order, lag, 'lag')
+%     save_xcorr(subject_number, condition, stim_order, average, 'average')
+    save_xcorr(subject_number, condition, stim_order, abs_average, 'abs_average')
     quit
 end

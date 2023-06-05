@@ -1,11 +1,35 @@
 cd '/Users/letitiaho/src/talker_change_data_processing'
 subjects = ["301", "302", "303", "304", "305", "307", "308", "310", "315", "316", "317"];
 
+Ys = [];
+powers = [];
+% for i = 1:3
+for i = 1:length(subjects)
+    subject_number = subjects(i);
+    fp = char(fullfile('1_preprocessing/data', subject_number, 'eeg_data.mat'));
+    load(fp) % should be called eeg_data because matlab is cancer
+    
+    for chan = 1:128:
+        for epoch = 1:size(eeg_data, 3):
+            Y = fft(eeg_data[, [], 2);
+            power = abs(Y_channel_means).^2/n;
+    
+    Y = fft(eeg_data, [], 2);
+    Y_trial_averaged = mean(Y, 3);
+    Ys(:, :, i) = Y_trial_averaged;
+    Ys = cat(3, Ys, Y_trial_averaged);
+%     size(Ys)
+
+    powers = cat(power, abs(Y_channel_means).^2/n;
+end
+
+
+
 % Ys = zeros(128, 1600, length(subjects));
 Ys = [];
+powers = [];
 % for i = 1:3
-for i = 1:3
-% for i = 1:length(subjects)
+for i = 1:length(subjects)
     subject_number = subjects(i);
     fp = char(fullfile('1_preprocessing/data', subject_number, 'eeg_data.mat'));
     load(fp) % should be called eeg_data because matlab is cancer
@@ -15,6 +39,8 @@ for i = 1:3
     Ys(:, :, i) = Y_trial_averaged;
     Ys = cat(3, Ys, Y_trial_averaged);
 %     size(Ys)
+
+    powers = cat(power, abs(Y_channel_means).^2/n;
 end
 
 

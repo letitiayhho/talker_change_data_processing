@@ -31,6 +31,37 @@ n <- length(subs)
 conds <- unique(c(xcorr$constraint, xcorr$meaning, xcorr$talker))
 ```
 
+```{r}
+standardize_ws <- function(p, w) {
+  i <- which(p == max(p))
+  mid <- w[i]
+  w_adjusted <- abs(w - mid)
+  return(w_adjusted)
+}
+
+get_critical_value <- function(p, w) {
+  c <- min(w[which(p < 0.05)])
+  return(c)
+}
+
+plot_ws <- function(w1, w2, labs, c, fname) {
+  df_long <- data.frame(w1 = unlist(w1), w2 = unlist(w2)) %>%
+    pivot_longer(cols = c("w1", "w2"),
+                 names_to = "condition",
+                 values_to = "W")
+  p <- ggplot(df_long, aes(x = W, fill = condition)) +
+    geom_histogram(position ="identity", alpha=0.65, bins = 15) +
+    geom_vline(xintercept = c) +
+    scale_fill_discrete(labels = labs) +
+    scale_color_discrete(labels = labs) +
+    ylim(c(0, 25)) +
+    xlim(c(0, 35))
+  ggsave(p, filename = fname, width = 12, height = 7)
+  return(p)
+}
+```
+
+
 #### One-sample t-tests for overall tracking
 
 ```{r}
@@ -159,111 +190,6 @@ sum(meaning_w$p < 0.05)
 sum(constraint_w$p < 0.05)
 ```
 
-
-#### Wilcoxon with interaction by constraint
-
-```{r}
-# Subset talker
-SL <- subset(xcorr, talker = "S", constraint = "L") %>% get_subject_averages()
-SH <- subset(xcorr, talker = "S", constraint = "H") %>% get_subject_averages()
-TL <- subset(xcorr, talker = "T", constraint = "L") %>% get_subject_averages()
-TH <- subset(xcorr, talker = "T", constraint = "H") %>% get_subject_averages()
-
-# Subset meaning
-ML <- subset(xcorr, meaning = "M", constraint = "L") %>% get_subject_averages()
-MH <- subset(xcorr, meaning = "M", constraint = "H") %>% get_subject_averages()
-NL <- subset(xcorr, meaning = "N", constraint = "L") %>% get_subject_averages()
-NH <- subset(xcorr, meaning = "N", constraint = "H") %>% get_subject_averages()
-```
-
-```{r}
-# One-sample t-tests for talker
-SL_w <- get_one_sample_wilcoxon_for_each_channel(SL, ALT)
-SH_w <- get_one_sample_wilcoxon_for_each_channel(SH, ALT)
-TL_w <- get_one_sample_wilcoxon_for_each_channel(TL, ALT)
-TH_w <- get_one_sample_wilcoxon_for_each_channel(TH, ALT)
-
-# One-sample t-tests for meaning
-ML_w <- get_one_sample_wilcoxon_for_each_channel(ML, ALT)
-MH_w <- get_one_sample_wilcoxon_for_each_channel(MH, ALT)
-NL_w <- get_one_sample_wilcoxon_for_each_channel(NL, ALT)
-NH_w <- get_one_sample_wilcoxon_for_each_channel(NH, ALT)
-```
-
-```{r}
-# One-sample t-tests for talker
-SL_w$w_adjusted <-standardize_ws(SL_w$p, SL_w$w)
-SH_w$w_adjusted <-standardize_ws(SH_w$p, SH_w$w)
-TL_w$w_adjusted <-standardize_ws(TL_w$p, TL_w$w)
-TH_w$w_adjusted <-standardize_ws(TH_w$p, SH_w$w)
-
-# One-sample t-tests for meaning
-ML_w$w_adjusted <-standardize_ws(ML_w$p, ML_w$w)
-MH_w$w_adjusted <-standardize_ws(MH_w$p, MH_w$w)
-NL_w$w_adjusted <-standardize_ws(NL_w$p, NL_w$w)
-NH_w$w_adjusted <-standardize_ws(NH_w$p, NH_w$w)
-```
-
-```{r}
-# Creating a table to display all the p-values
-interaction_w <- data.frame(channels, 
-                     'SL' = SL_w$p,
-                     'SH' = SH_w$p,
-                     'TL' = TL_w$p,
-                     'TH' = TH_w$p, 
-                     'ML' = ML_w$p,
-                     'MH' = MH_w$p,
-                     'NL' = NL_w$p,
-                     'NH' = NH_w$p)
-map_df <- mutate_if(interaction_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
-  mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
-                                            cell_spec(x, NULL),
-                                            cell_spec(x, background = spec_color(x, 
-                                                                                 direction = 1, 
-                                                                                 begin = 0.65, 
-                                                                                 end = 1, 
-                                                                                 option = "B", 
-                                                                                 scale_from = c(0,0.1))))})
-
-kable(map_df, escape = F, col.names = c("Channel", "L", "H", "L", "H", "L", "H", "L", "H")) %>%
-  add_header_above(c(" " = 1, "Same-talker" = 2, "Different-talker" = 2, "Meaningful" = 2, "Nonsense" = 2)) %>%
-  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
-```
-
-```{r}
-talker_L_w <- get_two_sample_wilcoxon_for_each_channel(SL, TL, paired = TRUE)
-talker_H_w <- get_two_sample_wilcoxon_for_each_channel(SH, TH, paired = TRUE)
-meaning_L_w <- get_two_sample_wilcoxon_for_each_channel(ML, NL, paired = TRUE)
-meaning_H_w <- get_two_sample_wilcoxon_for_each_channel(MH, NH, paired = TRUE)
-
-talker_L_w$w_adjusted <-standardize_ws(talker_L_w$p, talker_L_w$w)
-talker_H_w$w_adjusted <-standardize_ws(talker_H_w$p, talker_H_w$w)
-meaning_L_w$w_adjusted <-standardize_ws(meaning_L_w$p, meaning_L_w$w)
-meaning_H_w$w_adjusted <-standardize_ws(meaning_H_w$p, meaning_H_w$w)
-```
-
-```{r}
-# Creating a table to display all the p-values
-interaction_two_sample_w <- data.frame(channels, 
-                     'talker_L' = talker_L_w$p,
-                     'talker_H' = talker_H_w$p,
-                     'meaning_L' = meaning_L_w$p,
-                     'meaning_H' = meaning_H_w$p)
-map_df <- mutate_if(interaction_two_sample_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
-  mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
-                                            cell_spec(x, NULL),
-                                            cell_spec(x, background = spec_color(x, 
-                                                                                 direction = 1, 
-                                                                                 begin = 0.65, 
-                                                                                 end = 1, 
-                                                                                 option = "B", 
-                                                                                 scale_from = c(0,0.1))))})
-
-kable(map_df, escape = F, col.names = c("Channel", "L", "H", "L", "H")) %>%
-  add_header_above(c(" " = 1, "Talker" = 2, "Meaning" = 2)) %>%
-  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
-```
-
 #### Plot test statistics
 
 ```{r}
@@ -278,34 +204,6 @@ hist(H_w$p, ylim = c(0,40))
 
 ```{r}
 # Plot test statistics
-standardize_ws <- function(p, w) {
-  i <- which(p == max(p))
-  mid <- w[i]
-  w_adjusted <- abs(w - mid)
-  return(w_adjusted)
-}
-
-get_critical_value <- function(p, w) {
-  c <- min(w[which(p < 0.05)])
-  return(c)
-}
-
-plot_ws <- function(w1, w2, labs, c, fname) {
-  df_long <- data.frame(w1 = unlist(w1), w2 = unlist(w2)) %>%
-    pivot_longer(cols = c("w1", "w2"),
-                 names_to = "condition",
-                 values_to = "W")
-  p <- ggplot(df_long, aes(x = W, fill = condition)) +
-    geom_histogram(position ="identity", alpha=0.65, bins = 15) +
-    geom_vline(xintercept = c) +
-    scale_fill_discrete(labels = labs) +
-    scale_color_discrete(labels = labs) +
-    ylim(c(0, 25)) +
-    xlim(c(0, 35))
-  ggsave(p, filename = fname, width = 12, height = 7)
-  return(p)
-}
-
 overall_w$w_adjusted <- standardize_ws(overall_w$p, overall_w$w)
 S_w$w_adjusted <- standardize_ws(S_w$p, S_w$w)
 T_w$w_adjusted <- standardize_ws(T_w$p, T_w$w)
@@ -315,7 +213,6 @@ L_w$w_adjusted <- standardize_ws(L_w$p, L_w$w)
 H_w$w_adjusted <- standardize_ws(H_w$p, H_w$w)
 
 c <- get_critical_value(S_w$p, S_w$w_adjusted)
-
 plot_ws(T_w$w_adjusted, S_w$w_adjusted, c("T", "S"), c, "4_test_cross_correlations/figs/ws_talker_poster.png")
 plot_ws(N_w$w_adjusted, M_w$w_adjusted, c("N", "M"), c, "4_test_cross_correlations/figs/ws_meaning_poster.png")
 plot_ws(H_w$w_adjusted, L_w$w_adjusted, c("H", "L"), c, "4_test_cross_correlations/figs/ws_constraint_poster.png")
@@ -331,7 +228,7 @@ p <- ggplot(overall_w, aes(x = w_adjusted)) +
     xlim(c(0, 35)) +
     xlab("w")
 p 
-ggsave(filename = "../figs/ws_overall_poster.png", plot = p, width = 6, height = 2.5)
+ggsave(filename = "4_test_cross_correlations/figs/ws_overall_poster.png", plot = p, width = 6, height = 2.5)
 sum(overall_w$p < 0.05)
 ```
 
@@ -383,11 +280,13 @@ df_constraint <- rbind(get_sig_xcorrs_df('L', 'constraint', L_sig)) %>%
 # condition.labs <- c("S", "T", "M", "N", "L", "H")
 
 p_talker <- ggplot(df_talker, aes(x = condition, y = sig_xcorr, fill = group)) +
-  geom_boxplot(fill = "#09a6ed") +
+  geom_boxplot(fill = "#026fa1") +
   geom_signif(comparisons = list(c("S", "T")), annotations = '*') +
-  ylab("cross correlations") +
   ylim(c(0.5e-05, 6e-05)) +
-  theme(legend.position = "none") +
+  theme(axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.title.y =element_blank(),
+        legend.position = "none") +
   xlab('Talker')
 p_meaning <- ggplot(df_meaning, aes(x = condition, y = sig_xcorr, fill = group)) +
   geom_boxplot(fill = "#048fcf") +
@@ -399,18 +298,16 @@ p_meaning <- ggplot(df_meaning, aes(x = condition, y = sig_xcorr, fill = group))
   ylim(c(0.5e-05, 6e-05)) +
   xlab('Meaning')
 p_constraint <- ggplot(df_constraint, aes(x = condition, y = sig_xcorr, fill = group)) +
-  geom_boxplot(fill = "#026fa1") +
-  theme(axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(),
-        axis.title.y =element_blank(),
-        legend.position = "none") +
+  geom_boxplot(fill = "#09a6ed") +
+  theme(legend.position = "none") +
   ylim(c(0.5e-05, 6e-05)) +
-  xlab('Constraint')
-p <- ggarrange(p_talker, p_meaning, p_constraint, ncol = 3)
+  xlab('Constraint') +
+  ylab("cross correlations") 
+p <- ggarrange(p_constraint, p_meaning, p_talker, ncol = 3)
   
 p
 # getwd()
-# ggsave(p, filename = '4_test_cross_correlations/figs/xcorrs_for_sig_channels_poster_3.png', width = 10, height = 5)
+ggsave(p, filename = '4_test_cross_correlations/figs/xcorrs_for_sig_channels_poster_3.png', width = 8, height = 4)
 ```
 
 
@@ -486,20 +383,74 @@ t.test(L_counts, H_counts)
 #### Plot
 
 ```{r}
-df <- data.frame(cond = rep('S', length(S_counts)), group = rep('talker', length(S_counts)), counts = S_counts) %>%
-  rbind(data.frame(cond = rep('T', length(T_counts)), group = rep('talker', length(T_counts)), counts = T_counts)) %>%
-  rbind(data.frame(cond = rep('M', length(M_counts)), group = rep('meaning', length(M_counts)), counts = M_counts)) %>%
-  rbind(data.frame(cond = rep('N', length(N_counts)), group = rep('meaning', length(N_counts)), counts = N_counts)) %>%
-  rbind(data.frame(cond = rep('L', length(L_counts)), group = rep('constraint', length(L_counts)), counts = L_counts)) %>%
-  rbind(data.frame(cond = rep('H', length(H_counts)), group = rep('constraint', length(H_counts)), counts = H_counts))
+# p_talker <- ggplot(df_talker, aes(x = condition, y = sig_xcorr, fill = group)) +
+#   geom_boxplot(fill = "#09a6ed") +
+#   geom_signif(comparisons = list(c("S", "T")), annotations = '*') +
+#   ylab("cross correlations") +
+#   ylim(c(0.5e-05, 6e-05)) +
+#   theme(legend.position = "none") +
+#   xlab('Talker')
+# p_meaning <- ggplot(df_meaning, aes(x = condition, y = sig_xcorr, fill = group)) +
+#   geom_boxplot(fill = "#048fcf") +
+#   geom_signif(comparisons = list(c("M", "N")), map_signif_level = TRUE) +
+#   theme(axis.text.y=element_blank(),
+#         axis.ticks.y=element_blank(),
+#         axis.title.y =element_blank(),
+#         legend.position = "none") +
+#   ylim(c(0.5e-05, 6e-05)) +
+#   xlab('Meaning')
+# p_constraint <- ggplot(df_constraint, aes(x = condition, y = sig_xcorr, fill = group)) +
+#   geom_boxplot(fill = "#026fa1") +
+#   theme(axis.text.y=element_blank(),
+#         axis.ticks.y=element_blank(),
+#         axis.title.y =element_blank(),
+#         legend.position = "none") +
+#   ylim(c(0.5e-05, 6e-05)) +
+#   xlab('Constraint')
+# p <- ggarrange(p_talker, p_meaning, p_constraint, ncol = 3)
+# 
+# 
 
-p <- ggplot(df, aes(x = cond, y = counts, fill = group)) + 
+
+df_talker <- data.frame(cond = rep('Same', length(S_counts)), group = rep('talker', length(S_counts)), counts = S_counts) %>%
+  rbind(data.frame(cond = rep('Different', length(T_counts)), group = rep('talker', length(T_counts)), counts = T_counts)) 
+df_meaning <- data.frame(cond = rep('Meaningful', length(M_counts)), group = rep('meaning', length(M_counts)), counts = M_counts) %>%
+  rbind(data.frame(cond = rep('Nonsense', length(N_counts)), group = rep('meaning', length(N_counts)), counts = N_counts)) 
+df_constraint <- data.frame(cond = rep('Low', length(L_counts)), group = rep('constraint', length(L_counts)), counts = L_counts) %>%
+  rbind(data.frame(cond = rep('High', length(H_counts)), group = rep('constraint', length(H_counts)), counts = H_counts))
+
+p_constraint <- ggplot(df_constraint, aes(x = cond, y = counts, fill = group)) + 
   geom_boxplot() +
-  scale_fill_brewer(palette="Blues") +
-  geom_signif(comparisons = list(c("S", "T")), map_signif_level = TRUE) +
-  ylab("channels")
+  geom_boxplot(fill = "#09a6ed") +
+  theme(legend.position = "none") +
+  ylim(c(0, 45)) +
+  ylab("channels") +
+  xlab('Constraint')
+p_meaning <- ggplot(df_meaning, aes(x = cond, y = counts, fill = group)) + 
+  geom_boxplot() +
+  geom_boxplot(fill = "#048fcf") +
+  # geom_signif(comparisons = list(c("M" , "N")), map_signif_level = TRUE) +
+  theme(axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.title.y =element_blank(),
+        legend.position = "none") + 
+  ylim(c(0, 45)) +
+  ylab("channels") +
+  xlab('Meaning')
+p_talker <- ggplot(df_talker, aes(x = cond, y = counts, fill = group)) + 
+  geom_boxplot() +
+  geom_boxplot(fill = "#026fa1") +
+  geom_signif(comparisons = list(c("Same", "Different")), annotations = "*", map_signif_level = TRUE) +
+  theme(axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.title.y =element_blank(),
+        legend.position = "none") +
+  ylim(c(0, 45)) +
+  ylab("channels") +
+  xlab('Talker')
+p <- ggarrange(p_constraint, p_meaning, p_talker, ncol = 3, widths = c(2, 1.8, 1.8))
 p
-ggsave(p, filename = '../figs/compare_channel_counts_poster.png', width = 6, height = 3)
+ggsave(p, filename = '4_test_cross_correlations/figs/compare_channel_counts_poster.png', width = 8, height = 4)
 ```
 ## Count the number of channels tracking each condition
 
@@ -539,7 +490,7 @@ talker_counts <- count_sig_chans_two_samp(xcorr, subs, "talker")
 meaning_counts <- count_sig_chans_two_samp(xcorr, subs, "meaning")
 constraint_counts <- count_sig_chans_two_samp(xcorr, subs, "constraint")
 
-save(talker_counts, meaning_counts, constraint_counts, file = '../data/cond_channel_counts.RData')
+# save(talker_counts, meaning_counts, constraint_counts, file = '../data/cond_channel_counts.RData')
 ```
 
 #### Get stats
@@ -566,13 +517,17 @@ TukeyHSD(fit)
 ```{r}
 p <- ggplot(df, aes(x = cond, y = counts, fill = cond)) +
   geom_boxplot() +
-  scale_fill_brewer(palette="Blues") +
+  scale_fill_manual(values=c("#09a6ed", "#048fcf", "#026fa1")) +
+  # scale_fill_brewer(palette="Blues") +
   geom_signif(comparisons = list(c("talker", "constraint")), 
                                  map_signif_level = TRUE,
                                  annotations = c("*")) +
-  ylab("channels")
+    theme(legend.position = "none") +
+  ylab("channels") +
+  ylim(c(0, 45)) +
+  xlab("")
 p
-ggsave(p, filename = '../figs/compare_condition_channel_counts_poster.png', width = 6, height = 3)
+ggsave(p, filename = '4_test_cross_correlations/figs/compare_condition_channel_counts_poster.png', width = 8, height = 4)
 ```
 #### Save everything
 
@@ -603,3 +558,84 @@ ggsave(p, filename = '../figs/compare_condition_channel_counts_poster.png', widt
 #      NL_w, 
 #      file = fname)
 ```
+
+
+```{r}
+S_sig_w <- S_w$w_adjusted[S_w$w_adjusted > c]
+T_sig_w <- T_w$w_adjusted[T_w$w_adjusted > c]
+M_sig_w <- M_w$w_adjusted[M_w$w_adjusted > c]
+N_sig_w <- N_w$w_adjusted[N_w$w_adjusted > c]
+L_sig_w <- L_w$w_adjusted[L_w$w_adjusted > c]
+H_sig_w <- H_w$w_adjusted[H_w$w_adjusted > c]
+
+df_sig_w <- data.frame(cond = rep('same', length(S_sig_w)), ws = S_sig_w) %>%
+  rbind(data.frame(cond = rep('different', length(T_sig_w)), ws = T_sig_w)) %>%
+  rbind(data.frame(cond = rep('meaningful', length(M_sig_w)), ws = M_sig_w)) %>%
+  rbind(data.frame(cond = rep('nonsense', length(N_sig_w)), ws = N_sig_w)) %>%
+  rbind(data.frame(cond = rep('low', length(L_sig_w)), ws = L_sig_w)) %>%
+  rbind(data.frame(cond = rep('high', length(H_sig_w)), ws = H_sig_w))
+df_sig_w$cond <- factor(df_sig_w$cond , levels=c("same", "different", "meaningful", "nonsense", "low", "high"))
+
+# fit <- aov(ws ~ cond, data = df)
+# summary(fit)
+# TukeyHSD(fit)
+# 
+# # Plot
+# df_talker_ws <- data.frame(cond = rep('same', length(SH_sig_w)), constraint = rep('high', length(SH_sig_w)), ws = SH_sig_w) %>%
+#   rbind(data.frame(cond = rep('different', length(TH_sig_w)), constraint = rep('high', length(TH_sig_w)), ws = TH_sig_w)) %>%
+#   rbind(data.frame(cond = rep('same', length(SL_sig_w)), constraint = rep('low', length(SL_sig_w)), ws = SL_sig_w)) %>%
+#   rbind(data.frame(cond = rep('different', length(TL_sig_w)), constraint = rep('low', length(TL_sig_w)), ws = TL_sig_w))
+# 
+# fit <- aov(ws ~ constraint, data = df_talker_ws)
+# summary(fit)
+# TukeyHSD(fit)
+
+ggplot(df_sig_w, aes(x = cond, y = ws)) +
+  scale_fill_brewer(palette="Blues") +
+  geom_signif(comparisons = list(c("different" , "same")), map_signif_level = TRUE) +
+  geom_boxplot() +
+  ylim(22, 35)
+```
+
+```{r}
+talker_sig_w <- data.frame(cond = rep('Same', length(S_sig_w)), ws = S_sig_w) %>%
+  rbind(data.frame(cond = rep('Different', length(T_sig_w)), ws = T_sig_w))
+meaning_sig_w <- data.frame(cond = rep('Meaningful', length(M_sig_w)), ws = M_sig_w) %>%
+  rbind(data.frame(cond = rep('Nonsense', length(N_sig_w)), ws = N_sig_w))
+constraint_sig_w <- data.frame(cond = rep('Low', length(L_sig_w)), ws = L_sig_w) %>%
+  rbind(data.frame(cond = rep('High', length(H_sig_w)), ws = H_sig_w))
+# df_sig_w$cond <- factor(df_sig_w$cond , levels=c("same", "different", "meaningful", "nonsense", "low", "high"))
+
+p_constraint <- ggplot(talker_sig_w, aes(x = cond, y = ws)) + 
+  geom_boxplot() +
+  geom_boxplot(fill = "#026fa1") +
+  theme(axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.title.y =element_blank(),
+        legend.position = "none") +
+  ylim(c(22, 35)) +
+  ylab("w") +
+  xlab('Talker') + 
+  geom_signif(comparisons = list(c("Different", "Same")),  map_signif_level = TRUE)
+p_meaning <- ggplot(meaning_sig_w, aes(x = cond, y = ws)) + 
+  geom_boxplot() +
+  geom_boxplot(fill = "#048fcf") +
+  theme(axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.title.y =element_blank(),
+        legend.position = "none") + 
+  ylim(c(22, 35)) +
+  ylab("w") +
+  xlab('Meaning')
+p_talker <- ggplot(constraint_sig_w, aes(x = cond, y = ws)) + 
+  geom_boxplot() +
+  geom_boxplot(fill = "#09a6ed") +
+  theme(legend.position = "none") +
+  ylim(c(22, 35)) +
+  ylab("w") +
+  xlab('Constraint')
+p <- ggarrange(p_talker, p_meaning, p_constraint, ncol = 3, widths = c(2, 1.8, 1.8))
+p
+ggsave(p, filename = '4_test_cross_correlations/figs/compare_condition_ws.png', width = 8, height = 4)
+```
+

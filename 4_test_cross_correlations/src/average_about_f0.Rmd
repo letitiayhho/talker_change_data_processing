@@ -19,7 +19,7 @@ source("4_test_cross_correlations/src/functions.R")
 ```
 
 ```{r}
-band = "above_f0"
+band = "f0"
 # Import data
 xcorr <- read.csv(file = paste("3_cross_correlate/data/average_", band, "_normalized.csv", sep = ''))
 channels <- as.character(1:128)
@@ -35,6 +35,7 @@ overall <- get_subject_averages(xcorr)
 overall_w <- get_one_sample_wilcoxon_for_each_channel(overall)
 spacer <- matrix(" ", 128, 1)
 overall_ps <- data.frame(channels, 'p'= overall_w$p)
+MU <- mean(as.matrix(overall))
 ```
 
 
@@ -52,12 +53,12 @@ H <- subset(xcorr, constraint = "H") %>% get_subject_averages()
 ```
 
 ```{r}
-S_w <- get_one_sample_wilcoxon_for_each_channel(S)
-T_w <- get_one_sample_wilcoxon_for_each_channel(T)
-M_w <- get_one_sample_wilcoxon_for_each_channel(M)
-N_w <- get_one_sample_wilcoxon_for_each_channel(N)
-L_w <- get_one_sample_wilcoxon_for_each_channel(L)
-H_w <- get_one_sample_wilcoxon_for_each_channel(H)
+S_w <- get_one_sample_wilcoxon_for_each_channel(S, MU = MU)
+T_w <- get_one_sample_wilcoxon_for_each_channel(T, MU = MU)
+M_w <- get_one_sample_wilcoxon_for_each_channel(M, MU = MU)
+N_w <- get_one_sample_wilcoxon_for_each_channel(N, MU = MU)
+L_w <- get_one_sample_wilcoxon_for_each_channel(L, MU = MU)
+H_w <- get_one_sample_wilcoxon_for_each_channel(H, MU = MU)
 ```
 
 **Get some stats**

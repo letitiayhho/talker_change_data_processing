@@ -59,7 +59,7 @@ plot <- ggplot() +
         plot.background=element_blank())
 plot
 fname = paste('figs/', NORM, ALT, '_overall.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 6, height = 5)
+ggsave(plot = plot, filename = fname, width = 7, height = 5)
 ```
 
 #### One-sample and two-sample wilcoxon for each condition
@@ -105,10 +105,10 @@ get_map <- function(df, channels, nodiff_channels, levels_label) {
                               alpha = 0.85,
                               stroke = 1)) +
     scale_color_discrete(name = "Level", labels = levels_label) +
-    scale_size_continuous(name = "p", 
+    scale_size_continuous(name = "p",
                           range = c(0, 20),
                           limits = c(1, 200),
-                          breaks = c(20, 100, 200), 
+                          breaks = c(20, 100, 200),
                           labels = c("0.05", "0.01", "0.005")) +
     guides(alpha = FALSE) +
     annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
@@ -254,6 +254,55 @@ sum(H_w$p < 0.05, na.rm = TRUE)
 
 #### Wilcoxon with interaction by constraint
 
+```{r}
+get_map <- function(df, channels, nodiff_channels, levels_label) {
+  diff_coordinates <- get_relevant_coords(df$x, df$y, channels)
+  nodiff_coordinates <- get_relevant_coords(df$x, df$y, nodiff_channels)
+
+  ggplot() +
+    geom_point(data = df, aes(x = x, y = y,
+                              size = 1/group1,
+                              color = "1",
+                              alpha = 0.85,
+                              stroke = 1)) +
+    geom_point(data = df, aes(x = x, y = y,
+                              size = 1/group2,
+                              color = "2",
+                              alpha = 0.85,
+                              stroke = 1)) +
+    geom_point(data = df, aes(x = 1000+x, y = y,
+                              size = 1/nodiff_group1,
+                              color = "1",
+                              alpha = 0.85,
+                              stroke = 1)) +
+    geom_point(data = df, aes(x = 1000+x, y = y,
+                              size = 1/nodiff_group2,
+                              color = "2",
+                              alpha = 0.85,
+                              stroke = 1)) +
+    scale_color_discrete(name = "Level", labels = levels_label) +
+    scale_size_continuous(name = "p",
+                          range = c(0, 20),
+                          limits = c(1, 200),
+                          breaks = c(20, 100, 200),
+                          labels = c("0.05", "0.01", "0.005"), guide = FALSE) +
+    guides(alpha = FALSE) +
+    annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+    annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+    theme(axis.line=element_blank(),axis.text.x=element_blank(),
+          axis.text.y=element_blank(),axis.ticks=element_blank(),
+          axis.title.x=element_blank(),
+          axis.title.y=element_blank(),
+          panel.background=element_blank(),
+          panel.border=element_blank(),
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
+          plot.background=element_blank(),
+          legend.position="bottom")
+}
+```
+
+
 **Talker and low constraint**
 
 ```{r}
@@ -268,13 +317,13 @@ nodiff_SL <- recode_ps(SL_w$p, nodiff_talker_L_interaction_channels)
 nodiff_TL <- recode_ps(TL_w$p, nodiff_talker_L_interaction_channels)
 
 # Create data frame for bubbles
-talker_L_interaction_df <- data.frame(group1 = SL, group2 = TL, nodiff_group1 = nodiff_SL, nodiff_group2 = nodiff_TL, coordinates)
+talker_L_interaction_df <- data.frame(group1 = TL, group2 = SL, nodiff_group1 = nodiff_TL, nodiff_group2 = nodiff_SL, coordinates)
 
 # Plot
-plot <- get_map(talker_L_interaction_df, talker_L_interaction_channels, nodiff_talker_L_interaction_channels, c("Different talker low constraint", "Same-talker low constraint"))
+plot <- get_map(talker_L_interaction_df, talker_L_interaction_channels, nodiff_talker_L_interaction_channels, c( "Different talker low constraint", "Same-talker low constraint"))
 plot
 fname = paste('figs/', NORM, ALT, '_talker_L.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 12, height = 5)
+ggsave(plot = plot, filename = fname, width = 11, height = 5)
 ```
 
 **Talker and high constraint**
@@ -290,13 +339,13 @@ nodiff_SH <- recode_ps(SH_w$p, nodiff_talker_H_interaction_channels)
 nodiff_TH <- recode_ps(TH_w$p, nodiff_talker_H_interaction_channels)
 
 # Create data frame for bubbles
-talker_H_interaction_df <- data.frame(group1 = SH, group2 = TH, nodiff_group1 = nodiff_SH, nodiff_group2 = nodiff_TH, coordinates)
+talker_H_interaction_df <- data.frame(group1 = TH, group2 = SH, nodiff_group1 = nodiff_TH, nodiff_group2 = nodiff_SH, coordinates)
 
 # Plot
 plot <- get_map(talker_H_interaction_df, talker_H_interaction_channels, nodiff_talker_H_interaction_channels, c("Different talker high constraint", "Same-talker high constraint"))
 plot
 fname = paste('figs/', NORM, ALT, '_talker_H.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 12, height = 5)
+ggsave(plot = plot, filename = fname, width = 11, height = 5)
 ```
 
 **Meaning and low constraint**
@@ -313,13 +362,13 @@ nodiff_ML <- recode_ps(ML_w$p, nodiff_meaning_L_interaction_channels)
 nodiff_NL <- recode_ps(NL_w$p, nodiff_meaning_L_interaction_channels)
 
 # Create data frame for bubbles
-meaning_L_interaction_df <- data.frame(group1 = ML, group2 = NL, nodiff_group1 = nodiff_ML, nodiff_group2 = nodiff_NL, coordinates)
+meaning_L_interaction_df <- data.frame(group1 = NL, group2 = ML, nodiff_group1 = nodiff_NL, nodiff_group2 = nodiff_ML, coordinates)
 
 # Plot
 plot <- get_map(meaning_L_interaction_df, meaning_L_interaction_channels, nodiff_meaning_L_interaction_channels, c("Nonsense low constraint", "Meaningful low constraint"))
 plot
 fname = paste('figs/', NORM, ALT, '_meaning_L.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 12, height = 5)
+ggsave(plot = plot, filename = fname, width = 11, height = 5)
 ```
 
 **Meaning and high constraint**
@@ -336,13 +385,13 @@ nodiff_MH <- recode_ps(MH_w$p, nodiff_meaning_H_interaction_channels)
 nodiff_NH <- recode_ps(NH_w$p, nodiff_meaning_H_interaction_channels)
 
 # Create data frame for bubbles
-meaning_H_interaction_df <- data.frame(group1 = MH, group2 = NH, nodiff_group1 = nodiff_MH, nodiff_group2 = nodiff_NH, coordinates)
+meaning_H_interaction_df <- data.frame(group1 = NH, group2 = MH, nodiff_group1 = nodiff_NH, nodiff_group2 = nodiff_MH, coordinates)
 
 # Plot
 plot <- get_map(meaning_H_interaction_df, meaning_H_interaction_channels, nodiff_meaning_H_interaction_channels, c("Nonsense high constraint", "Meaningful high constraint"))
 plot
 fname = paste('figs/', NORM, ALT, '_meaning_H.png', sep = "")
-ggsave(plot = plot, filename = fname, width = 12, height = 5)
+ggsave(plot = plot, filename = fname, width = 11, height = 5)
 ```
 **stats**
 
@@ -359,8 +408,12 @@ print("number of talker norm channels for high constraint")
 length(talker_H_interaction_channels)
 print("number of different-talker channels (p < 0.05)")
 sum(TH_w$p < 0.05, na.rm = TRUE)
-print("number of same-talker channels (p < 0.05)")
+print("number of same-talker channels (p x< 0.05)")
 sum(SH_w$p < 0.05, na.rm = TRUE)
+print("number of different-talker channels (p < 0.01)")
+sum(TH_w$p < 0.01, na.rm = TRUE)
+print("number of same-talker channels (p < 0.01)")
+sum(SH_w$p < 0.01, na.rm = TRUE)
 
 
 print("number of meaning channels for low constraint")
