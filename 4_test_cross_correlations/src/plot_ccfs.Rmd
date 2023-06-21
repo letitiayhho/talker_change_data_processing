@@ -1,0 +1,99 @@
+---
+title: "Analysis of prewhitened CCFs"
+output: html_notebook
+---
+
+```{r}
+library(ggplot2)
+library(dplyr)
+```
+
+
+```{r}
+fpath <- '~/src/talker_change_data_processing/3_cross_correlate/data/304/rs_prewhitened.RData'
+load(fpath)
+fpath <- '~/src/talker_change_data_processing/3_cross_correlate/data/304/rs_n_obs.RData'
+load(fpath)
+```
+
+```{r}
+# Values
+n_epochs = dim(rs)[1]
+n_channels = dim(rs)[2]
+n_lags = dim(rs)[3]
+```
+
+
+```{r}
+# Plot cross correlations for each channel
+i = 0
+
+for (epoch in 1:n_epochs) { # epochs x channels x lags
+  # print("Epoch")
+  # print(epoch)
+  epoch_rs <- rs[epoch, , ]
+  for (channel in 1:n_channels) {
+    # print("Channel")
+    # print(channel)
+    channel_rs <- epoch_rs[channel, ]
+    plot_rs <- data.frame('r' = channel_rs)
+    plot(channel_rs, ylim = c(-0.1, 0.1))
+    abline(h = 1.96/sqrt(n_obs[epoch]))
+    
+    i <- i + 1
+    if (i > 10) {
+      break
+    }
+  }
+  break
+}
+
+```
+
+
+```{r}
+fpath <- '~/src/talker_change_data_processing/3_cross_correlate/data/304/sig_ccfs.RData'
+load(fpath)
+```
+
+```{r}
+chan_means <- rowMeans(sig_ccfs)
+fpath <- '~/src/talker_change_data_processing/3_cross_correlate/data/304/split_conditions.csv'
+cond <- read.table(fpath, sep = ',', header = TRUE)
+df <- data.frame(cond, t(sig_ccfs))
+channel_labels <- paste("X", as.character(1:128), sep = "")
+means <- df %>%
+  group_by(constraint, meaning, talker) %>%
+  summarise_at(vars(all_of(channel_labels)), mean)
+    # select(all_of(channel_labels))
+
+  # group_by(subject_number, talker) %>%
+  # summarise(below_S_f0 = mean(below_S_f0), 
+  #           S_f0 = mean(S_f0), 
+  #           above_S_f0 = mean(above_S_f0),
+  #           below_T_f0 = mean(below_T_f0),
+  #           T_f0 = mean(T_f0),
+  #           above_T_f0 = mean(above_T_f0))
+```
+
+```{r}
+```
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+```{r}
+# Get counts of significance cross correlations
+```
+
+
+
+

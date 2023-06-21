@@ -19,14 +19,14 @@ source("4_test_cross_correlations/src/functions.R")
 
 ```{r}
 # Import data
-xcorr <- read.csv(file = "3_cross_correlate/data/abs_average_normalized.csv")
+xcorr <- read.csv(file = "3_cross_correlate/data/maximum_normalized.csv")
 channels <- as.character(1:128)
 ```
 
 #### One-sample t-tests for overall tracking
 
 ```{r}
-overall <- get_subject_averages(xcorr)
+overall <- get_subject_averages(xcorr) # Averages across all conditions within each subject
 overall_q <- get_ljungbox(overall)
 
 # Creating a table to display all the p-values
@@ -69,23 +69,23 @@ H <- subset(xcorr, constraint = "H") %>% get_subject_averages()
 ```
 
 ```{r}
-S_w <- get_ljungbox(S)
-T_w <- get_ljungbox(T)
-M_w <- get_ljungbox(M)
-N_w <- get_ljungbox(N)
-L_w <- get_ljungbox(L)
-H_w <- get_ljungbox(H)
+S_q <- get_ljungbox(S)
+T_q <- get_ljungbox(T)
+M_q <- get_ljungbox(M)
+N_q <- get_ljungbox(N)
+L_q <- get_ljungbox(L)
+H_q <- get_ljungbox(H)
 ```
 
 ```{r}
 # Creating a table to display all the p-values
 one_sample_w <- data.frame(channels, 
-                     'S' = S_w$p,
-                     'T' = T_w$p, 
-                     'M' = M_w$p,
-                     'N' = N_w$p, 
-                     'L' = L_w$p,
-                     'H' = H_w$p)
+                     'S' = S_q$p,
+                     'T' = T_q$p, 
+                     'M' = M_q$p,
+                     'N' = N_q$p, 
+                     'L' = L_q$p,
+                     'H' = H_q$p)
 map_df <- mutate_if(one_sample_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
   mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
                                             cell_spec(x, NULL),

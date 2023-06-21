@@ -1,0 +1,200 @@
+---
+title: "Analysis of prewhitened CCFs"
+output: html_notebook
+---
+
+```{r}
+library("ggplot2")
+library("dplyr")
+library("ggpubr")
+library("kableExtra")
+source("../../4_test_cross_correlations/src/functions.R")
+```
+
+```{r}
+subset <- function(data, talker = NaN, meaning = NaN, constraint = NaN, keepLabels = FALSE, keepSubjNum = TRUE) {
+  channel_columns = paste("X", as.character(1:128), sep = "")
+  if (talker == "S") {
+    data <- filter(data, talker == "S")
+  } else if (talker == "T") {
+    data <- filter(data, talker == "T")
+  }
+  if (meaning == "M") {
+    data <- filter(data, meaning == "M")
+  } else if (meaning == "N") {
+    data <- filter(data, meaning == "N")
+  }
+  if (constraint == "L") {
+    data <- filter(data, constraint == "L")
+  } else if (constraint == "H") {
+    data <- filter(data, constraint == "H")
+  }
+  if (keepLabels) {
+    data <- select(data, all_of(c("subject_number", "talker", "meaning", "constraint", channel_columns)))
+  } else if (keepSubjNum) {
+    data <- select(data, all_of(c("subject_number", channel_columns)))
+  }  else {
+    data <- select(data, all_of(channel_columns))
+  }
+  return(data)
+}
+
+get_subject_averages <- function(data) {
+  channel_labels <- paste("X", as.character(1:128), sep = "")
+  data <-  data %>%
+    group_by(subject_number) %>%
+    summarise_at(vars(all_of(channel_labels)), mean) %>%
+    select(all_of(channel_labels))
+  return(data)
+}
+
+get_two_sample_wilcoxon_for_each_channel <- function(group1, group2, paired) {
+  w <- mapply(function(x, y) {wilcox.test(x, y, paired = paired, exact = TRUE)$statistic}, group1, group2)
+  p <- mapply(function(x, y) {wilcox.test(x, y, paired = paired, exact = TRUE)$p.value}, group1, group2)
+  return(data.frame("w" = w, "p" = p))
+}
+```
+
+
+
+```{r}
+GIT_HOME = '/Users/letitiaho/src/talker_change_data_processing'
+setwd(GIT_HOME)
+
+# Read subject numbers from file
+subject_numbers <- readLines("0_set_up_and_raw_data/data/subject_numbers.txt")
+
+means <- data.frame()
+for (subject_number in subject_numbers) {
+  fpath <- paste('~/src/talker_change_data_processing/3_cross_correlate/data/', subject_number, '/sig_ccfs.RData', sep = '')
+  load(fpath)
+  fpath <- paste('~/src/talker_change_data_processing/3_cross_correlate/data/', subject_number, '/split_conditions.csv', sep = '')
+  cond <- read.table(fpath, sep = ',', header = TRUE)
+  df <- data.frame(cond, t(sig_ccfs))
+  channel_labels <- paste("X", as.character(1:128), sep = "")
+  sub_means <- df %>%
+    group_by(constraint, meaning, talker) %>%
+    summarise_at(vars(all_of(channel_labels)), mean)
+  sub_means$subject_number <- rep(subject_number, nrow(sub_means))
+  
+  means <- rbind(means, sub_means)
+}
+```
+
+```{r}
+S <- subset(means, talker = "S") %>% get_subject_averages()
+T <- subset(means, talker = "T") %>% get_subject_averages()
+M <- subset(means, meaning = "M") %>% get_subject_averages()
+N <- subset(means, meaning = "N") %>% get_subject_averages()
+L <- subset(means, constraint = "L") %>% get_subject_averages()
+H <- subset(means, constraint = "H") %>% get_subject_averages()
+```
+
+```{r}
+talker_w <- get_two_sample_wilcoxon_for_each_channel(S, T, paired = TRUE)
+meaning_w <- get_two_sample_wilcoxon_for_each_channel(M, N, paired = TRUE)
+constraint_w <- get_two_sample_wilcoxon_for_each_channel(L, H, paired = TRUE)
+```
+
+```{r}
+channels <- as.character(1:128)
+two_sample_w <- data.frame(channels, 
+                     'talker' = talker_w$p,
+                     'meaning' = meaning_w$p,
+                     'constraint' = constraint_w$p)
+map_df <-  mutate_if(two_sample_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
+  mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
+                                            cell_spec(x, NULL),
+                                            cell_spec(x, background = spec_color(x, 
+                                                                                 direction = 1, 
+                                                                                 begin = 0.65, 
+                                                                                 end = 1, 
+                                                                                 option = "B", 
+                                                                                 scale_from = c(0,0.1))))})
+
+kable(map_df, escape = F, col.names = c("Channel", "Talker", "Meaning", "Constraint")) %>%
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
+
+
+
+
+
+
+
+
+
+```{r}
+# Maps
+coordinates <- get_layout()
+S_means <- colMeans(S)
+S_df <- data.frame(S_means, coordinates)
+plot <- ggplot() +
+  geom_point(data = S_df, aes(x = x, y = y, 
+                                    size = S_means, 
+                                    alpha = 0.5,
+                                    stroke = 0.1)) +
+  # geom_point(data = S_df, aes(x = x, y = y,
+  #                                   size = 0.1,
+  #                                   alpha = 0.5)) +
+  scale_size_continuous(range = c(0, 4),
+                        limits = c(0, 1)) +
+  # scale_size_continuous(range = c(0, 1), 
+  #                       limits = c(0, 1),
+  #                       breaks = c(0.2, 0.4, 0.6, 0.8, 1)) +
+  guides(alpha = FALSE) +
+  ylim(0, 900) +
+  xlim(0, 900) +
+  annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+  annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.background=element_blank())
+plot
+# fname = paste('figs/', NORM, ALT, '_overall.png', sep = "")
+# ggsave(plot = plot, filename = fname, width = 7, height = 5)
+```
+```{r}
+# Maps
+coordinates <- get_layout()
+T_means <- colMeans(T)
+T_df <- data.frame(T_means, coordinates)
+plot <- ggplot() +
+  geom_point(data = T_df, aes(x = x, y = y, 
+                                    size = T_means, 
+                                    alpha = 0.5,
+                                    stroke = 0.1)) +
+  # geom_point(data = T_df, aes(x = x, y = y,
+  #                                   size = 0.01,
+  #                                   alpha = 0.5)) +
+  scale_size_continuous(range = c(0, 4),
+                        limits = c(0, 1)) +
+                        # breaks = c(0.2, 0.4, 0.6, 0.8, 1)) +
+  guides(alpha = FALSE) +
+  ylim(0, 900) +
+  xlim(0, 900) +
+  annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+  annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.background=element_blank())
+plot
+# fname = paste('figs/', NORM, ALT, '_overall.png', sep = "")
+# ggsave(plot = plot, filename = fname, width = 7, height = 5)
+```
+
+
+
+

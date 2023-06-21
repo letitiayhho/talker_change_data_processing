@@ -47,6 +47,12 @@ plot_average_xcorrs <- function(condition_xcorrs, fname, p) { # should be n_subs
   return(plot)
 }
 
+get_ljungbox <- function(data) {
+  Q <- apply(data, MARGIN = 2, function(channel) {Box.test(channel)$statistic})
+  p <- apply(data, MARGIN = 2, function(channel) {Box.test(channel)$p.value})
+  return(data.frame("Q" = Q, "p" = p))
+}
+
 get_one_sample_subject_wilcoxon <- function(condition_xcorrs) {
   sub_means <- c(rowMeans(as.matrix(condition_xcorrs)))
   w <- wilcox.test(sub_means)
