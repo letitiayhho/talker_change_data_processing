@@ -1,4 +1,4 @@
-function [] = cross_correlate_save_full(git_home, subject_number)
+function [] = cross_correlate_prewhiten_save_full(git_home, subject_number)
 % DESCRIPTION:
 %     Takes the preprocessed eeg data and convolves or cross-correlates the 
 %     waveforms with the waveform of the auditory stimuli
@@ -41,9 +41,12 @@ function [] = cross_correlate_save_full(git_home, subject_number)
              % Pad the stimuli signal to make it the same length as the eeg
              pad = zeros(length(epoch) - length(stim), 1);
              stim = [stim; pad];
+             
+             % Prewhiten the eeg signal
+             prewhitened_epoch = prewhiten(epoch);
 
              % Compute convolution and cross correlation 
-             [r, ~] = xcorr(stim, epoch, 500, 'normalized');
+             [r, ~] = xcorr(stim, prewhitened_epoch, 500, 'normalized');
 
              % Write statistics to data arrays
              rs(j, i, :) = r;
@@ -54,7 +57,7 @@ function [] = cross_correlate_save_full(git_home, subject_number)
     condition = load('split_conditions.mat').split_conditions;
 
     %% 4. Write data files
-    fp = fullfile('3_cross_correlate/data', subject_number, 'rs_normalized.mat');
+    fp = fullfile('3_cross_correlate/data', subject_number, 'rs_prewhitened.mat');
     fprintf(1, ['\nWriting data to /', fp, '\n'])
     save(fp, 'rs')
 

@@ -1,0 +1,141 @@
+
+```{r}
+subject_number = "302"
+GIT_HOME = '/Users/letitiaho/src/talker_change_data_processing'
+```
+
+```{r}
+setwd(GIT_HOME)
+eeg_data_fpath <- paste('1_preprocessing/data/', subject_number, '/eeg_data.mat', sep = '')
+stim_order_fpath <- paste('3_cross_correlate/data/', subject_number, '/stim_order.csv', sep = '')
+eeg_data <- readMat(eeg_data_fpath)$eeg.data
+stim_order <- read.table(stim_order_fpath, sep = ',', header = TRUE)
+```
+
+```{r}
+i = 1
+j = 1
+```
+
+```{r}
+epoch <- as.numeric(eeg_data[i, , j])
+```
+
+```{r}
+setwd(GIT_HOME)
+word <- as.character(stim_order$word[j])
+word_fpath <- paste("0_set_up_and_raw_data/data/stim/low_pass_400/", word, sep = '')
+stim <- audio::load.wave(word_fpath)
+stim <- signal::resample(stim, 10, 441)
+```
+
+```{r}
+setwd(GIT_HOME)
+maxlag_fpath <- paste('3_cross_correlate/data/', subject_number, '/max_lag.RData', sep = '')
+maxlag <- load(maxlag_fpath)
+maxlag <- data
+epoch_maxlag <- maxlag[j, i]
+```
+
+```{r}
+window <- 1  
+order <- 50
+x <- stim
+y <- epoch
+```
+
+```{r}
+## either x is a 2-column time series
+## or x and y are univariate time series
+
+# Enters 'else' statement and x and y are converted to zoo
+
+if((NCOL(x) == 2) && missing(y)) {
+  print("((NCOL(x) == 2) && missing(y))")
+  xnam <- colnames(x)[1]
+  ynam <- colnames(x)[2]
+  x <- as.zoo(x)
+  y <- x[,2]
+  x <- x[,1]
+} else {
+  print("Else")
+  xnam <- deparse(substitute(x))
+  ynam <- deparse(substitute(y))
+  x <- as.zoo(x)
+  y <- as.zoo(y)
+  stopifnot((NCOL(x) == 1), (NCOL(y) == 1))
+}
+
+cat(paste("Length of y:" , length(y)))
+```
+
+
+```{r}
+# Moves through this part okay
+
+# Set threshold for windows of computing lagged observations
+if (order > window) {
+  lower_bounds <- order - window
+} else {
+  lower_bounds <- 0
+}
+if (order < 500 - window) {
+  upper_bounds <- order + window
+} else {
+  upper_bounds <- 500
+}
+
+cat(paste("Length of y:" , length(y)))
+cat(paste("Upper bounds:" , upper_bounds))
+cat(paste("Lower bounds:" , lower_bounds))
+```
+
+```{r}
+# Also moves through this part okay
+
+## compute lagged observations
+print('compute lagged observations')
+lagX <- do.call("merge", lapply(lower_bounds:upper_bounds, function(k) lag(x, -k))) # CHANGE TO COMPUTE AROUND ORDER
+lagY <- do.call("merge", lapply(lower_bounds:upper_bounds, function(k) lag(y, -k)))
+```
+
+```{r}
+x_copy <- x
+y_copy <- y
+lagX_copy <- lagX
+lagY_copy <- lagY
+```
+
+```{r}
+## collect series, handle NAs and separate results again
+print('collect series, handle NAs and separate results again')
+all <- merge(x_copy, y_copy, lagX_copy, lagY_copy)
+colnames(all) <- c("x", "y", paste("x", lower_bounds:upper_bounds, sep = "_"), paste("y", lower_bounds:upper_bounds, sep = "_"))
+all <- na.action(all)
+y <- as.vector(all[,2])
+print('is it here?')
+lagX <- as.matrix(all[,(lower_bounds:upper_bounds + 2)])
+lagY <- as.matrix(all[,(lower_bounds:upper_bounds + 2)])
+```
+
+
+```{r}
+
+
+
+
+
+
+# 
+# ## fit full model
+# fm <- lm(y ~ lagY + lagX)
+# 
+# ## compare models with waldtest
+# rval <- waldtest(fm, 2, ...)
+# 
+# ## adapt annotation
+# attr(rval, "heading") <- c("Granger causality test\n",
+#                            paste("Model 1: ", ynam, " ~ ", "Lags(", ynam, ", 1:", order, ") + Lags(", xnam, ", 1:", order,
+#                                  ")\nModel 2: ", ynam, " ~ ", "Lags(", ynam, ", 1:", order, ")", sep = ""))
+```
+
