@@ -38,7 +38,7 @@ epoch_maxlag <- maxlag[j, i]
 ```
 
 ```{r}
-window <- 1  
+window <- 10
 order <- 50
 x <- stim
 y <- epoch
@@ -109,33 +109,26 @@ lagY_copy <- lagY
 ```{r}
 ## collect series, handle NAs and separate results again
 print('collect series, handle NAs and separate results again')
-all <- merge(x_copy, y_copy, lagX_copy, lagY_copy)
-colnames(all) <- c("x", "y", paste("x", lower_bounds:upper_bounds, sep = "_"), paste("y", lower_bounds:upper_bounds, sep = "_"))
-all <- na.action(all)
-y <- as.vector(all[,2])
-print('is it here?')
-lagX <- as.matrix(all[,(lower_bounds:upper_bounds + 2)])
-lagY <- as.matrix(all[,(lower_bounds:upper_bounds + 2)])
+# all <- merge(x_copy, y_copy, lagX_copy, lagY_copy)
+# colnames(all) <- c("x", "y", paste("x", lower_bounds:upper_bounds, sep = "_"), paste("y", lower_bounds:upper_bounds, sep = "_"))
+# all <- na.action(all)
+# y_copy2 <- as.vector(all[,2])
+# print('is it here?')
+# lagX <- as.matrix(all[,(lower_bounds:upper_bounds + 2)])
+# lagY <- as.matrix(all[,(lower_bounds:upper_bounds + 2)])
 ```
 
 
 ```{r}
+## fit full model
+fm <- lm(y ~ lagY + lagX)
 
+## compare models with waldtest
+rval <- waldtest(fm, 2, ...)
 
-
-
-
-
-# 
-# ## fit full model
-# fm <- lm(y ~ lagY + lagX)
-# 
-# ## compare models with waldtest
-# rval <- waldtest(fm, 2, ...)
-# 
-# ## adapt annotation
-# attr(rval, "heading") <- c("Granger causality test\n",
-#                            paste("Model 1: ", ynam, " ~ ", "Lags(", ynam, ", 1:", order, ") + Lags(", xnam, ", 1:", order,
-#                                  ")\nModel 2: ", ynam, " ~ ", "Lags(", ynam, ", 1:", order, ")", sep = ""))
+## adapt annotation
+attr(rval, "heading") <- c("Granger causality test\n",
+                           paste("Model 1: ", ynam, " ~ ", "Lags(", ynam, ", 1:", order, ") + Lags(", xnam, ", 1:", order,
+                                 ")\nModel 2: ", ynam, " ~ ", "Lags(", ynam, ", 1:", order, ")", sep = ""))
 ```
 

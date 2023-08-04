@@ -13,9 +13,9 @@ compute_granger <- function(subject_number, window = 0) {
   stim_order <- read.table(stim_order_fpath, sep = ',', header = TRUE)
   
   # 2. Cross correlate
-  dfs <- array(0, dim = c(dim(eeg_data)[3], dim(eeg_data)[1], 2))
-  Fs <- array(0, dim = c(dim(eeg_data)[3], dim(eeg_data)[1], 2))
-  Ps <- array(0, dim = c(dim(eeg_data)[3], dim(eeg_data)[1], 2))
+  dfs <- array(0, dim = c(dim(eeg_data)[3], dim(eeg_data)[1]))
+  Fs <- array(0, dim = c(dim(eeg_data)[3], dim(eeg_data)[1]))
+  Ps <- array(0, dim = c(dim(eeg_data)[3], dim(eeg_data)[1]))
   
   # Loop over channels
   cat('Channel #')
@@ -54,17 +54,16 @@ compute_granger <- function(subject_number, window = 0) {
       
       # Compute granger causality
       tryCatch(granger <- grangertest(stim, epoch, order = upper_bounds), error = function(c) {
-        granger$Df <- c(NA, NA)
-        granger$F <- c(NA, NA)
-        granger$`Pr(>F)` <- c(NA, NA)
+        granger$Df <- NA
+        granger$F <- NA
+        granger$`Pr(>F)` <- NA
       })
 
       # Save output
-      dfs[j, i, ] <- granger$Df
-      Fs[j, i, ] <- granger$F
-      Ps[j, i, ] <- granger$`Pr(>F)`
+      dfs[j, i] <- granger$Df[2]
+      Fs[j, i] <- granger$F[2]
+      Ps[j, i] <- granger$`Pr(>F)`[2]
       
-      # break
     }
     # break
   }
