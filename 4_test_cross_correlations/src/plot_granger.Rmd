@@ -8,8 +8,7 @@ source("../../4_test_cross_correlations/src/functions.R")
 ```
 
 ```{r}
-coordinates <- get_layout()
-
+# Functions
 subset_data <- function(data, talker = NaN, meaning = NaN, constraint = NaN, keepLabels = FALSE, keepSubjNum = FALSE) {
   channel_columns = paste("X", as.character(1:128), sep = "")
   if (talker == "S") {
@@ -46,39 +45,59 @@ get_two_sample_t_for_each_channel <- function(group1, group2) {
 
 get_map <- function(df) {
   ggplot() +
-  geom_point(data = df, aes(x = x, y = y, 
-                                    size = sig, 
-                                    alpha = 0.5,
-                                    stroke = 1)) +
-  guides(alpha = FALSE) +
-  ylim(0, 900) +
-  xlim(0, 900) +
-  annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
-  annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
-  theme(axis.line=element_blank(),axis.text.x=element_blank(),
-        axis.text.y=element_blank(),axis.ticks=element_blank(),
-        axis.title.x=element_blank(),
-        axis.title.y=element_blank(),
-        panel.background=element_blank(),
-        panel.border=element_blank(),
-        panel.grid.major=element_blank(),
-        panel.grid.minor=element_blank(),
-        plot.background=element_blank())
+    geom_point(data = df, aes(x = x, y = y, 
+                              size = 1/p, 
+                              col = sig,
+                              alpha = 0.5,
+                              stroke = 1)) +
+    scale_size_continuous(name = "p",
+                          range = c(0, 20),
+                          limits = c(1, 200),
+                          breaks = c(20, 100, 200),
+                          labels = c("0.05", "0.01", "0.005")) +
+    guides(alpha = FALSE) +
+    ylim(0, 900) +
+    xlim(0, 900) +
+    annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+    annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+    theme(axis.line=element_blank(),axis.text.x=element_blank(),
+          axis.text.y=element_blank(),axis.ticks=element_blank(),
+          axis.title.x=element_blank(),
+          axis.title.y=element_blank(),
+          panel.background=element_blank(),
+          panel.border=element_blank(),
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
+          plot.background=element_blank())
   # return(plot)
 }
-```
 
-```{r}
-setwd("/Users/letitiaho/src/talker_change_data_processing/3_cross_correlate/data/")
-files <- list.files(path = '.', pattern = "*granger-P.RDS", full.names = TRUE, recursive = TRUE)
-cond_files <- list.files(path = '.', pattern = "*split_conditions.csv", full.names = TRUE, recursive = TRUE)
+# get_map <- function(df) {
+#   ggplot() +
+#   geom_point(data = df, aes(x = x, y = y, 
+#                                     size = sig, 
+#                                     alpha = 0.5,
+#                                     stroke = 1)) +
+#   guides(alpha = FALSE) +
+#   ylim(0, 900) +
+#   xlim(0, 900) +
+#   annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+#   annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+#   theme(axis.line=element_blank(),axis.text.x=element_blank(),
+#         axis.text.y=element_blank(),axis.ticks=element_blank(),
+#         axis.title.x=element_blank(),
+#         axis.title.y=element_blank(),
+#         panel.background=element_blank(),
+#         panel.border=element_blank(),
+#         panel.grid.major=element_blank(),
+#         panel.grid.minor=element_blank(),
+#         plot.background=element_blank())
+#   # return(plot)
+# }
 
 relabel_ps <- function(channel_labels, sub_df) {
   for (col in channel_labels) {
     sub_df[col] <- as.numeric(sub_df[col] < 0.05)
-    # sub_df[col][sub_df[col] >= 0.05] <- -2 # Stupid way of mapping p-values < 0.05 as 1, and p-values > 0.05 as 0, but whatever
-    # sub_df[col][sub_df[col] > -1] <- 1
-    # sub_df[col][sub_df[col] < 0] <- 0
   }
   return(sub_df)
 }
@@ -89,6 +108,15 @@ count_sig_ps <- function(channel_labels, sub_df) {
     summarise_at(vars(all_of(channel_labels)), sum, na.rm = TRUE) %>%
     select(all_of(channel_labels))
 }
+
+```
+
+```{r}
+# Load data
+coordinates <- get_layout()
+setwd("/Users/letitiaho/src/talker_change_data_processing/3_cross_correlate/data/")
+files <- list.files(path = '.', pattern = "*granger-P.RDS", full.names = TRUE, recursive = TRUE)
+cond_files <- list.files(path = '.', pattern = "*split_conditions.csv", full.names = TRUE, recursive = TRUE)
 
 df <- data.frame()
 for (i in 1:length(files)) {
@@ -130,7 +158,7 @@ T <- talker_df[talker_df$talker == "T",]
 T <- T[,-c(1)] # Remove 'talker column
 
 talker_t <- get_two_sample_t_for_each_channel(S, T)
-talker_df <- data.frame(sig = as.numeric(talker_t$p < 0.05), coordinates)
+talker_df <- data.frame(p = talker_t$p, sig = talker_t$p < 0.05, coordinates)
 plot <- get_map(talker_df)
 plot
 ```
@@ -146,10 +174,9 @@ N <- meaning_df[meaning_df$meaning == "N",]
 N <- N[,-c(1)] # Remove 'meaning column
 
 meaning_t <- get_two_sample_t_for_each_channel(M, N)
-meaning_df <- data.frame(sig = as.numeric(meaning_t$p < 0.05), coordinates)
+meaning_df <- data.frame(p = meaning_t$p, sig = meaning_t$p < 0.05, coordinates)
 get_map(meaning_df)
 ```
-
 
 ```{r}
 constraint_df <- df %>%
@@ -162,7 +189,7 @@ H <- constraint_df[constraint_df$constraint == "H",]
 H <- H[,-c(1)] # Remove 'constraint column
 
 constraint_t <- get_two_sample_t_for_each_channel(L, H)
-constraint_df <- data.frame(sig = as.numeric(constraint_t$p < 0.05), coordinates)
+constraint_df <- data.frame(p = constraint_t$p, sig = constraint_t$p < 0.05, coordinates)
 get_map(meaning_df)
 ```
 
