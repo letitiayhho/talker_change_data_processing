@@ -1,0 +1,168 @@
+
+
+```{r}
+library(dplyr)
+library(ggplot2)
+source("../../tools/functions.R")
+source("../../4_test_cross_correlations/src/functions.R")
+```
+
+```{r}
+coordinates <- get_layout()
+
+subset_data <- function(data, talker = NaN, meaning = NaN, constraint = NaN, keepLabels = FALSE, keepSubjNum = FALSE) {
+  channel_columns = paste("X", as.character(1:128), sep = "")
+  if (talker == "S") {
+    data <- filter(data, talker == "S")
+  } else if (talker == "T") {
+    data <- filter(data, talker == "T")
+  }
+  if (meaning == "M") {
+    data <- filter(data, meaning == "M")
+  } else if (meaning == "N") {
+    data <- filter(data, meaning == "N")
+  }
+  if (constraint == "L") {
+    data <- filter(data, constraint == "L")
+  } else if (constraint == "H") {
+    data <- filter(data, constraint == "H")
+  }
+  if (keepLabels) {
+    data <- select(data, all_of(c("sub", "talker", "meaning", "constraint", channel_columns)))
+  } else if (keepSubjNum) {
+    data <- select(data, all_of(c("sub", channel_columns)))
+  }  else {
+    data <- select(data, all_of(channel_columns))
+  }
+  return(data)
+}
+
+get_two_sample_t_for_each_channel <- function(group1, group2) {
+  t <- mapply(function(x, y) {t.test(x, y, alternative = c("less"))$statistic}, group1, group2)
+  df <- mapply(function(x, y) {t.test(x, y, alternative = c("less"))$parameter}, group1, group2)
+  p <- mapply(function(x, y) {t.test(x, y)$p.value}, group1, group2)
+  return(data.frame("t" = t, "df" = df, "p" = p))
+}
+
+get_map <- function(df) {
+  ggplot() +
+  geom_point(data = df, aes(x = x, y = y, 
+                                    size = sig, 
+                                    alpha = 0.5,
+                                    stroke = 1)) +
+  guides(alpha = FALSE) +
+  ylim(0, 900) +
+  xlim(0, 900) +
+  annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+  annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.background=element_blank())
+  # return(plot)
+}
+```
+
+```{r}
+setwd("/Users/letitiaho/src/talker_change_data_processing/3_cross_correlate/data/")
+files <- list.files(path = '.', pattern = "*granger-P.RDS", full.names = TRUE, recursive = TRUE)
+cond_files <- list.files(path = '.', pattern = "*split_conditions.csv", full.names = TRUE, recursive = TRUE)
+
+relabel_ps <- function(channel_labels, sub_df) {
+  for (col in channel_labels) {
+    sub_df[col] <- as.numeric(sub_df[col] < 0.05)
+    # sub_df[col][sub_df[col] >= 0.05] <- -2 # Stupid way of mapping p-values < 0.05 as 1, and p-values > 0.05 as 0, but whatever
+    # sub_df[col][sub_df[col] > -1] <- 1
+    # sub_df[col][sub_df[col] < 0] <- 0
+  }
+  return(sub_df)
+}
+
+count_sig_ps <- function(channel_labels, sub_df) {
+  sub_df <- sub_df %>%
+    group_by(constraint, meaning, talker, sub) %>%
+    summarise_at(vars(all_of(channel_labels)), sum, na.rm = TRUE) %>%
+    select(all_of(channel_labels))
+}
+
+df <- data.frame()
+for (i in 1:length(files)) {
+  parts <- unlist(strsplit(files[i], '/'))
+  sub <- parts[2]
+  
+  print(files[i])
+  # print(cond_files[i])
+  
+  granger_fp <- files[i]
+  cond_fp <- cond_files[i]
+  
+  load(granger_fp)
+  conds <- read.csv(cond_fp)
+
+  sub_df <- data.frame(cbind(conds, Ps))
+  # print(dim(sub_df))
+  channel_labels <- paste("X", as.character(1:128), sep = "")
+  sub_df <- relabel_ps(channel_labels, sub_df)
+  # print(dim(sub_df))
+  sub_df <- cbind('sub' = rep(sub, nrow(sub_df)), sub_df)
+  sub_df <- count_sig_ps(channel_labels, sub_df)
+  # print(dim(sub_df))
+  sub_df <- cbind('sub' = rep(sub, 8), sub_df)
+
+  df <- rbind(df, sub_df)
+}
+
+```
+
+```{r}
+talker_df <- df %>%
+  group_by(talker, sub) %>%
+  summarise_at(vars(all_of(channel_labels)), sum, na.rm = TRUE) %>%
+  select(all_of(channel_labels))
+S <- talker_df[talker_df$talker == "S",]
+S <- S[,-c(1)] # Remove 'talker' column
+T <- talker_df[talker_df$talker == "T",]
+T <- T[,-c(1)] # Remove 'talker column
+
+talker_t <- get_two_sample_t_for_each_channel(S, T)
+talker_df <- data.frame(sig = as.numeric(talker_t$p < 0.05), coordinates)
+plot <- get_map(talker_df)
+plot
+```
+
+```{r}
+meaning_df <- df %>%
+  group_by(meaning, sub) %>%
+  summarise_at(vars(all_of(channel_labels)), sum, na.rm = TRUE) %>%
+  select(all_of(channel_labels))
+M <- meaning_df[meaning_df$meaning == "M",]
+M <- M[,-c(1)] # Remove 'meaning' column
+N <- meaning_df[meaning_df$meaning == "N",]
+N <- N[,-c(1)] # Remove 'meaning column
+
+meaning_t <- get_two_sample_t_for_each_channel(M, N)
+meaning_df <- data.frame(sig = as.numeric(meaning_t$p < 0.05), coordinates)
+get_map(meaning_df)
+```
+
+
+```{r}
+constraint_df <- df %>%
+  group_by(constraint, sub) %>%
+  summarise_at(vars(all_of(channel_labels)), sum, na.rm = TRUE) %>%
+  select(all_of(channel_labels))
+L <- constraint_df[constraint_df$constraint == "L",]
+L <- L[,-c(1)] # Remove 'constraint' column
+H <- constraint_df[constraint_df$constraint == "H",]
+H <- H[,-c(1)] # Remove 'constraint column
+
+constraint_t <- get_two_sample_t_for_each_channel(L, H)
+constraint_df <- data.frame(sig = as.numeric(constraint_t$p < 0.05), coordinates)
+get_map(meaning_df)
+```
+
