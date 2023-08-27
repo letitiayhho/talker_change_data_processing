@@ -52,7 +52,7 @@ for (epoch in 1:n_epochs) { # epochs x channels x lags
 
 
 ```{r}
-fpath <- '~/src/talker_change_data_processing/3_cross_correlate/data/304/sig_ccfs.RData'
+fpath <- '~/src/talker_change_data_processing/3_cross_correlate/data/304/max.RData'
 load(fpath)
 ```
 
@@ -77,6 +77,11 @@ means <- df %>%
 ```
 
 ```{r}
+# Plot the test statistic??
+
+# TAKE THE MAX STANDARDIZED R, wow I can straight up plot the Rs can't I
+
+
 ```
 
 ```{r}
@@ -90,10 +95,581 @@ means <- df %>%
 
 
 
+
+
+
+**Plot max cross-correlations**
+
 ```{r}
-# Get counts of significance cross correlations
+library(dplyr)
+library(ggplot2)
+source("../../tools/functions.R")
+source("../../4_test_cross_correlations/src/functions.R")
+```
+
+```{r}
+get_two_sample_t_for_each_channel <- function(group1, group2) {
+  t <- mapply(function(x, y) {t.test(x, y, alternative = c("less"), paired = TRUE)$statistic}, group1, group2)
+  df <- mapply(function(x, y) {t.test(x, y, alternative = c("less"), paired = TRUE)$parameter}, group1, group2)
+  p <- mapply(function(x, y) {t.test(x, y)$p.value}, group1, group2)
+  return(data.frame("t" = t, "df" = df, "p" = p))
+}
+
+get_two_sample_t_map <- function(df) {
+  ggplot() +
+    geom_point(data = df, aes(x = x, y = y, 
+                              size = t, 
+                              col = sig,
+                              alpha = 0.5,
+                              stroke = 1)) +
+    # scale_size_continuous(name = "p",
+    #                       range = c(0, 20),
+    #                       limits = c(1, 200),
+    #                       breaks = c(20, 100, 200),
+    #                       labels = c("0.05", "0.01", "0.005")) +
+    guides(alpha = FALSE) +
+    ylim(0, 900) +
+    xlim(0, 900) +
+    annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+    annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+    theme(axis.line=element_blank(),axis.text.x=element_blank(),
+          axis.text.y=element_blank(),axis.ticks=element_blank(),
+          axis.title.x=element_blank(),
+          axis.title.y=element_blank(),
+          panel.background=element_blank(),
+          panel.border=element_blank(),
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
+          plot.background=element_blank())
+  # return(plot)
+}
+
+get_one_level_map <- function(df) {
+  ggplot() +
+    geom_point(data = df, aes(x = x, y = y, 
+                              size = R, 
+                              col = sig,
+                              alpha = 0.5,
+                              stroke = 1)) +
+    scale_size_continuous(name = "sds",
+                          range = c(1.3, 2.6)) +
+                          # limits = c(1, 2.6),
+                          # breaks = c(1, 2, 3))
+                          # labels = c("1", "2", "3")) +
+    guides(alpha = FALSE) +
+    ylim(0, 900) +
+    xlim(0, 900) +
+    annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+    annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+    theme(axis.line=element_blank(),axis.text.x=element_blank(),
+          axis.text.y=element_blank(),axis.ticks=element_blank(),
+          axis.title.x=element_blank(),
+          axis.title.y=element_blank(),
+          panel.background=element_blank(),
+          panel.border=element_blank(),
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
+          plot.background=element_blank())
+}
+
+get_average_r_map <- function(df) {
+  ggplot() +
+    geom_point(data = df, aes(x = x, y = y, 
+                              size = R, 
+                              alpha = 0.5,
+                              stroke = 1)) +
+    scale_size_continuous(name = "sds",
+                          range = c(1.3, 2.6)) +
+                          # limits = c(1, 2.6),
+                          # breaks = c(1, 2, 3))
+                          # labels = c("1", "2", "3")) +
+    guides(alpha = FALSE) +
+    ylim(0, 900) +
+    xlim(0, 900) +
+    annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+    annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+    theme(axis.line=element_blank(),axis.text.x=element_blank(),
+          axis.text.y=element_blank(),axis.ticks=element_blank(),
+          axis.title.x=element_blank(),
+          axis.title.y=element_blank(),
+          panel.background=element_blank(),
+          panel.border=element_blank(),
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
+          plot.background=element_blank())
+}
+```
+
+```{r}
+# Load data
+coordinates <- get_layout()
+setwd("/Users/letitiaho/src/talker_change_data_processing/3_cross_correlate/data/")
+files <- list.files(path = '.', pattern = "*maxs.RDS", full.names = TRUE, recursive = TRUE)
+cond_files <- list.files(path = '.', pattern = "*split_conditions.csv", full.names = TRUE, recursive = TRUE)
+
+df <- data.frame()
+for (i in 1:length(files)) {
+  parts <- unlist(strsplit(files[i], '/'))
+  sub <- parts[2]
+  
+  print(files[i])
+
+  maxs_fp <- files[i]
+  cond_fp <- cond_files[i]
+  
+  maxs <- readRDS(maxs_fp)
+  conds <- read.csv(cond_fp)
+
+  sub_df <- data.frame(cbind(conds, maxs)) 
+  sub_df <- cbind('sub' = rep(sub, nrow(conds)), sub_df) # Add subject numbers as column
+  channel_labels <- paste("X", as.character(1:128), sep = "")
+
+  df <- rbind(df, sub_df)
+}
+```
+```{r}
+T_df <- df[df$talker == "T",]
+
+T_df <- T_df %>%
+  # group_by(talker, sub) %>%
+  summarise_at(vars(all_of(channel_labels)), mean, na.rm = TRUE) %>%
+  select(all_of(channel_labels))
+T <- as.numeric(T_df)
+# S_df <- talker_df[talker_df$talker == "S",]
+# S <- S[,-c(1)] # Remove 'talker' column
+# T <- talker_df[talker_df$talker == "T",]
+# T <- T[,-c(1)] # Remove 'talker column
+
+talker_df <- data.frame(R = T, sig = T > 2.04, coordinates)
+plot <- get_one_level_map(talker_df)
+plot
+```
+
+
+```{r}
+S_df <- df[df$talker == "S",]
+
+S_df <- S_df %>%
+  # group_by(talker, sub) %>%
+  summarise_at(vars(all_of(channel_labels)), mean, na.rm = TRUE) %>%
+  select(all_of(channel_labels))
+S <- as.numeric(S_df)
+# S_df <- talker_df[talker_df$talker == "S",]
+# S <- S[,-c(1)] # Remove 'talker' column
+# T <- talker_df[talker_df$talker == "T",]
+# T <- T[,-c(1)] # Remove 'talker column
+
+talker_df <- data.frame(R = S, sig = S > 1.96, coordinates)
+plot <- get_one_level_map(talker_df)
+plot
+```
+
+```{r}
+talker_df <- df %>%
+  group_by(talker, sub) %>%
+  summarise_at(vars(all_of(channel_labels)), mean, na.rm = TRUE) %>%
+  select(all_of(channel_labels))
+
+S <- talker_df[talker_df$talker == "S",]
+S <- S[,-c(1)] # Remove 'talker' column
+T <- talker_df[talker_df$talker == "T",]
+T <- T[,-c(1)] # Remove 'talker column
+talker_t <- get_two_sample_t_for_each_channel(S, T)
+talker_t$p[talker_t$p < 0.01] <- 0.01
+
+talker_df <- data.frame(t = -talker_t$t, sig = talker_t$p < 0.05, coordinates)
+plot <- get_two_sample_t_map(talker_df)
+plot
+```
+
+```{r}
+meaning_df <- df %>%
+  group_by(meaning, sub) %>%
+  summarise_at(vars(all_of(channel_labels)), sum, na.rm = TRUE) %>%
+  select(all_of(channel_labels))
+M <- meaning_df[meaning_df$meaning == "M",]
+M <- M[,-c(1)] # Remove 'meaning' column
+N <- meaning_df[meaning_df$meaning == "N",]
+N <- N[,-c(1)] # Remove 'meaning column
+
+meaning_t <- get_two_sample_t_for_each_channel(M, N)
+meaning_df <- data.frame(t = abs(meaning_t$t), sig = meaning_t$p < 0.05, coordinates)
+get_two_sample_t_map(meaning_df)
+```
+
+
+
+***Mean CCFS***
+
+```{r}
+# Compute mean ccf
+setwd("/Users/letitiaho/src/talker_change_data_processing/3_cross_correlate/data/")
+files <- list.files(path = '.', pattern = "*rs_prewhitened_standardized.RDS", full.names = TRUE, recursive = TRUE)
+cond_files <- list.files(path = '.', pattern = "*split_conditions.csv", full.names = TRUE, recursive = TRUE)
+
+df <- data.frame()
+for (i in 1:length(files)) {
+  parts <- unlist(strsplit(files[i], '/'))
+  sub <- parts[2]
+  
+  print(files[i])
+  
+  ccf_fp <- files[i]
+  cond_fp <- cond_files[i]
+  
+  ccfs <- readRDS(ccf_fp)
+  conds <- read.csv(cond_fp)
+  
+  # ccfs <- ccfs[,,0:300] # Trim
+  ccfs <- apply(ccfs, c(1,2), mean)
+  sub_df <- data.frame(cbind(conds, ccfs))
+  sub_df <- cbind('sub' = rep(sub, nrow(conds)), sub_df) # Add subject numbers as column
+  channel_labels <- paste("X", as.character(1:128), sep = "")
+  
+  df <- rbind(df, sub_df)
+}
+```
+
+```{r}
+T_df <- df[df$talker == "T",]
+
+T_df <- T_df %>%
+  summarise_at(vars(all_of(channel_labels)), mean, na.rm = TRUE) %>%
+  select(all_of(channel_labels))
+T <- as.numeric(T_df)
+
+
+talker_df <- data.frame(R = T,coordinates)
+plot <- get_average_r_map(talker_df)
+plot
 ```
 
 
 
 
+***Max CCFS baselined with overall***
+
+```{r}
+get_max_baselined_map <- function(df) {
+  ggplot() +
+    geom_point(data = df, aes(x = x, y = y, 
+                              size = R, 
+                              # col = sig,
+                              alpha = 0.5,
+                              stroke = 1)) +
+    # scale_size_continuous(name = "sds",
+                          # range = c(1.3, 2.6)) +
+                          # limits = c(1, 2.6),
+                          # breaks = c(1, 2, 3))
+                          # labels = c("1", "2", "3")) +
+    guides(alpha = FALSE) +
+    ylim(0, 900) +
+    xlim(0, 900) +
+    annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+    annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+    theme(axis.line=element_blank(),axis.text.x=element_blank(),
+          axis.text.y=element_blank(),axis.ticks=element_blank(),
+          axis.title.x=element_blank(),
+          axis.title.y=element_blank(),
+          panel.background=element_blank(),
+          panel.border=element_blank(),
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
+          plot.background=element_blank())
+}
+```
+
+
+```{r}
+# Load data
+coordinates <- get_layout()
+setwd("/Users/letitiaho/src/talker_change_data_processing/3_cross_correlate/data/")
+files <- list.files(path = '.', pattern = "*maxs.RDS", full.names = TRUE, recursive = TRUE)
+cond_files <- list.files(path = '.', pattern = "*split_conditions.csv", full.names = TRUE, recursive = TRUE)
+
+df <- data.frame()
+for (i in 1:length(files)) {
+  parts <- unlist(strsplit(files[i], '/'))
+  sub <- parts[2]
+  
+  print(files[i])
+
+  maxs_fp <- files[i]
+  cond_fp <- cond_files[i]
+  
+  maxs <- readRDS(maxs_fp)
+  conds <- read.csv(cond_fp)
+
+  sub_df <- data.frame(cbind(conds, maxs)) 
+  sub_df <- cbind('sub' = rep(sub, nrow(conds)), sub_df) # Add subject numbers as column
+  channel_labels <- paste("X", as.character(1:128), sep = "")
+
+  df <- rbind(df, sub_df)
+}
+```
+
+```{r}
+overall <- df %>%
+  summarise_at(vars(all_of(channel_labels)), mean, na.rm = TRUE) %>%
+  select(all_of(channel_labels)) %>%
+  as.numeric()
+```
+
+```{r}
+# Subset data
+T_df <- df[df$talker == "T",]
+
+# Average over condition
+T <- T_df %>%
+  summarise_at(vars(all_of(channel_labels)), mean, na.rm = TRUE) %>%
+  select(all_of(channel_labels)) %>%
+  as.numeric()
+
+# Take baseline
+T <- T - overall 
+
+# Plot
+T_df <- data.frame(R = T, coordinates)
+plot <- get_max_baselined_map(T_df)
+plot
+```
+
+```{r}
+# Subset data
+S_df <- df[df$talker == "S",]
+
+# Average over condition
+S <- S_df %>%
+  summarise_at(vars(all_of(channel_labels)), mean, na.rm = TRUE) %>%
+  select(all_of(channel_labels)) %>%
+  as.numeric()
+
+# Take baseline
+S <- S - overall 
+
+# Plot
+S_df <- data.frame(R = S, coordinates)
+plot <- get_max_baselined_map(S_df)
+plot
+```
+**Condition differences**
+
+```{r}
+talker <- T - S 
+
+# Plot
+talker_df <- data.frame(R = talker, coordinates)
+plot <- get_max_baselined_map(talker_df)
+plot
+```
+
+
+
+***T-test max xcorr against baseline**
+
+# P-values look wrong, fix this
+
+```{r}
+get_one_sample_wilcoxon_for_each_channel_against_baseline <- function(data, alt = 'greater', baseline = 0) {
+  w <- mapply(function(x, y) {wilcox.test(x, exact = TRUE, mu = y)$statistic}, data, baseline)
+  p <- mapply(function(x, y) {wilcox.test(x, exact = TRUE, mu = y)$p.value}, data, baseline)
+  return(data.frame("w" = w, "p" = p))
+}
+```
+
+```{r}
+T_df <- df[df$talker == "T",]
+T <- T_df %>%
+  group_by(sub) %>%
+  summarise_at(vars(all_of(channel_labels)), mean, na.rm = TRUE) %>%
+  select(all_of(channel_labels))
+
+get_one_sample_wilcoxon_for_each_channel_against_baseline(T, baseline = overall)
+```
+
+```{r}
+S_df <- df[df$talker == "S",]
+S <- S_df %>%
+  group_by(sub) %>%
+  summarise_at(vars(all_of(channel_labels)), mean, na.rm = TRUE) %>%
+  select(all_of(channel_labels))
+
+get_one_sample_wilcoxon_for_each_channel_against_baseline(S, baseline = overall)
+```
+
+
+```{r}
+one_sample_w <- data.frame(channels, 
+                     'S' = S_w$p,
+                     'T' = T_w$p, 
+                     'M' = M_w$p,
+                     'N' = N_w$p, 
+                     'L' = L_w$p,
+                     'H' = H_w$p)
+map_df <- mutate_if(one_sample_w, is.numeric, function(x) {round(x, digits = 3)}) %>%
+  mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
+                                            cell_spec(x, NULL),
+                                            cell_spec(x, background = spec_color(x, 
+                                                                                 direction = 1, 
+                                                                                 begin = 0.65, 
+                                                                                 end = 1, 
+                                                                                 option = "B", 
+                                                                                 scale_from = c(0,0.1))))})
+
+kable(map_df, escape = F, col.names = c("Channel", "S", "T", "M", "N", "S", "G")) %>%
+  add_header_above(c(" " = 1, "Talker" = 2, "Meaning" = 2, "Constraint" = 2)) %>%
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
+
+
+
+
+**Mean ABS ccfs**
+
+```{r}
+library(dplyr)
+library(ggplot2)
+source("../../tools/functions.R")
+source("../../4_test_cross_correlations/src/functions.R")
+```
+
+```{r}
+# Compute mean ccf
+setwd("/Users/letitiaho/src/talker_change_data_processing/3_cross_correlate/data/")
+files <- list.files(path = '.', pattern = "*rs_prewhitened_standardized.RDS", full.names = TRUE, recursive = TRUE)
+cond_files <- list.files(path = '.', pattern = "*split_conditions.csv", full.names = TRUE, recursive = TRUE)
+
+df <- data.frame()
+for (i in 1:length(files)) {
+  parts <- unlist(strsplit(files[i], '/'))
+  sub <- parts[2]
+  
+  print(files[i])
+  
+  ccf_fp <- files[i]
+  cond_fp <- cond_files[i]
+  
+  ccfs <- readRDS(ccf_fp)
+  conds <- read.csv(cond_fp)
+  
+  ccfs <- abs(ccfs)
+  ccfs <- apply(ccfs, c(1,2), mean)
+  sub_df <- data.frame(cbind(conds, ccfs))
+  sub_df <- cbind('sub' = rep(sub, nrow(conds)), sub_df) # Add subject numbers as column
+  channel_labels <- paste("X", as.character(1:128), sep = "")
+  
+  df <- rbind(df, sub_df)
+}
+```
+
+```{r}
+coordinates <- get_layout()
+
+get_average_r_map <- function(df) {
+  ggplot() +
+    geom_point(data = df, aes(x = x, y = y, 
+                              size = R, 
+                              alpha = 0.5,
+                              stroke = 1)) +
+    # scale_size_continuous(name = "sds",
+                          # range = c(1.3, 2.6)) +
+                          # limits = c(1, 2.6),
+                          # breaks = c(1, 2, 3))
+                          # labels = c("1", "2", "3")) +
+    guides(alpha = FALSE) +
+    ylim(0, 900) +
+    xlim(0, 900) +
+    annotate("text", x=20, y=5, label= "L", alpha = 0.8) +
+    annotate("text", x=880, y=5, label= "R", alpha = 0.8) +
+    theme(axis.line=element_blank(),axis.text.x=element_blank(),
+          axis.text.y=element_blank(),axis.ticks=element_blank(),
+          axis.title.x=element_blank(),
+          axis.title.y=element_blank(),
+          panel.background=element_blank(),
+          panel.border=element_blank(),
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
+          plot.background=element_blank())
+}
+
+get_two_sample_wilcoxon_for_each_channel <- function(group1, group2) {
+  w <- mapply(function(x, y) {t.test(x, y, paired = FALSE, alt = 'greater', exact = TRUE)$statistic}, group1, group2)
+  p <- mapply(function(x, y) {t.test(x, y, paired = FALSE, alt = 'greater', exact = TRUE)$p.value}, group1, group2)
+  return(data.frame("w" = w, "p" = p))
+}
+
+get_subject_averages <- function(data) {
+  channel_labels <- paste("X", as.character(1:128), sep = "")
+  data <-  data %>%
+    group_by(sub) %>%
+    summarise_at(vars(all_of(channel_labels)), mean) %>%
+    select(all_of(channel_labels))
+  return(data)
+}
+
+T_df <- df[df$talker == "T",]
+T_df <- T_df %>%
+  summarise_at(vars(all_of(channel_labels)), mean, na.rm = TRUE) %>%
+  select(all_of(channel_labels))
+T <- as.numeric(T_df)
+talker_df <- data.frame(R = T, coordinates)
+plot <- get_average_r_map(talker_df)
+plot
+
+S_df <- df[df$talker == "S",]
+S_df <- S_df %>%
+  summarise_at(vars(all_of(channel_labels)), mean, na.rm = TRUE) %>%
+  select(all_of(channel_labels))
+S <- as.numeric(S_df)
+talker_df <- data.frame(R = S, coordinates)
+plot <- get_average_r_map(talker_df)
+plot
+
+talker_df <- T - S %>%
+  as.numeric()
+talker_df <- data.frame(R = talker_df, coordinates)
+plot <- get_average_r_map(talker_df)
+plot
+
+# Take wilcoxon
+S <- df[df$talker == "S",] %>% get_subject_averages()
+T <- df[df$talker == "T",] %>% get_subject_averages()
+talker_t <- get_two_sample_wilcoxon_for_each_channel(T, S)
+talker_df <- cbind(talker_t, coordinates)
+```
+
+```{r}
+# Try baselining
+overall <- df %>%
+  summarise_at(vars(all_of(channel_labels)), mean, na.rm = TRUE) %>%
+  select(all_of(channel_labels)) %>%
+  as.numeric()
+
+S_df <- df[df$talker == "S",]
+S_df <- S_df %>%
+  summarise_at(vars(all_of(channel_labels)), mean, na.rm = TRUE) %>%
+  select(all_of(channel_labels))
+S <- as.numeric(S_df)
+S <- S - overall
+S_plot_df <- data.frame(R = S, coordinates)
+plot <- get_average_r_map(S_plot_df)
+plot
+
+T_df <- df[df$talker == "T",]
+T_df <- T_df %>%
+  summarise_at(vars(all_of(channel_labels)), mean, na.rm = TRUE) %>%
+  select(all_of(channel_labels))
+T <- as.numeric(T_df)
+T <- T - overall
+T_plot_df <- data.frame(R = T, coordinates)
+plot <- get_average_r_map(T_plot_df)
+plot
+
+talker_df <- T - S %>%
+  as.numeric()
+talker_df <- data.frame(R = talker_df, coordinates)
+plot <- get_average_r_map(talker_df)
+plot
+```
+
+**Take wilcoxon test between... baseline and mean Rs**

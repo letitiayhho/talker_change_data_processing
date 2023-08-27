@@ -1,0 +1,18 @@
+
+
+```{r}
+# source('3_cross_correlate/src/prewhiten.R')
+GIT_HOME = '/Users/letitiaho/src/talker_change_data_processing'
+setwd(GIT_HOME)
+
+s_word_fpath <- "0_set_up_and_raw_data/data/stim/low_pass_400/doorbell_f.wav"
+t_word_fpath <- "0_set_up_and_raw_data/data/stim/low_pass_400/word_doorbell.wav"
+s_stim <- audio::load.wave(s_word_fpath)
+t_stim <- audio::load.wave(t_word_fpath)
+ccf <- prewhiten(s_stim, t_stim, 500) # ccf(x,y, 50) gives ccf for values of = 0, ±1, …, ±50
+n <- ccf$ccf$n.used
+r <- ccf$ccf$acf
+lag <- ccf$ccf$lag
+plot(r, type = "l")
+```
+

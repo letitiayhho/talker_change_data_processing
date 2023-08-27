@@ -147,6 +147,25 @@ for (i in 1:length(files)) {
 
 ```
 
+***Plot the Granger test statistics straight up***
+
+```{r}
+T_df <- df %>%
+  group_by(talker, sub) %>%
+  summarise_at(vars(all_of(channel_labels)), sum, na.rm = TRUE) %>%
+  select(all_of(channel_labels))
+S <- talker_df[talker_df$talker == "S",]
+S <- S[,-c(1)] # Remove 'talker' column
+T <- talker_df[talker_df$talker == "T",]
+T <- T[,-c(1)] # Remove 'talker column
+
+# talker_t <- get_two_sample_t_for_each_channel(S, T)
+# talker_df <- data.frame(p = talker_t$p, sig = talker_t$p < 0.05, coordinates)
+plot <- get_map(talker_df)
+plot
+```
+**Plot counts**
+
 ```{r}
 talker_df <- df %>%
   group_by(talker, sub) %>%
@@ -190,6 +209,6 @@ H <- H[,-c(1)] # Remove 'constraint column
 
 constraint_t <- get_two_sample_t_for_each_channel(L, H)
 constraint_df <- data.frame(p = constraint_t$p, sig = constraint_t$p < 0.05, coordinates)
-get_map(meaning_df)
+get_map(constraint_df)
 ```
 

@@ -1,7 +1,11 @@
 cross_correlate_prewhiten_save_full <- function(subject_number) {
-  library(audio)
-  library(TSA)
-  library(R.matlab)
+# GIT_HOME = '/Users/letitiaho/src/talker_change_data_processing'
+# setwd(GIT_HOME)
+# source('3_cross_correlate/src/prewhiten.R')
+# subject_number = '301'
+#   library(audio)
+#   library(TSA)
+#   library(R.matlab)
 
   cat(paste('Cross correlating data from subject #', subject_number, '\n'))
   
@@ -64,7 +68,7 @@ cross_correlate_prewhiten_save_full <- function(subject_number) {
       # Add to arrays
       rs[j, i, ] <- r
       n_obs[j] <- n
-      maxs[j, i] <- maximum
+      maxs[j, i] <- maximum # max R is standardized
       max_lags[j, i] <- max_lag
       lags[j, i, ] <- lag
       
@@ -74,20 +78,22 @@ cross_correlate_prewhiten_save_full <- function(subject_number) {
   }
   
   # Write data files
-  save_data(subject_number, rs, 'rs_prewhitened_standardized.RData')
-  save_data(subject_number, n_obs, 'n_obs.RData')
-  save_data(subject_number, max, 'max.RData')
-  save_data(subject_number, max_lags, 'max_lag.RData')
-  save_data(subject_number, lags, 'lags.RData')
-}
-
-
-save_data <- function(subject_number, data, fname) {
-  fp <- file.path('3_cross_correlate/data', subject_number, fname)
+  fp <- file.path('3_cross_correlate/data', subject_number, 'rs_prewhitened_standardized.RDS')
   cat(paste('\nWriting data to /', fp, '\n'))
-  save(data, file = fp)
+  saveRDS(rs, file = fp)
+  fp <- file.path('3_cross_correlate/data', subject_number, 'n_obs.RDS')
+  cat(paste('\nWriting data to /', fp, '\n'))
+  saveRDS(n_obs, file = fp)
+  fp <- file.path('3_cross_correlate/data', subject_number, 'maxs.RDS')
+  cat(paste('\nWriting data to /', fp, '\n'))
+  saveRDS(maxs, file = fp)
+  fp <- file.path('3_cross_correlate/data', subject_number, 'max_lag.RDS')
+  cat(paste('\nWriting data to /', fp, '\n'))
+  saveRDS(max_lag, file = fp)
+  fp <- file.path('3_cross_correlate/data', subject_number, 'lags.RDS')
+  cat(paste('\nWriting data to /', fp, '\n'))
+  saveRDS(lags, file = fp)
 }
-
 
 
 
@@ -102,4 +108,5 @@ subject_numbers <- readLines("0_set_up_and_raw_data/data/subject_numbers.txt")
 for (subject_number in subject_numbers) {
   print(subject_number)
   cross_correlate_prewhiten_save_full(subject_number)
+  # break
 }

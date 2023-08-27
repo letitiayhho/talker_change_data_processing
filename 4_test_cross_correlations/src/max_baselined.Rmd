@@ -1,0 +1,349 @@
+---
+title: "Average"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, warning=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+knitr::opts_knit$set(root.dir = "/Users/letitiaho/src/talker_change_data_processing/")
+setwd("/Users/letitiaho/src/talker_change_data_processing/")
+library("dplyr")
+library("ggplot2")
+library("ggpubr")
+library("kableExtra")
+source("tools/functions.R")
+source("4_test_cross_correlations/src/functions.R")
+```
+
+```{r}
+# Import data
+xcorr <- read.csv(file = "3_cross_correlate/data/maximum.csv")
+channels <- as.character(1:128)
+```
+
+```{r}
+# Split into conditionns
+#   Same-talker = S
+#   Different-talker = T
+#   Meaningful = M
+#   Nonsense = N
+#   Low constraint = L
+#   High constraint = H
+S <- subset(xcorr, talker = "S") %>% get_subject_averages()
+T <- subset(xcorr, talker = "T") %>% get_subject_averages()
+M <- subset(xcorr, meaning = "M") %>% get_subject_averages()
+N <- subset(xcorr, meaning = "N") %>% get_subject_averages()
+L <- subset(xcorr, constraint = "L") %>% get_subject_averages()
+H <- subset(xcorr, constraint = "H") %>% get_subject_averages()
+```
+
+```{r}
+# Function for making color coded table for p-values
+p_table <- function(dat) {
+  color_ps <- mutate_if(dat, is.numeric, function(x) {round(x, digits = 3)}) %>%
+    mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
+                                              cell_spec(x, NULL),
+                                              cell_spec(x, background = spec_color(x, 
+                                                                                   direction = 1, 
+                                                                                   begin = 0.65, 
+                                                                                   end = 1, 
+                                                                                   option = "B", 
+                                                                                   scale_from = c(0,0.1))))})
+  
+  kable(color_ps, escape = F, col.names = c("Channel", "S", "T", "M", "N", "S", "G")) %>%
+    add_header_above(c(" " = 1, "Talker" = 2, "Meaning" = 2, "Constraint" = 2)) %>%
+    kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+  # return(map_df)
+}
+```
+
+
+### Create baseline
+
+```{r}
+overall <- get_subject_averages(xcorr)
+baseline <- apply(overall, 2, mean) %>%
+  rep(11) %>%
+  matrix(nrow = 11, byrow = TRUE) # Cast it so baseline is the same shape as the condition cross correlation matrices
+```
+
+## One-sample wilcoxon for each baselined condition, against mu = 0
+
+Compares the cross correlations for each condition level (e.g. same-talker, meaningful) to 0.
+
+```{r}
+S_baselined <- S-baseline
+T_baselined <- T-baseline
+M_baselined <- M-baseline
+N_baselined <- N-baseline
+L_baselined <- L-baseline
+H_baselined <- H-baseline
+```
+
+```{r}
+get_one_sample_wilcoxon_for_each_channel <- function(data, alt, MU = 0) {
+  w <- apply(data, MARGIN = 2, function(channel) {wilcox.test(channel, 
+                                                              exact = TRUE,
+                                                              mu = MU,
+                                                              alternative = c(alt))$statistic})
+  p <- apply(data, MARGIN = 2, function(channel) {wilcox.test(channel, 
+                                                              exact = TRUE, 
+                                                              mu = MU,
+                                                              alternative = c(alt))$p.value})
+  return(data.frame("w" = w, "p" = p))
+}
+```
+
+#### Greater than
+
+```{r}
+# Compare to 0
+S_w_greater <- get_one_sample_wilcoxon_for_each_channel(S_baselined, alt = 'greater')
+T_w_greater <- get_one_sample_wilcoxon_for_each_channel(T_baselined, alt = 'greater')
+M_w_greater <- get_one_sample_wilcoxon_for_each_channel(M_baselined, alt = 'greater')
+N_w_greater <- get_one_sample_wilcoxon_for_each_channel(N_baselined, alt = 'greater')
+L_w_greater <- get_one_sample_wilcoxon_for_each_channel(L_baselined, alt = 'greater')
+H_w_greater <- get_one_sample_wilcoxon_for_each_channel(H_baselined, alt = 'greater')
+```
+
+```{r}
+# Creating a table to display all the p-values
+greater_w <- data.frame(channels, 
+                     'S' = S_w_greater$p,
+                     'T' = T_w_greater$p, 
+                     'M' = M_w_greater$p,
+                     'N' = N_w_greater$p, 
+                     'L' = L_w_greater$p,
+                     'H' = H_w_greater$p)
+p_table(greater_w)
+```
+
+#### Lesser than
+
+```{r}
+S_w_less <- get_one_sample_wilcoxon_for_each_channel(S_baselined, alt = 'less')
+T_w_less <- get_one_sample_wilcoxon_for_each_channel(T_baselined, alt = 'less')
+M_w_less <- get_one_sample_wilcoxon_for_each_channel(M_baselined, alt = 'less')
+N_w_less <- get_one_sample_wilcoxon_for_each_channel(N_baselined, alt = 'less')
+L_w_less <- get_one_sample_wilcoxon_for_each_channel(L_baselined, alt = 'less')
+H_w_less <- get_one_sample_wilcoxon_for_each_channel(H_baselined, alt = 'less')
+```
+
+```{r}
+# Creating a table to display all the p-values
+less_w <- data.frame(channels, 
+                     'S' = S_w_less$p,
+                     'T' = T_w_less$p, 
+                     'M' = M_w_less$p,
+                     'N' = N_w_less$p, 
+                     'L' = L_w_less$p,
+                     'H' = H_w_less$p)
+p_table(less_w)
+```
+
+## One-sample Wilcoxon against baseline mu, better approach
+
+Instead of baselining the cross correlation values by subtracting the baseline value from them, simply compute a two-sample wilcoxon against mu = baseline.
+
+```{r}
+mu <- apply(overall, 2, mean)
+```
+
+```{r}
+get_one_sample_wilcoxon_for_each_channel_against_mu <- function(data, mu, alt) {
+  w <- mapply(function(x, y, z) {t.test(x, exact = TRUE, mu = y, alt = z)$statistic}, data, mu, alt)
+  p <- mapply(function(x, y, z) {t.test(x, exact = TRUE, mu = y, alt = z)$p.value}, data, mu, alt)
+  return(data.frame("w" = w, "p" = p))
+}
+```
+
+#### Greater than
+
+```{r}
+S_w_mu_greater <- get_one_sample_wilcoxon_for_each_channel_against_mu(S, mu = mu, alt = 'greater')
+T_w_mu_greater <- get_one_sample_wilcoxon_for_each_channel_against_mu(T, mu = mu, alt = 'greater')
+M_w_mu_greater <- get_one_sample_wilcoxon_for_each_channel_against_mu(M, mu = mu, alt = 'greater')
+N_w_mu_greater <- get_one_sample_wilcoxon_for_each_channel_against_mu(N, mu = mu, alt = 'greater')
+L_w_mu_greater <- get_one_sample_wilcoxon_for_each_channel_against_mu(L, mu = mu, alt = 'greater')
+H_w_mu_greater <- get_one_sample_wilcoxon_for_each_channel_against_mu(H, mu = mu, alt = 'greater')
+```
+
+```{r}
+# Creating a table to display all the p-values
+two_sample_greater <- data.frame(channels, 
+                     'S' = S_w_mu_greater$p,
+                     'T' = T_w_mu_greater$p, 
+                     'M' = M_w_mu_greater$p,
+                     'N' = N_w_mu_greater$p, 
+                     'L' = L_w_mu_greater$p,
+                     'H' = H_w_mu_greater$p)
+p_table(two_sample_greater)
+```
+
+#### Less than
+
+```{r}
+S_w_mu_less <- get_one_sample_wilcoxon_for_each_channel_against_mu(S, mu = mu, alt = 'less')
+T_w_mu_less <- get_one_sample_wilcoxon_for_each_channel_against_mu(T, mu = mu, alt = 'less')
+M_w_mu_less <- get_one_sample_wilcoxon_for_each_channel_against_mu(M, mu = mu, alt = 'less')
+N_w_mu_less <- get_one_sample_wilcoxon_for_each_channel_against_mu(N, mu = mu, alt = 'less')
+L_w_mu_less <- get_one_sample_wilcoxon_for_each_channel_against_mu(L, mu = mu, alt = 'less')
+H_w_mu_less <- get_one_sample_wilcoxon_for_each_channel_against_mu(H, mu = mu, alt = 'less')
+```
+
+```{r}
+# Creating a table to display all the p-values
+two_sample_less <- data.frame(channels, 
+                     'S' = S_w_mu_less$p,
+                     'T' = T_w_mu_less$p, 
+                     'M' = M_w_mu_less$p,
+                     'N' = N_w_mu_less$p, 
+                     'L' = L_w_mu_less$p,
+                     'H' = H_w_mu_less$p)
+p_table(two_sample_less)
+```
+
+
+## Two Sample Wilcoxon comparing conditions
+
+```{r}
+# Functions
+get_two_sample_wilcoxon_for_each_channel <- function(group1, group2, paired = TRUE) {
+  w <- mapply(function(x, y, z) {wilcox.test(x, y, paired = z, exact = TRUE)$statistic}, group1, group2, paired)
+  p <- mapply(function(x, y, z) {wilcox.test(x, y, paired = z, exact = TRUE)$p.value}, group1, group2, paired)
+  return(data.frame("w" = w, "p" = p))
+}
+
+p_table_two_sample <- function(dat) {
+  map_df <-  mutate_if(dat, is.numeric, function(x) {round(x, digits = 3)}) %>%
+    mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
+                                              cell_spec(x, NULL),
+                                              cell_spec(x, background = spec_color(x, 
+                                                                                   direction = 1, 
+                                                                                   begin = 0.65, 
+                                                                                   end = 1, 
+                                                                                   option = "B", 
+                                                                                   scale_from = c(0,0.1))))})
+  
+  kable(map_df, escape = F, col.names = c("Channel", "Talker", "Meaning", "Constraint")) %>%
+    kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+}
+```
+
+```{r}
+talker_w <- get_two_sample_wilcoxon_for_each_channel(S, T)
+meaning_w <- get_two_sample_wilcoxon_for_each_channel(M, N)
+constraint_w <- get_two_sample_wilcoxon_for_each_channel(L, H)
+```
+
+```{r}
+two_sample_w <- data.frame(channels, 
+                     'talker' = talker_w$p,
+                     'meaning' = meaning_w$p,
+                     'constraint' = constraint_w$p)
+p_table_two_sample(two_sample_w)
+```
+
+## Interactions
+
+```{r}
+p_table_interaction <- function(dat) {
+map_df <- mutate_if(dat, is.numeric, function(x) {round(x, digits = 3)}) %>%
+  mutate_if(is.numeric, function(x) {ifelse(x > 0.1, 
+                                            cell_spec(x, NULL),
+                                            cell_spec(x, background = spec_color(x, 
+                                                                                 direction = 1, 
+                                                                                 begin = 0.65, 
+                                                                                 end = 1, 
+                                                                                 option = "B", 
+                                                                                 scale_from = c(0,0.1))))})
+
+kable(map_df, escape = F, col.names = c("Channel", "L", "H", "L", "H", "L", "H", "L", "H")) %>%
+  add_header_above(c(" " = 1, "Same-talker" = 2, "Different-talker" = 2, "Meaningful" = 2, "Nonsense" = 2)) %>%
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+}
+```
+
+```{r}
+# Subset talker
+SL <- subset(xcorr, talker = "S", constraint = "L") %>% get_subject_averages()
+SH <- subset(xcorr, talker = "S", constraint = "H") %>% get_subject_averages()
+TL <- subset(xcorr, talker = "T", constraint = "L") %>% get_subject_averages()
+TH <- subset(xcorr, talker = "T", constraint = "H") %>% get_subject_averages()
+
+# Subset meaning
+ML <- subset(xcorr, meaning = "M", constraint = "L") %>% get_subject_averages()
+MH <- subset(xcorr, meaning = "M", constraint = "H") %>% get_subject_averages()
+NL <- subset(xcorr, meaning = "N", constraint = "L") %>% get_subject_averages()
+NH <- subset(xcorr, meaning = "N", constraint = "H") %>% get_subject_averages()
+```
+
+#### Greater than
+
+```{r}
+# One-sample t-tests for talker
+SL_w_greater <- get_one_sample_wilcoxon_for_each_channel_against_mu(SL, mu = mu, alt = 'greater')
+SH_w_greater <- get_one_sample_wilcoxon_for_each_channel_against_mu(SH, mu = mu, alt = 'greater')
+TL_w_greater <- get_one_sample_wilcoxon_for_each_channel_against_mu(TL, mu = mu, alt = 'greater')
+TH_w_greater <- get_one_sample_wilcoxon_for_each_channel_against_mu(TH, mu = mu, alt = 'greater')
+
+# One-sample t-tests for meaning
+ML_w_greater <- get_one_sample_wilcoxon_for_each_channel_against_mu(ML, mu = mu, alt = 'greater')
+MH_w_greater <- get_one_sample_wilcoxon_for_each_channel_against_mu(MH, mu = mu, alt = 'greater')
+NL_w_greater <- get_one_sample_wilcoxon_for_each_channel_against_mu(NL, mu = mu, alt = 'greater')
+NH_w_greater <- get_one_sample_wilcoxon_for_each_channel_against_mu(NH, mu = mu, alt = 'greater')
+```
+
+```{r}
+# Creating a table to display all the p-values
+interaction_w_greater <- data.frame(channels, 
+                     'SL' = SL_w_greater$p,
+                     'SH' = SH_w_greater$p,
+                     'TL' = TL_w_greater$p,
+                     'TH' = TH_w_greater$p, 
+                     'ML' = ML_w_greater$p,
+                     'MH' = MH_w_greater$p,
+                     'NL' = NL_w_greater$p,
+                     'NH' = NH_w_greater$p)
+p_table_interaction(interaction_w_greater)
+```
+
+#### Less than
+
+```{r}
+# One-sample t-tests for talker
+SL_w_less <- get_one_sample_wilcoxon_for_each_channel_against_mu(SL, mu = mu, alt = 'less')
+SH_w_less <- get_one_sample_wilcoxon_for_each_channel_against_mu(SH, mu = mu, alt = 'less')
+TL_w_less <- get_one_sample_wilcoxon_for_each_channel_against_mu(TL, mu = mu, alt = 'less')
+TH_w_less <- get_one_sample_wilcoxon_for_each_channel_against_mu(TH, mu = mu, alt = 'less')
+
+# One-sample t-tests for meaning
+ML_w_less <- get_one_sample_wilcoxon_for_each_channel_against_mu(ML, mu = mu, alt = 'less')
+MH_w_less <- get_one_sample_wilcoxon_for_each_channel_against_mu(MH, mu = mu, alt = 'less')
+NL_w_less <- get_one_sample_wilcoxon_for_each_channel_against_mu(NL, mu = mu, alt = 'less')
+NH_w_less <- get_one_sample_wilcoxon_for_each_channel_against_mu(NH, mu = mu, alt = 'less')
+```
+
+```{r}
+# Creating a table to display all the p-values
+interaction_w_less <- data.frame(channels, 
+                     'SL' = SL_w_less$p,
+                     'SH' = SH_w_less$p,
+                     'TL' = TL_w_less$p,
+                     'TH' = TH_w_less$p, 
+                     'ML' = ML_w_less$p,
+                     'MH' = MH_w_less$p,
+                     'NL' = NL_w_less$p,
+                     'NH' = NH_w_less$p)
+p_table_interaction(interaction_w_less)
+```
+
+
+## Save variables for mapping
+
+```{r}
+save(S_w_mu_greater, T_w_mu_greater, M_w_mu_greater, N_w_mu_greater, talker_w, meaning_w, constraint_w, file = "4_test_cross_correlations/data/wilcoxon_against_overall.RData")
+```
+
