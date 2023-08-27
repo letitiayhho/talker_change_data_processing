@@ -1,5 +1,5 @@
 ---
-title: "Average"
+title: "Maximum cross correlations"
 output: html_notebook
 editor_options: 
   chunk_output_type: inline
@@ -55,99 +55,15 @@ p_table <- function(dat) {
   kable(color_ps, escape = F, col.names = c("Channel", "S", "T", "M", "N", "S", "G")) %>%
     add_header_above(c(" " = 1, "Talker" = 2, "Meaning" = 2, "Constraint" = 2)) %>%
     kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
-  # return(map_df)
 }
 ```
 
+## One-sample Wilcoxon against baseline mu
 
-### Create baseline
+One-sample Wilcoxon against baseline mu, which is computed as the overall max cross correlation across all conditions
 
 ```{r}
 overall <- get_subject_averages(xcorr)
-baseline <- apply(overall, 2, mean) %>%
-  rep(11) %>%
-  matrix(nrow = 11, byrow = TRUE) # Cast it so baseline is the same shape as the condition cross correlation matrices
-```
-
-## One-sample wilcoxon for each baselined condition, against mu = 0
-
-Compares the cross correlations for each condition level (e.g. same-talker, meaningful) to 0.
-
-```{r}
-S_baselined <- S-baseline
-T_baselined <- T-baseline
-M_baselined <- M-baseline
-N_baselined <- N-baseline
-L_baselined <- L-baseline
-H_baselined <- H-baseline
-```
-
-```{r}
-get_one_sample_wilcoxon_for_each_channel <- function(data, alt, MU = 0) {
-  w <- apply(data, MARGIN = 2, function(channel) {wilcox.test(channel, 
-                                                              exact = TRUE,
-                                                              mu = MU,
-                                                              alternative = c(alt))$statistic})
-  p <- apply(data, MARGIN = 2, function(channel) {wilcox.test(channel, 
-                                                              exact = TRUE, 
-                                                              mu = MU,
-                                                              alternative = c(alt))$p.value})
-  return(data.frame("w" = w, "p" = p))
-}
-```
-
-#### Greater than
-
-```{r}
-# Compare to 0
-S_w_greater <- get_one_sample_wilcoxon_for_each_channel(S_baselined, alt = 'greater')
-T_w_greater <- get_one_sample_wilcoxon_for_each_channel(T_baselined, alt = 'greater')
-M_w_greater <- get_one_sample_wilcoxon_for_each_channel(M_baselined, alt = 'greater')
-N_w_greater <- get_one_sample_wilcoxon_for_each_channel(N_baselined, alt = 'greater')
-L_w_greater <- get_one_sample_wilcoxon_for_each_channel(L_baselined, alt = 'greater')
-H_w_greater <- get_one_sample_wilcoxon_for_each_channel(H_baselined, alt = 'greater')
-```
-
-```{r}
-# Creating a table to display all the p-values
-greater_w <- data.frame(channels, 
-                     'S' = S_w_greater$p,
-                     'T' = T_w_greater$p, 
-                     'M' = M_w_greater$p,
-                     'N' = N_w_greater$p, 
-                     'L' = L_w_greater$p,
-                     'H' = H_w_greater$p)
-p_table(greater_w)
-```
-
-#### Lesser than
-
-```{r}
-S_w_less <- get_one_sample_wilcoxon_for_each_channel(S_baselined, alt = 'less')
-T_w_less <- get_one_sample_wilcoxon_for_each_channel(T_baselined, alt = 'less')
-M_w_less <- get_one_sample_wilcoxon_for_each_channel(M_baselined, alt = 'less')
-N_w_less <- get_one_sample_wilcoxon_for_each_channel(N_baselined, alt = 'less')
-L_w_less <- get_one_sample_wilcoxon_for_each_channel(L_baselined, alt = 'less')
-H_w_less <- get_one_sample_wilcoxon_for_each_channel(H_baselined, alt = 'less')
-```
-
-```{r}
-# Creating a table to display all the p-values
-less_w <- data.frame(channels, 
-                     'S' = S_w_less$p,
-                     'T' = T_w_less$p, 
-                     'M' = M_w_less$p,
-                     'N' = N_w_less$p, 
-                     'L' = L_w_less$p,
-                     'H' = H_w_less$p)
-p_table(less_w)
-```
-
-## One-sample Wilcoxon against baseline mu, better approach
-
-Instead of baselining the cross correlation values by subtracting the baseline value from them, simply compute a two-sample wilcoxon against mu = baseline.
-
-```{r}
 mu <- apply(overall, 2, mean)
 ```
 
@@ -206,7 +122,9 @@ p_table(two_sample_less)
 ```
 
 
-## Two Sample Wilcoxon comparing conditions
+## Two Sample Wilcoxon comparing levels of conditions
+
+E.g. comparing max cross correlation for same vs different talker sentences
 
 ```{r}
 # Functions
@@ -344,6 +262,18 @@ p_table_interaction(interaction_w_less)
 ## Save variables for mapping
 
 ```{r}
-save(S_w_mu_greater, T_w_mu_greater, M_w_mu_greater, N_w_mu_greater, talker_w, meaning_w, constraint_w, file = "4_test_cross_correlations/data/wilcoxon_against_overall.RData")
+save(S_w_mu_greater, 
+     T_w_mu_greater, 
+     M_w_mu_greater, 
+     N_w_mu_greater, 
+     S_w_mu_less,
+     T_w_mu_less,
+     M_w_mu_less,
+     N_w_mu_less,
+     talker_w, 
+     meaning_w, 
+     constraint_w, file = "4_test_cross_correlations/data/wilcoxon_against_overall.RData")
 ```
+
+
 
