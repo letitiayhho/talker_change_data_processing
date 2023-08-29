@@ -21,8 +21,10 @@ end
     %% Combine data file from each subject
     function [data] = combine_cross_correlations(file_struct)
         data = table();
+        fprintf("Reading...\n")
         for i = 1:length(file_struct)
             path = fullfile(file_struct(i).folder, file_struct(i).name);
+            fprintf(1, [path, '\n'])
             cross_correlations = load(path).data_frame;
             data = [data; cross_correlations];
         end
